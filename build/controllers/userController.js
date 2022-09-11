@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class UserController {
     list(req, res) {
@@ -24,7 +24,7 @@ class UserController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const users = yield database_1.default.query("SELECT * FROM users");
+            const users = yield database_1.db.query("SELECT * FROM users");
             res.json(users);
         });
     }
@@ -38,7 +38,7 @@ class UserController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const user = yield database_1.default.query("SELECT * FROM usuariosportal.users where id= ?", [id]);
+            const user = yield database_1.db.query("SELECT * FROM usuariosportal.users where id= ?", [id]);
             res.json(user);
         });
     }
@@ -52,7 +52,7 @@ class UserController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const userCompanies = yield database_1.default.query(`
+            const userCompanies = yield database_1.db.query(`
        SELECT t0.id,t0.companyname, 
               (SELECT COUNT(*) 
               FROM company_users t1 
@@ -74,7 +74,7 @@ class UserController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const userPerfiles = yield database_1.default.query(`
+            const userPerfiles = yield database_1.db.query(`
        SELECT *, 
               (SELECT COUNT(*) 
                FROM perfil_users t1 
@@ -91,7 +91,7 @@ class UserController {
             const user = req.body;
             console.log(user);
             user.password = yield helpers_1.default.encryptPassword(user.password || '');
-            const result = yield database_1.default.query('INSERT INTO users set ?', [user]);
+            const result = yield database_1.db.query('INSERT INTO users set ?', [user]);
             res.json(result);
         });
     }
@@ -119,7 +119,7 @@ class UserController {
                 newUser.password = user.password;
             }
             console.log(user);
-            const result = yield database_1.default.query('update users set ? where id = ?', [newUser, idUser]);
+            const result = yield database_1.db.query('update users set ? where id = ?', [newUser, idUser]);
             res.json(result);
         });
     }
@@ -142,7 +142,7 @@ class UserController {
                 //Otorgar acceso a la empresa seleccionada
                 sqlAccess = `Insert into company_users (id_company,id_user) values(?,?)`;
             }
-            const result = yield database_1.default.query(sqlAccess, [accessRequest.id_company, accessRequest.id_user]);
+            const result = yield database_1.db.query(sqlAccess, [accessRequest.id_company, accessRequest.id_user]);
             res.json(result);
         });
     }
@@ -165,7 +165,7 @@ class UserController {
                 //Otorgar acceso a la empresa seleccionada
                 sqlAccess = `Insert into perfil_users (id_perfil,id_user) values(?,?)`;
             }
-            const result = yield database_1.default.query(sqlAccess, [perfilRequest.id_perfil, perfilRequest.id_user]);
+            const result = yield database_1.db.query(sqlAccess, [perfilRequest.id_perfil, perfilRequest.id_user]);
             res.json(result);
         });
     }

@@ -15,7 +15,10 @@ class AuthRoutes {
         this.router.post('/recovery', authController_1.default.recovery);
         this.router.post('/restore', authController_1.default.restore);
         this.router.get('/dependenciesUser', authController_1.default.dependenciesUser);
+        this.router.get('/dependenciesUserXE', authController_1.default.dependenciesUserXE);
         this.router.get('/storesUser', authController_1.default.almacenUser);
+        this.router.get('/storesUser2', authController_1.default.almacenUserXE);
+        this.router.get('/areasUser', authController_1.default.areasUserXE);
     }
 }
 const authRoutes = new AuthRoutes();

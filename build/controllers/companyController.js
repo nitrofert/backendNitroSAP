@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class ComapnyController {
     list(req, res) {
@@ -24,7 +24,7 @@ class ComapnyController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const companies = yield database_1.default.query("SELECT * from companies");
+            const companies = yield database_1.db.query("SELECT * from companies");
             console.log(companies);
             res.json(companies);
         });
@@ -38,7 +38,7 @@ class ComapnyController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const companies = yield database_1.default.query("SELECT * from companies where status ='A'");
+            const companies = yield database_1.db.query("SELECT * from companies where status ='A'");
             console.log(companies);
             res.json(companies);
         });
@@ -54,7 +54,7 @@ class ComapnyController {
             //******************************************************* */
             const newCompany = req.body;
             console.log(newCompany);
-            const result = yield database_1.default.query('INSERT INTO companies set ?', [newCompany]);
+            const result = yield database_1.db.query('INSERT INTO companies set ?', [newCompany]);
             res.json(result);
         });
     }
@@ -68,7 +68,7 @@ class ComapnyController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const comapny = yield database_1.default.query(`
+            const comapny = yield database_1.db.query(`
       
       SELECT t0.*
       FROM companies t0
@@ -97,7 +97,7 @@ class ComapnyController {
                 urlwssap: company.urlwssap,
                 dbcompanysap: company.dbcompanysap
             };
-            const result = yield database_1.default.query('update companies set ? where id = ?', [newCompany, idCompany]);
+            const result = yield database_1.db.query('update companies set ? where id = ?', [newCompany, idCompany]);
             res.json(result);
         });
     }

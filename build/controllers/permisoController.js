@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class PermisoController {
     list(req, res) {
@@ -24,7 +24,7 @@ class PermisoController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* /
-            const permisos = yield database_1.default.query(`
+            const permisos = yield database_1.db.query(`
        
        SELECT t0.id AS idPerfil,
               t0.perfil,
@@ -53,7 +53,7 @@ class PermisoController {
             const permiso = req.body;
             console.log(permiso);
             //Validar si el permiso esta registrado
-            const existePermiso = yield database_1.default.query(`
+            const existePermiso = yield database_1.db.query(`
          SELECT COUNT(*) as cntPermisos
          FROM perfil_menu_accions 
          WHERE id_perfil = ? AND id_menu = ?
@@ -65,7 +65,7 @@ class PermisoController {
                 SQLpermiso = `Update perfil_menu_accions 
                             set ${permiso.accion}=${permiso.valor}
                         where id_perfil = ? AND id_menu = ?`;
-                const result = yield database_1.default.query(SQLpermiso, [permiso.idPerfil, permiso.idMenu]);
+                const result = yield database_1.db.query(SQLpermiso, [permiso.idPerfil, permiso.idMenu]);
                 res.json(result);
             }
             else {
@@ -84,7 +84,7 @@ class PermisoController {
                     newPermiso.delete_accion = permiso.valor;
                 console.log(newPermiso);
                 SQLpermiso = `Insert into perfil_menu_accions set ? `;
-                const result = yield database_1.default.query(SQLpermiso, [newPermiso]);
+                const result = yield database_1.db.query(SQLpermiso, [newPermiso]);
                 res.json(result);
             }
         });
@@ -99,7 +99,7 @@ class PermisoController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const perfil = yield database_1.default.query(`
+            const perfil = yield database_1.db.query(`
        
        SELECT t0.*
        FROM perfiles t0
@@ -125,7 +125,7 @@ class PermisoController {
                 description: perfil.description,
                 estado: perfil.estado
             };
-            const result = yield database_1.default.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
+            const result = yield database_1.db.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
             res.json(result);
         });
     }
@@ -146,7 +146,7 @@ class PermisoController {
                 description: perfil.description,
                 estado: perfil.estado
             };
-            const result = yield database_1.default.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
+            const result = yield database_1.db.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
             res.json(result);
         });
     }

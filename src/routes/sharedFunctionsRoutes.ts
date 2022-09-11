@@ -10,7 +10,10 @@ class SharedFunctionsRoutes{
     }
 
     config():void{
+        this.router.get('/taxes/compras', sharedFunctionsController.taxesXE);
         this.router.get('/taxes/:taxOption?', sharedFunctionsController.taxes);
+        this.router.get('/cuentas/:dependencia?', sharedFunctionsController.cuentasDependenciaXE);
+        
        
     }
 }

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class MenuController {
     list(req, res) {
@@ -24,7 +24,7 @@ class MenuController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const menu = yield database_1.default.query(`
+            const menu = yield database_1.db.query(`
        
        SELECT t0.*,t1.title AS 'padre' 
        FROM menu t0
@@ -42,7 +42,7 @@ class MenuController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const menu = yield database_1.default.query(`
+            const menu = yield database_1.db.query(`
        
        SELECT t0.*, '' as padre 
        FROM menu t0
@@ -63,10 +63,10 @@ class MenuController {
             const { hierarchy, iddad } = req.params;
             let result;
             if (hierarchy == 'P') {
-                result = yield database_1.default.query("Select IFNULL(MAX(ordernum),0)+1 as ordernum from menu where hierarchy= ?", [hierarchy]);
+                result = yield database_1.db.query("Select IFNULL(MAX(ordernum),0)+1 as ordernum from menu where hierarchy= ?", [hierarchy]);
             }
             else {
-                result = yield database_1.default.query("SELECT IFNULL(MAX(ordernum),0) AS ordernum, (SELECT t0.ordernum FROM menu t0 WHERE t0.id = ?) AS ordernumdad FROM menu WHERE hierarchy= 'H' AND iddad = ? ", [iddad, iddad]);
+                result = yield database_1.db.query("SELECT IFNULL(MAX(ordernum),0) AS ordernum, (SELECT t0.ordernum FROM menu t0 WHERE t0.id = ?) AS ordernumdad FROM menu WHERE hierarchy= 'H' AND iddad = ? ", [iddad, iddad]);
                 let ordernum = iddad + '.';
                 if (result[0].ordernum != '0') {
                     let ordernumMax = result[0].ordernum;
@@ -91,7 +91,7 @@ class MenuController {
             //******************************************************* */
             const newMenu = req.body;
             console.log(newMenu);
-            const result = yield database_1.default.query('INSERT INTO menu set ?', [newMenu]);
+            const result = yield database_1.db.query('INSERT INTO menu set ?', [newMenu]);
             res.json(result);
         });
     }
@@ -105,7 +105,7 @@ class MenuController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const menu = yield database_1.default.query(`
+            const menu = yield database_1.db.query(`
        
        SELECT t0.*,'' AS 'padre' 
        FROM menu t0
@@ -135,7 +135,7 @@ class MenuController {
                 url: menu.url,
                 icon: menu.icon
             };
-            const result = yield database_1.default.query('update menu set ? where id = ?', [newMenu, idMenu]);
+            const result = yield database_1.db.query('update menu set ? where id = ?', [newMenu, idMenu]);
             res.json(result);
         });
     }

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class PerfilController {
     list(req, res) {
@@ -24,7 +24,7 @@ class PerfilController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const perfil = yield database_1.default.query(`
+            const perfil = yield database_1.db.query(`
        
        SELECT t0.* 
        FROM perfiles t0
@@ -43,7 +43,7 @@ class PerfilController {
             //******************************************************* */
             const newPerfil = req.body;
             console.log(newPerfil);
-            const result = yield database_1.default.query('INSERT INTO perfiles set ?', [newPerfil]);
+            const result = yield database_1.db.query('INSERT INTO perfiles set ?', [newPerfil]);
             res.json(result);
         });
     }
@@ -57,7 +57,7 @@ class PerfilController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const perfil = yield database_1.default.query(`
+            const perfil = yield database_1.db.query(`
        
        SELECT t0.*
        FROM perfiles t0
@@ -83,7 +83,7 @@ class PerfilController {
                 description: perfil.description,
                 estado: perfil.estado
             };
-            const result = yield database_1.default.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
+            const result = yield database_1.db.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
             res.json(result);
         });
     }

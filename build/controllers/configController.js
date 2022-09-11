@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const database_1 = __importDefault(require("../database"));
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 class ConfigController {
     list(req, res) {
@@ -38,7 +38,7 @@ class ConfigController {
               t1.read_accion = TRUE
         ORDER BY t0.ordernum ASC`;
             console.log(sql);
-            const menu = yield database_1.default.query(sql);
+            const menu = yield database_1.db.query(sql);
             let menupadres = menu.filter(opcion => opcion.hierarchy == 'P');
             let menuhijos = menu.filter(opcion => opcion.hierarchy == 'H');
             let menuportal = [{

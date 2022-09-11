@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import db from "../database";
+import {db} from "../database";
 import { PermisosInterface } from "../interfaces/permiso.interface";
 import helper from "../lib/helpers";
 

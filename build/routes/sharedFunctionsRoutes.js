@@ -11,7 +11,9 @@ class SharedFunctionsRoutes {
         this.config();
     }
     config() {
+        this.router.get('/taxes/compras', sharedFunctionsController_1.default.taxesXE);
         this.router.get('/taxes/:taxOption?', sharedFunctionsController_1.default.taxes);
+        this.router.get('/cuentas/:dependencia?', sharedFunctionsController_1.default.cuentasDependenciaXE);
     }
 }
 const sharedFunctionsRoutes = new SharedFunctionsRoutes();

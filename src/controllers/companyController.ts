@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import db from "../database";
+import {db} from "../database";
 import { CompanyInterface } from "../interfaces/company.interface";
 import helper from "../lib/helpers";
 

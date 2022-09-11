@@ -12,9 +12,11 @@ class WsSAPRoutes {
     }
     config() {
         this.router.get('/BusinessPartners', wssapController_1.default.BusinessPartners);
+        this.router.get('/BusinessPartnersXE/:id?', wssapController_1.default.BusinessPartnersXE);
         this.router.get('/Items', wssapController_1.default.Items);
         this.router.get('/Cuentas', wssapController_1.default.Cuentas);
         this.router.get('/Xengine/items', wssapController_1.default.itemsXengine);
+        this.router.get('/Xengine/monedas/:fechaTrm', wssapController_1.default.monedasXengine);
     }
 }
 const wssapRoutes = new WsSAPRoutes();

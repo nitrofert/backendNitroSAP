@@ -15,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const helpers_1 = __importDefault(require("../lib/helpers"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 class WssapController {
+    constructor() {
+        this.url_sap_xe = 'http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/';
+        this.url_sap_sl = 'https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/';
+    }
     BusinessPartners(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             //Obtener datos del usurio logueado que realizo la petición
@@ -24,7 +28,7 @@ class WssapController {
             //******************************************************* */
             const infoUsuario = decodedToken.infoUsuario;
             const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
-            console.log("BusinessPartners ", bieSession);
+            //console.log("BusinessPartners ",bieSession);
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/BusinessPartners?$filter=startswith(CardCode,'P'), CardType eq 'cSupplier'&$select=CardCode,CardName`;
                 //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/BusinessPartners?$filter=CardCode eq 'PN830511745'&$select=CardCode,CardName`;
@@ -53,7 +57,7 @@ class WssapController {
             //******************************************************* */
             const infoUsuario = decodedToken.infoUsuario;
             const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
-            console.log("Items", bieSession);
+            //console.log("Items",bieSession);
             if (bieSession != '') {
                 const configWs2 = {
                     method: "GET",
@@ -81,7 +85,7 @@ class WssapController {
             //******************************************************* */
             const infoUsuario = decodedToken.infoUsuario;
             const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
-            console.log("Items", bieSession);
+            //console.log("Items",bieSession);
             if (bieSession != '') {
                 const configWs2 = {
                     method: "GET",
@@ -102,6 +106,12 @@ class WssapController {
     }
     itemsXengine(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = decodedToken.infoUsuario;
             const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/WSNTF.xsjs`;
             /*http.get(url2,(resp)=>{
                 console.log(resp);
@@ -110,6 +120,47 @@ class WssapController {
             //console.log(response2.body); 
             const data2 = yield response2.json();
             //console.log(data2);
+            return res.json(data2);
+        });
+    }
+    monedasXengine(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = decodedToken.infoUsuario;
+            const compania = infoUsuario.dbcompanysap;
+            let { fechaTrm } = req.params;
+            //console.log(await helper.format(fechaTrm));
+            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsMonedas.xsjs?fecha=${yield helpers_1.default.format(fechaTrm)}&compania=${compania}`;
+            console.log(url2);
+            const response2 = yield (0, node_fetch_1.default)(url2);
+            //console.log(response2.body); 
+            const data2 = yield response2.json();
+            console.log(data2);
+            return res.json(data2);
+        });
+    }
+    BusinessPartnersXE(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = decodedToken.infoUsuario;
+            const compania = infoUsuario.dbcompanysap;
+            let { id } = req.params;
+            console.log(id);
+            let proveedor = '';
+            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
+            console.log(url2);
+            const response2 = yield (0, node_fetch_1.default)(url2);
+            //console.log(response2.body); 
+            const data2 = yield response2.json();
+            console.log(data2);
             return res.json(data2);
         });
     }

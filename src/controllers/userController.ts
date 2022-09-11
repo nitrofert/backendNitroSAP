@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import db from "../database";
+import {db} from "../database";
 import { UserInterface } from "../interfaces/user.interface";
 import helper from "../lib/helpers";
 
