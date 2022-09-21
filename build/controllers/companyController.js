@@ -24,9 +24,15 @@ class ComapnyController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const companies = yield database_1.db.query("SELECT * from companies");
-            console.log(companies);
-            res.json(companies);
+            try {
+                const companies = yield database_1.db.query("SELECT * from companies");
+                // console.log(companies);
+                res.json(companies);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     listActive(req, res) {
@@ -38,9 +44,15 @@ class ComapnyController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const companies = yield database_1.db.query("SELECT * from companies where status ='A'");
-            console.log(companies);
-            res.json(companies);
+            try {
+                const companies = yield database_1.db.query("SELECT * from companies where status ='A'");
+                // console.log(companies);
+                res.json(companies);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     create(req, res) {
@@ -53,9 +65,15 @@ class ComapnyController {
             }
             //******************************************************* */
             const newCompany = req.body;
-            console.log(newCompany);
-            const result = yield database_1.db.query('INSERT INTO companies set ?', [newCompany]);
-            res.json(result);
+            try {
+                //console.log(newCompany);
+                const result = yield database_1.db.query('INSERT INTO companies set ?', [newCompany]);
+                res.json(result);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     getCompanyById(req, res) {
@@ -68,13 +86,19 @@ class ComapnyController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const comapny = yield database_1.db.query(`
+            try {
+                const comapny = yield database_1.db.query(`
       
-      SELECT t0.*
-      FROM companies t0
-      where t0.id = ?
-      ORDER BY t0.companyname ASC`, [id]);
-            res.json(comapny);
+            SELECT t0.*
+            FROM companies t0
+            where t0.id = ?
+            ORDER BY t0.companyname ASC`, [id]);
+                res.json(comapny);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     update(req, res) {
@@ -87,7 +111,7 @@ class ComapnyController {
             }
             //******************************************************* */
             const company = req.body;
-            console.log(company);
+            //console.log(company);
             const idCompany = company.id;
             const newCompany = {
                 companyname: company.companyname,
@@ -97,8 +121,14 @@ class ComapnyController {
                 urlwssap: company.urlwssap,
                 dbcompanysap: company.dbcompanysap
             };
-            const result = yield database_1.db.query('update companies set ? where id = ?', [newCompany, idCompany]);
-            res.json(result);
+            try {
+                const result = yield database_1.db.query('update companies set ? where id = ?', [newCompany, idCompany]);
+                res.json(result);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
         });
     }
 }

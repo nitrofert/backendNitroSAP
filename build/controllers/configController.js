@@ -38,30 +38,36 @@ class ConfigController {
               t1.read_accion = TRUE
         ORDER BY t0.ordernum ASC`;
             console.log(sql);
-            const menu = yield database_1.db.query(sql);
-            let menupadres = menu.filter(opcion => opcion.hierarchy == 'P');
-            let menuhijos = menu.filter(opcion => opcion.hierarchy == 'H');
-            let menuportal = [{
-                    label: 'Inicio',
-                    items: [
-                        { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/portal'] }
-                    ]
-                }];
-            let items;
-            for (let opcionMenuPadre of menupadres) {
-                items = [];
-                for (let opcionMenuHijo of menuhijos) {
-                    if (opcionMenuPadre.id == opcionMenuHijo.iddad) {
-                        items.push({ label: opcionMenuHijo.title, icon: opcionMenuHijo.icon, routerLink: [opcionMenuHijo.url] });
+            try {
+                const menu = yield database_1.db.query(sql);
+                let menupadres = menu.filter(opcion => opcion.hierarchy == 'P');
+                let menuhijos = menu.filter(opcion => opcion.hierarchy == 'H');
+                let menuportal = [{
+                        label: 'Inicio',
+                        items: [
+                            { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/portal'] }
+                        ]
+                    }];
+                let items;
+                for (let opcionMenuPadre of menupadres) {
+                    items = [];
+                    for (let opcionMenuHijo of menuhijos) {
+                        if (opcionMenuPadre.id == opcionMenuHijo.iddad) {
+                            items.push({ label: opcionMenuHijo.title, icon: opcionMenuHijo.icon, routerLink: [opcionMenuHijo.url] });
+                        }
                     }
+                    menuportal.push({
+                        label: opcionMenuPadre.title,
+                        items: items
+                    });
                 }
-                menuportal.push({
-                    label: opcionMenuPadre.title,
-                    items: items
-                });
+                console.log(menuportal);
+                res.json(menuportal);
             }
-            console.log(menuportal);
-            res.json(menuportal);
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
 }

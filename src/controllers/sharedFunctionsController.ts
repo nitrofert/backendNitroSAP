@@ -26,9 +26,17 @@ class SharedFunctionsController {
             where = ` where ${req.params.taxOption} = 'Y'` 
         }
 
-        const solped: any[] = await db.query(`Select * from ${bdmysql}.taxes ${where}`);
-        //console.log(JSON.stringify(solped));
-        res.json(solped);
+        
+        try {
+        
+            const solped: any[] = await db.query(`Select * from ${bdmysql}.taxes ${where}`);
+            res.json(solped);
+
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async taxesXE(req: Request, res: Response) {
@@ -47,15 +55,16 @@ class SharedFunctionsController {
         
         const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
     
-        const response2 = await fetch(url2); 
-        //console.log(response2.body); 
-        const data2 = await response2.json();  
-
-        console.log(data2); 
-
+        try {
         
-        
-        return res.json(data2);  
+            const response2 = await fetch(url2); 
+            const data2 = await response2.json();  
+            return res.json(data2);  
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        } 
            
     }
 
@@ -76,16 +85,18 @@ class SharedFunctionsController {
         console.log(dependencia);
         
         const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
-        console.log(url2);
-        const response2 = await fetch(url2); 
-        //console.log(response2.body); 
-        const data2 = await response2.json();  
-
-        console.log(data2); 
-
         
+
+        try {
         
-        return res.json(data2);  
+            const response2 = await fetch(url2); 
+            const data2 = await response2.json();  
+            return res.json(data2);  
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
            
     }
 

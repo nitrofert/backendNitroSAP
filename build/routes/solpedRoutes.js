@@ -13,8 +13,14 @@ class SolpedRoutes {
     config() {
         this.router.get('/list', solpedController_1.default.list);
         this.router.post('/', solpedController_1.default.create);
-        this.router.get('/:id', solpedController_1.default.getSolpedById);
         this.router.put('/', solpedController_1.default.update);
+        this.router.get('/:id', solpedController_1.default.getSolpedById);
+        this.router.post('/envio-aprobacion', solpedController_1.default.envioAprobacionSolped);
+        this.router.get('/aprobar/:idcrypt', solpedController_1.default.aproved);
+        this.router.get('/rechazar/:idcrypt', solpedController_1.default.reject);
+        this.router.put('/rechazar', solpedController_1.default.rejectSolped);
+        this.router.post('/aprobacion', solpedController_1.default.aproved_portal);
+        this.router.get('/aprobaciones/:id', solpedController_1.default.listAprobaciones);
     }
 }
 const solpedRoutes = new SolpedRoutes();

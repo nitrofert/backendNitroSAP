@@ -24,12 +24,18 @@ class PerfilController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const perfil = yield database_1.db.query(`
-       
-       SELECT t0.* 
-       FROM perfiles t0
-       ORDER BY t0.perfil ASC`);
-            res.json(perfil);
+            try {
+                const perfil = yield database_1.db.query(`
+        
+            SELECT t0.* 
+            FROM perfiles t0
+            ORDER BY t0.perfil ASC`);
+                res.json(perfil);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     create(req, res) {
@@ -41,10 +47,16 @@ class PerfilController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const newPerfil = req.body;
-            console.log(newPerfil);
-            const result = yield database_1.db.query('INSERT INTO perfiles set ?', [newPerfil]);
-            res.json(result);
+            try {
+                const newPerfil = req.body;
+                console.log(newPerfil);
+                const result = yield database_1.db.query('INSERT INTO perfiles set ?', [newPerfil]);
+                res.json(result);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     getPerfilById(req, res) {
@@ -57,13 +69,19 @@ class PerfilController {
             }
             //******************************************************* */
             const { id } = req.params;
-            const perfil = yield database_1.db.query(`
-       
-       SELECT t0.*
-       FROM perfiles t0
-       where t0.id = ?
-       ORDER BY t0.perfil ASC`, [id]);
-            res.json(perfil);
+            try {
+                const perfil = yield database_1.db.query(`
+            
+            SELECT t0.*
+            FROM perfiles t0
+            where t0.id = ?
+            ORDER BY t0.perfil ASC`, [id]);
+                res.json(perfil);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
     update(req, res) {
@@ -75,16 +93,22 @@ class PerfilController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
             }
             //******************************************************* */
-            const perfil = req.body;
-            console.log(perfil);
-            const idPerfil = perfil.id;
-            const newPerfil = {
-                perfil: perfil.perfil,
-                description: perfil.description,
-                estado: perfil.estado
-            };
-            const result = yield database_1.db.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
-            res.json(result);
+            try {
+                const perfil = req.body;
+                console.log(perfil);
+                const idPerfil = perfil.id;
+                const newPerfil = {
+                    perfil: perfil.perfil,
+                    description: perfil.description,
+                    estado: perfil.estado
+                };
+                const result = yield database_1.db.query('update perfiles set ? where id = ?', [newPerfil, idPerfil]);
+                res.json(result);
+            }
+            catch (error) {
+                console.error(error);
+                res.json(error);
+            }
         });
     }
 }

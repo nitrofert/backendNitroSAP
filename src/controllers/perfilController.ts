@@ -17,15 +17,24 @@ class PerfilController{
         }   
         //******************************************************* */
 
-       const  perfil:PerfilInterface[] =  await db.query(`
-       
-       SELECT t0.* 
-       FROM perfiles t0
-       ORDER BY t0.perfil ASC`);
        
 
+       try {
 
-       res.json(perfil);
+            const  perfil:PerfilInterface[] =  await db.query(`
+        
+            SELECT t0.* 
+            FROM perfiles t0
+            ORDER BY t0.perfil ASC`);
+            
+    
+    
+            res.json(perfil);
+
+        }catch (error: any) {
+            console.error(error);
+            res.json(error);
+        }
     }
 
     public async create(req: Request, res: Response): Promise<void>{
@@ -38,14 +47,23 @@ class PerfilController{
          }   
          //******************************************************* */
 
-         const newPerfil = req.body;
-         console.log(newPerfil);
-         const result = await db.query('INSERT INTO perfiles set ?', [newPerfil]);
-         res.json(result);
+         
+
+         try {
+
+            const newPerfil = req.body;
+            console.log(newPerfil);
+            const result = await db.query('INSERT INTO perfiles set ?', [newPerfil]);
+            res.json(result);
+
+        }catch (error: any) {
+            console.error(error);
+            res.json(error);
+        }
      }
 
 
-     public async getPerfilById(req: Request, res: Response){
+    public async getPerfilById(req: Request, res: Response){
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -57,14 +75,23 @@ class PerfilController{
 
         const { id } = req.params; 
 
-       const  perfil:PerfilInterface[] =  await db.query(`
        
-       SELECT t0.*
-       FROM perfiles t0
-       where t0.id = ?
-       ORDER BY t0.perfil ASC`,[id]);
-       
-       res.json(perfil);
+
+       try {
+
+            const  perfil:PerfilInterface[] =  await db.query(`
+            
+            SELECT t0.*
+            FROM perfiles t0
+            where t0.id = ?
+            ORDER BY t0.perfil ASC`,[id]);
+            
+            res.json(perfil);
+
+        }catch (error: any) {
+            console.error(error);
+            res.json(error);
+        }
     }
 
      public async update(req: Request, res: Response){
@@ -77,17 +104,25 @@ class PerfilController{
          }   
          //******************************************************* */
 
-         const perfil = req.body;
-         console.log(perfil);
-         const idPerfil = perfil.id;
-         const newPerfil = {
-            perfil:perfil.perfil,
-            description:perfil.description,
-            estado:perfil.estado
-         }
-         const result = await db.query('update perfiles set ? where id = ?', [newPerfil,idPerfil]);
-         res.json(result);
+         
         
+         try {
+
+            const perfil = req.body;
+            console.log(perfil);
+            const idPerfil = perfil.id;
+            const newPerfil = {
+                perfil:perfil.perfil,
+                description:perfil.description,
+                estado:perfil.estado
+            }
+            const result = await db.query('update perfiles set ? where id = ?', [newPerfil,idPerfil]);
+            res.json(result);
+
+        }catch (error: any) {
+            console.error(error);
+            res.json(error);
+        }
         
     }
 

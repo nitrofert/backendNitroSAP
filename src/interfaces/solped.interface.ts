@@ -28,6 +28,8 @@ export interface Solped {
     approved:          string;
     created_at:        string;
     updated_at:        string;
+    comments?: string;
+    trm:number;
 }
 
 export interface SolpedDet {

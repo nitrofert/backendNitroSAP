@@ -14,6 +14,7 @@ export interface DecodeTokenInterface {
     iat:             number;
     exp:             number;
     dependenciasUsuario: DependenciasUsuario[];
+    permisosUsuario: PermisosUsuario[];
 }
 
 export interface InfoUsuario {
@@ -60,6 +61,19 @@ export interface DependenciasUsuario {
     dependence: string;
     location: string;
     vicepresidency:string;
+}
+
+export interface PermisosUsuario{
+    id_perfil:number;
+    id_menu:number;
+    read_accion: number;
+    create_accion: number;
+    update_accion: number;
+    delete_accion: number;
+    aproved_accion: number;
+    perfil:string;
+    title:string;
+    url:string;
 }
 
 // Converts JSON strings to/from your types

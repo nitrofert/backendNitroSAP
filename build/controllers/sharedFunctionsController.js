@@ -30,9 +30,14 @@ class SharedFunctionsController {
             if (req.params.taxOption) {
                 where = ` where ${req.params.taxOption} = 'Y'`;
             }
-            const solped = yield database_1.db.query(`Select * from ${bdmysql}.taxes ${where}`);
-            //console.log(JSON.stringify(solped));
-            res.json(solped);
+            try {
+                const solped = yield database_1.db.query(`Select * from ${bdmysql}.taxes ${where}`);
+                res.json(solped);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
         });
     }
     taxesXE(req, res) {
@@ -46,11 +51,15 @@ class SharedFunctionsController {
             const bdmysql = infoUsuario.bdmysql;
             const compania = infoUsuario.dbcompanysap;
             const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
-            const response2 = yield (0, node_fetch_1.default)(url2);
-            //console.log(response2.body); 
-            const data2 = yield response2.json();
-            console.log(data2);
-            return res.json(data2);
+            try {
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
         });
     }
     cuentasDependenciaXE(req, res) {
@@ -66,12 +75,15 @@ class SharedFunctionsController {
             let dependencia = req.params.dependencia;
             console.log(dependencia);
             const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
-            console.log(url2);
-            const response2 = yield (0, node_fetch_1.default)(url2);
-            //console.log(response2.body); 
-            const data2 = yield response2.json();
-            console.log(data2);
-            return res.json(data2);
+            try {
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
         });
     }
 }

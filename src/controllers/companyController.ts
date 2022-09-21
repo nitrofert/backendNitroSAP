@@ -17,9 +17,18 @@ class ComapnyController {
         }
         //******************************************************* */
 
-        const companies: CompanyInterface[] = await db.query("SELECT * from companies");
-        console.log(companies);
-        res.json(companies);
+        
+
+        try {
+
+            const companies: CompanyInterface[] = await db.query("SELECT * from companies");
+            // console.log(companies);
+            res.json(companies);
+
+       }catch (error: any) {
+           console.error(error);
+            res.json(error);
+       }
     }
 
     public async listActive(req: Request, res: Response) {
@@ -32,9 +41,18 @@ class ComapnyController {
         }
         //******************************************************* */
 
-        const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
-        console.log(companies);
-        res.json(companies);
+       
+
+        try {
+
+            const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
+            // console.log(companies);
+            res.json(companies);
+
+       }catch (error: any) {
+           console.error(error);
+            res.json(error);
+       }
     }
 
     public async create(req: Request, res: Response): Promise<void> {
@@ -48,9 +66,18 @@ class ComapnyController {
         //******************************************************* */
 
         const newCompany = req.body;
-        console.log(newCompany);
-        const result = await db.query('INSERT INTO companies set ?', [newCompany]);
-        res.json(result);
+       
+
+        try {
+
+             //console.log(newCompany);
+            const result = await db.query('INSERT INTO companies set ?', [newCompany]);
+            res.json(result);
+
+        }catch (error: any) {
+            console.error(error);
+             res.json(error);
+        }
     }
 
 
@@ -66,14 +93,23 @@ class ComapnyController {
 
         const { id } = req.params;
 
-        const comapny: CompanyInterface[] = await db.query(`
-      
-      SELECT t0.*
-      FROM companies t0
-      where t0.id = ?
-      ORDER BY t0.companyname ASC`, [id]);
+        
 
-        res.json(comapny);
+        try {
+
+            const comapny: CompanyInterface[] = await db.query(`
+      
+            SELECT t0.*
+            FROM companies t0
+            where t0.id = ?
+            ORDER BY t0.companyname ASC`, [id]);
+
+            res.json(comapny);
+
+        }catch (error: any) {
+            console.error(error);
+             res.json(error);
+        }
     }
 
     public async update(req: Request, res: Response) {
@@ -87,7 +123,7 @@ class ComapnyController {
         //******************************************************* */
 
         const company = req.body;
-        console.log(company);
+        //console.log(company);
         const idCompany = company.id;
         const newCompany: CompanyInterface = {
             companyname: company.companyname,
@@ -98,10 +134,17 @@ class ComapnyController {
             dbcompanysap: company.dbcompanysap
 
         }
-        const result = await db.query('update companies set ? where id = ?', [newCompany, idCompany]);
-        res.json(result);
+        
 
+        try {
 
+            const result = await db.query('update companies set ? where id = ?', [newCompany, idCompany]);
+            res.json(result);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
 

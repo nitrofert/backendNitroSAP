@@ -30,13 +30,13 @@ class AuthController{
             ,[formLogin.username,formLogin.username,formLogin.company]);
 
         // Validamos si el usuario buscado por el username existe, si no existe retornamos error
-        if(user.length==0) return res.status(401).json({message:"Datos de inicio de sesión invalidos", status:401});
+        if(user.length==0) return res.status(401).json({message:"Datos de inicio de sesión invalidos1", status:401});
         //console.log(user);
         //Comparamos el pasword registrado en el formulario con el password obtenido del query x username
         const validPassword = await helper.matchPassword(req.body.password, (user[0].password || ''));
         //console.log(validPassword);
         // Si el passwornno coincide, retornamos error 
-        if(!validPassword) return res.status(401).json({message:"Datos de inicio de sesión invalidos", status:401});
+        if(!validPassword) return res.status(401).json({message:"Datos de inicio de sesión invalidos2", status:401});
         
         //Obtener datos de usuario para ecriptar en token jwt
         
@@ -66,17 +66,23 @@ class AuthController{
                                                 INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
                                                 WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
                                                     t0.hierarchy ='H' AND
-                                                    t1.read_accion = true
+                                                    t1.read_accion = true AND
+                                                    t0.visible =1
                                                 ORDER BY t0.ordernum ASC;`,[user[0].id]);
 
-        //const dependenciasUsuario = await db.query(`SELECT * FROM dependencies_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
-        const permisosUsuario = [];
+        const permisosUsuario = await db.query(`SELECT * 
+                                                        FROM perfil_menu_accions t0 
+                                                        INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
+                                                        INNER JOIN menu t2 ON t2.id = t0.id_menu
+                                                        WHERE t0.id_perfil IN (SELECT tt0.id_perfil FROM perfil_users tt0 WHERE tt0.id_user = ?)`,[user[0].id]);
+        
         const almacenesUsuario = [];
         
 
         let userConfig ={
             infoUsuario:infoUsuario[0],
             perfilesUsuario,
+            permisosUsuario,
             menuUsuario:{
                 opcionesMenu,
                 opcionesSubMenu
@@ -117,11 +123,17 @@ class AuthController{
 
         const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
         const bdmysql = infoUsuario.bdmysql;
-        //console.log(bdmysql);
-        const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+        
 
-        //console.log(dependenciasUsuario);
-        res.json(dependenciasUsuario);
+        try {
+
+            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+            res.json(dependenciasUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async areasSolpedUser(req: Request, res: Response) {
@@ -135,11 +147,17 @@ class AuthController{
 
         const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
         const bdmysql = infoUsuario.bdmysql;
-        //console.log(bdmysql);
-        const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+        
 
-        //console.log(dependenciasUsuario);
-        res.json(dependenciasUsuario);
+        try {
+
+            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+            res.json(dependenciasUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async almacenUser(req: Request, res: Response) {
@@ -153,11 +171,17 @@ class AuthController{
 
         const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
         const bdmysql = infoUsuario.bdmysql;
-        //console.log(bdmysql);
-        const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario.codusersap}'`);
+        
 
-        //console.log(dependenciasUsuario);
-        res.json(dependenciasUsuario);
+        try {
+
+            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario.codusersap}'`);
+            res.json(dependenciasUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async almacenUserXE(req: Request, res: Response) {
@@ -175,16 +199,16 @@ class AuthController{
        
         
         const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-        console.log(url2);
-        const response2 = await fetch(url2);
-        //console.log(response2.body); 
-        const data2 = await response2.json();  
+        try {
 
-        console.log(data2); 
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();  
+            return res.json(data2); 
 
-        
-        
-        return res.json(data2);  
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async dependenciesUserXE(req: Request, res: Response) {
@@ -201,16 +225,16 @@ class AuthController{
 
 
         const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-        console.log(url2);
-        const response2 = await fetch(url2);
-        //console.log(response2.body); 
-        const data2 = await response2.json();  
+        try {
 
-        console.log(data2); 
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();  
+            return res.json(data2); 
 
-        
-        
-        return res.json(data2); 
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
 
     public async areasUserXE(req: Request, res: Response) {
@@ -227,16 +251,18 @@ class AuthController{
 
 
         const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-        console.log(url2);
-        const response2 = await fetch(url2);
-        //console.log(response2.body); 
-        const data2 = await response2.json();  
+        //console.log(url2);
+        try {
 
-        console.log(data2); 
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();  
+            return res.json(data2); 
 
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
         
-        
-        return res.json(data2); 
     }
 
 }

@@ -38,6 +38,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
+const database_1 = require("../database");
+const mailer_1 = __importDefault(require("./mailer"));
 class Helpers {
     encryptPassword(password) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -57,14 +59,14 @@ class Helpers {
             }
         });
     }
-    generateToken(payload) {
+    generateToken(payload, expire = '12h') {
         return __awaiter(this, void 0, void 0, function* () {
             const signInOptions = {
                 // RS256 uses a public/private key pair. The API provides the private key
                 // to generate the JWT. The client gets a public key to validate the
                 // signature
                 //algorithm: 'RS256',
-                expiresIn: '1h'
+                expiresIn: expire
             };
             //Configuara secretkey con llave publica y privada generada con openssl
             //temporalmente sera secretkey
@@ -89,9 +91,16 @@ class Helpers {
                 '/',
                 '/api/companies/listActive',
                 '/api/permisos/list',
-                '/api/wssap/Xengine/items'
+                '/api/compras/solped/aprobar/',
+                '/api/compras/solped/rechazar/'
             ];
-            return routesAllowWithoutToken.includes(url);
+            let result = false;
+            for (let item of routesAllowWithoutToken) {
+                if (url.includes(item)) {
+                    result = true;
+                }
+            }
+            return result;
         });
     }
     loginWsSAP(infoUsuario) {
@@ -105,12 +114,12 @@ class Helpers {
                 },
                 body: JSON.stringify(jsonLog)
             };
-            console.log(configWs);
+            //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    console.log('successfully logged');
+                    console.log('successfully logged SAP');
                     return response.headers.get('set-cookie');
                 }
                 else {
@@ -163,6 +172,913 @@ class Helpers {
                 .toString()
                 .padStart(2, '0');
             return `${year}-${month}-${date}`;
+        });
+    }
+    getSolpedById(idSolped, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solpedResult = yield database_1.db.query(`
+      
+        SELECT T0.*, T1.*, T2.email 
+        FROM ${bdmysql}.solped T0 
+        INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
+        INNER JOIN usuariosportal.users T2 ON T2.id = T0.id_user
+        WHERE t0.id = ?`, [idSolped]);
+            //console.log((solpedResult));
+            let solped = {
+                id: idSolped,
+                id_user: solpedResult[0].id_user,
+                usersap: solpedResult[0].usersap,
+                fullname: solpedResult[0].fullname,
+                serie: solpedResult[0].serie,
+                doctype: solpedResult[0].doctype,
+                status: solpedResult[0].status,
+                sapdocnum: solpedResult[0].sapdocnum,
+                docdate: solpedResult[0].docdate,
+                docduedate: solpedResult[0].docduedate,
+                taxdate: solpedResult[0].taxdate,
+                reqdate: solpedResult[0].reqdate,
+                u_nf_depen_solped: solpedResult[0].u_nf_depen_solped,
+                approved: solpedResult[0].approved,
+                comments: solpedResult[0].comments,
+                trm: solpedResult[0].trm
+            };
+            let solpedDet = [];
+            for (let item of solpedResult) {
+                solpedDet.push({
+                    id_solped: item.id_solped,
+                    linenum: item.linenum,
+                    linestatus: item.linestatus,
+                    itemcode: item.itemcode,
+                    dscription: item.dscription,
+                    reqdatedet: item.reqdatedet,
+                    linevendor: item.linevendor,
+                    acctcode: item.acctcode,
+                    acctcodename: item.acctcodename,
+                    quantity: item.quantity,
+                    moneda: item.moneda,
+                    trm: item.trm,
+                    price: item.price,
+                    linetotal: item.linetotal,
+                    tax: item.tax,
+                    taxvalor: item.taxvalor,
+                    linegtotal: item.linegtotal,
+                    ocrcode: item.ocrcode,
+                    ocrcode2: item.ocrcode2,
+                    ocrcode3: item.ocrcode3,
+                    whscode: item.whscode,
+                    id_user: item.id_user
+                });
+            }
+            let solpedObject = {
+                solped,
+                solpedDet
+            };
+            return solpedObject;
+        });
+    }
+    getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const queryNextApprovedLine = `
+        SELECT *, MIN(nivel)
+        FROM ${bdmysql}.aprobacionsolped t0
+        WHERE id_solped = ${idSolped} AND estadoseccion = 'A' AND estadoap='P'
+        ORDER BY nivel ASC`;
+            console.log(queryNextApprovedLine);
+            const nextLineAprovedSolped = yield database_1.db.query(queryNextApprovedLine);
+            console.log(nextLineAprovedSolped, nextLineAprovedSolped.length, nextLineAprovedSolped[0].id);
+            let lineAprovedSolped;
+            if (nextLineAprovedSolped[0].id !== null) {
+                lineAprovedSolped = {
+                    autor: {
+                        fullname: nextLineAprovedSolped[0].nombreautor,
+                        email: nextLineAprovedSolped[0].emailautor,
+                    },
+                    aprobador: {
+                        fullname: nextLineAprovedSolped[0].nombreaprobador,
+                        email: nextLineAprovedSolped[0].emailaprobador,
+                        usersap: nextLineAprovedSolped[0].usersapaprobador,
+                    },
+                    infoSolped: {
+                        id_solped: idSolped,
+                        idlineap: nextLineAprovedSolped[0].id,
+                        bdmysql,
+                        companysap,
+                        logo
+                    }
+                };
+            }
+            else {
+                lineAprovedSolped = '';
+            }
+            console.log(lineAprovedSolped);
+            return lineAprovedSolped;
+        });
+    }
+    sendNotification(infoEmail) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //console.log(infoEmail);
+            let mailer = mailer_1.default.getTransporter();
+            (yield mailer).sendMail({
+                from: `"Notificaciones NitroPortal" <${mailer_1.default.emailsend}>`,
+                //to: infoEmail.to,
+                to: `ralbor@nitrofert.com.co`,
+                cc: `ralbor@nitrofert.com.co`,
+                //cc:infoEmail.cc,
+                subject: infoEmail.subject,
+                html: infoEmail.html,
+                headers: { 'x-myheader': 'test header' }
+            }, function (error, info) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (error) {
+                        console.log(error);
+                    }
+                    else {
+                        console.log("Email Send");
+                    }
+                });
+            });
+        });
+    }
+    testSendMail() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const transporter = yield mailer_1.default.getTransporter();
+            transporter.sendMail({
+                from: `"Notificaciones NitroPortal" <${mailer_1.default.emailsend}>`,
+                to: "ralbor@nitrofert.com.co",
+                subject: "Hello from nitrosap",
+                text: "Hello nitrosap?",
+                html: "<strong>Hello nitrosap?</strong>",
+                headers: { 'x-myheader': 'test header' }
+            });
+        });
+    }
+    DetalleAprobacionSolped(idSolped, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const detalleAprobacionSolped = yield database_1.db.query(`
+        SELECT *
+        FROM ${bdmysql}.aprobacionsolped t0
+        WHERE id_solped = ? AND estadoseccion = 'A' and estadoap !='P'
+        ORDER BY nivel ASC`, [idSolped]);
+            console.log((detalleAprobacionSolped));
+            return detalleAprobacionSolped;
+        });
+    }
+    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solpedDet = solped.solpedDet;
+            let subtotal = 0;
+            let totalimpuesto = 0;
+            let total = 0;
+            const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
+            let htmlDetalleAprobacion = '';
+            let lineaDetalleAprobacion = '';
+            if (detalleAprobacionSolped.length > 0) {
+                for (let item of detalleAprobacionSolped) {
+                    lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.estadoap === 'A' ? 'Aprobado' : 'Rechazado'}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.updated_at.toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+                }
+                htmlDetalleAprobacion = `<tr>
+                                        <td style="border:2px solid #000000; padding: 10px;">
+                                            <table align="center" style="width: 100%;">
+                                                <tr>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                    </td>
+                                                </tr>
+                                                ${lineaDetalleAprobacion}
+                                            </table>
+                                        </td>
+                                    </tr>`;
+            }
+            let lineaDetalleSolped = ``;
+            for (let item of solpedDet) {
+                subtotal = subtotal + item.linetotal;
+                totalimpuesto = totalimpuesto + item.taxvalor;
+                total = total + item.linegtotal;
+                lineaDetalleSolped = lineaDetalleSolped + `
+                                                    <tr>
+                                                        
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.linenum}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.dscription}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                                                        </td>
+                                                    </tr>
+            `;
+            }
+            let detalleSolped = `
+                                        <tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table style="width:100%; width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                    <tr style="background-color: #3dae2b; color:#454444;">
+                                                        
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Línea</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Descripción</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Cantidad</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Valor</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">TRM</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Subtotal línea</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Impuesto</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Total línea</span>
+                                                        </td>
+                                                    </tr>
+
+                                                    ${lineaDetalleSolped}
+
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            let bottonsAproved = "";
+            if (key !== '') {
+                bottonsAproved = `<table>
+                                    <tr>
+                                        <td><a href="http://localhost:3000/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
+                                        
+                                        <td><a href="http://localhost:3000/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>
+                                    </tr>
+                                </table>`;
+            }
+            const html = `<!DOCTYPE html>
+        <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="x-apple-disable-message-reformatting">
+            <title></title>
+            <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+            <![endif]-->
+            <body style="margin:0;padding:0;">
+                    <table role="presentation" style="width:100%;border-collapse:collapse;border-spacing:0;background:#ffffff;">
+                    <tr>
+                        <td align="center" style="padding:0;">
+                            <table role="presentation"
+                                style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+                                <tr>
+                                    <td align="center" style="padding:40px 0 30px 0;background:#ffffff;border:2px solid #000000">
+                                        <img src="${logo}" alt="" width="50%"  style="height:auto;display:block;" /> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:36px 30px 42px 30px;border:2px solid #000000">
+                                        <table
+                                            style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <h1>Solicitud de aprobación Solped ${solped.solped.id}</h1>
+                                                    <p> Hola ${LineAprovedSolped.aprobador.fullname} el usuario ${LineAprovedSolped.autor.fullname}
+                                                        ha solicitado la aprobación de la solped # ${solped.solped.id}
+                                                    </p>
+                                                    <p>
+                                                        A continuación podrá ver la información solped
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                        <tr>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Usuario solicitante</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.fullname}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Area solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.u_nf_depen_solped}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller;padding-left: 2px;">Calse solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.doctype === 'S' ? 'Servicio' : 'Articulo'}</span><br />
+                                                                
+                                                            </td>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.taxdate.toLocaleString()} - ${solped.solped.reqdate.toLocaleString()}</span><br />
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                    </table>
+                                                    <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Comentarios</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.comments}</span>
+                                                </td>
+                                            </tr>
+                                            ${detalleSolped}
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                        <table align="right">
+                                                            <tr>
+                                                                <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                                                            </tr>
+                                                        </table>
+                                                </td>
+                                            </tr>
+                                            ${htmlDetalleAprobacion}
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:30px;background:url(https://nitrofert.com.co/wp-content/uploads/2022/01/Fondo-home-nitrofert-3-2.jpg) repeat;border:2px solid #000000">
+                                        <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                            <tr>
+                                                <td style="padding:0;width:50%;" align="left">
+                                                    <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                                                </td>
+                                                <td style="padding:0;width:50%;" align="right">
+                                                    ${bottonsAproved}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            <style>
+                table, td, div, h1, p {font-family: Arial, sans-serif;}
+                
+            </style>
+        </head>
+        </html>`;
+            return html;
+        });
+    }
+    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solpedDet = solped.solpedDet;
+            let subtotal = 0;
+            let totalimpuesto = 0;
+            let total = 0;
+            const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
+            let htmlDetalleAprobacion = '';
+            let lineaDetalleAprobacion = '';
+            if (detalleAprobacionSolped.length > 0) {
+                for (let item of detalleAprobacionSolped) {
+                    lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.estadoap === 'A' ? 'Aprobado' : 'Rechazado'}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.updated_at.toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+                }
+                htmlDetalleAprobacion = `<tr>
+                                        <td style="border:2px solid #000000; padding: 10px;">
+                                            <table align="center" style="width: 100%;">
+                                                <tr>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                    </td>
+                                                </tr>
+                                                ${lineaDetalleAprobacion}
+                                            </table>
+                                        </td>
+                                    </tr>`;
+            }
+            let lineaDetalleSolped = ``;
+            for (let item of solpedDet) {
+                subtotal = subtotal + item.linetotal;
+                totalimpuesto = totalimpuesto + item.taxvalor;
+                total = total + item.linegtotal;
+                lineaDetalleSolped = lineaDetalleSolped + `
+                                                    <tr>
+                                                        
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.linenum}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.dscription}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                                                        </td>
+                                                    </tr>
+            `;
+            }
+            let detalleSolped = `
+                                        <tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table style="width:100%; width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                    <tr style="background-color: #3dae2b; color:#454444;">
+                                                        
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Línea</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Descripción</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Cantidad</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Valor</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">TRM</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Subtotal línea</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Impuesto</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Total línea</span>
+                                                        </td>
+                                                    </tr>
+
+                                                    ${lineaDetalleSolped}
+
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            let bottonsAproved = "";
+            if (key !== '') {
+                bottonsAproved = `<table>
+                                    <tr>
+                                        <td><a href="http://localhost:3000/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
+                                        
+                                        <td><a href="http://localhost:3000/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
+                                    </tr>
+                                </table>`;
+            }
+            const html = `<!DOCTYPE html>
+        <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="x-apple-disable-message-reformatting">
+            <title></title>
+            <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+            <![endif]-->
+            <body style="margin:0;padding:0;">
+                    <table role="presentation" style="width:100%;border-collapse:collapse;border-spacing:0;background:#ffffff;">
+                    <tr>
+                        <td align="center" style="padding:0;">
+                            <table role="presentation"
+                                style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+                                <tr>
+                                    <td align="center" style="padding:40px 0 30px 0;background:#ffffff;border:2px solid #000000">
+                                        <img src="${logo}" alt="" width="50%"  style="height:auto;display:block;" /> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:36px 30px 42px 30px;border:2px solid #000000">
+                                        <table
+                                            style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <h1>Notificación de aprobación  de solped # ${solped.solped.id}</h1>
+                                                    <p> Hola ${LineAprovedSolped.autor.fullname} el usuario ${LineAprovedSolped.aprobador.fullname}
+                                                        ha aprobado la solped # ${solped.solped.id} y se genero el documento # ${LineAprovedSolped.infoSolped.sapdocnum} en SAP
+                                                    </p>
+                                                    <p>
+                                                        A continuación podrá ver la información solped
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                        <tr>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Usuario solicitante</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.fullname}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Area solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.u_nf_depen_solped}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller;padding-left: 2px;">Calse solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.doctype === 'S' ? 'Servicio' : 'Articulo'}</span><br />
+                                                                
+                                                            </td>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.taxdate.toLocaleString()} - ${solped.solped.reqdate.toLocaleString()}</span><br />
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                    </table>
+                                                    <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Comentarios</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.comments}</span>
+                                                </td>
+                                            </tr>
+                                            ${detalleSolped}
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                        <table align="right">
+                                                            <tr>
+                                                                <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                                                            </tr>
+                                                        </table>
+                                                </td>
+                                            </tr>
+                                            ${htmlDetalleAprobacion}
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:30px;background:url(https://nitrofert.com.co/wp-content/uploads/2022/01/Fondo-home-nitrofert-3-2.jpg) repeat;border:2px solid #000000">
+                                        <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                            <tr>
+                                                <td style="padding:0;width:50%;" align="left">
+                                                    <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                                                </td>
+                                                <td style="padding:0;width:50%;" align="right">
+                                                    ${bottonsAproved}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            <style>
+                table, td, div, h1, p {font-family: Arial, sans-serif;}
+                
+            </style>
+        </head>
+        </html>`;
+            return html;
+        });
+    }
+    loadBodyMailRejectSolped(LineAprovedSolped, logo, solped) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const solpedDet = solped.solpedDet;
+            let subtotal = 0;
+            let totalimpuesto = 0;
+            let total = 0;
+            const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
+            let htmlDetalleAprobacion = '';
+            let lineaDetalleAprobacion = '';
+            if (detalleAprobacionSolped.length > 0) {
+                for (let item of detalleAprobacionSolped) {
+                    lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.estadoap === 'A' ? 'Aprobado' : 'Rechazado'}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.updated_at.toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+                }
+                htmlDetalleAprobacion = `<tr>
+                                        <td style="border:2px solid #000000; padding: 10px;">
+                                            <table align="center" style="width: 100%;">
+                                                <tr>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                    </td>
+                                                    <td>
+                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                    </td>
+                                                </tr>
+                                                ${lineaDetalleAprobacion}
+                                            </table>
+                                        </td>
+                                    </tr>`;
+            }
+            let lineaDetalleSolped = ``;
+            for (let item of solpedDet) {
+                subtotal = subtotal + item.linetotal;
+                totalimpuesto = totalimpuesto + item.taxvalor;
+                total = total + item.linegtotal;
+                lineaDetalleSolped = lineaDetalleSolped + `
+                                                    <tr>
+                                                        
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.linenum}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.dscription}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                                                        </td>
+                                                    </tr>
+            `;
+            }
+            let detalleSolped = `
+                                        <tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table style="width:100%; width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                    <tr style="background-color: #3dae2b; color:#454444;">
+                                                        
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Línea</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Descripción</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Cantidad</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Valor</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">TRM</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Subtotal línea</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Impuesto</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Total línea</span>
+                                                        </td>
+                                                    </tr>
+
+                                                    ${lineaDetalleSolped}
+
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            const html = `<!DOCTYPE html>
+        <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="x-apple-disable-message-reformatting">
+            <title></title>
+            <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+            <![endif]-->
+            <body style="margin:0;padding:0;">
+                    <table role="presentation" style="width:100%;border-collapse:collapse;border-spacing:0;background:#ffffff;">
+                    <tr>
+                        <td align="center" style="padding:0;">
+                            <table role="presentation"
+                                style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+                                <tr>
+                                    <td align="center" style="padding:40px 0 30px 0;background:#ffffff;border:2px solid #000000">
+                                        <img src="${logo}" alt="" width="50%"  style="height:auto;display:block;" /> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:36px 30px 42px 30px;border:2px solid #000000">
+                                        <table
+                                            style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <h1>Notificación de rechazo solped # ${solped.solped.id}</h1>
+                                                    <p> Hola ${LineAprovedSolped.autor.fullname} el usuario ${LineAprovedSolped.aprobador.fullname}
+                                                        ha rechazado la solicitud de aprobación de la solped # ${solped.solped.id}
+                                                    </p>
+                                                    <p>
+                                                        ${LineAprovedSolped.infoSolped.comments}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                        <tr>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Usuario solicitante</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.fullname}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Area solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.u_nf_depen_solped}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller;padding-left: 2px;">Calse solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.doctype === 'S' ? 'Servicio' : 'Articulo'}</span><br />
+                                                                
+                                                            </td>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.taxdate.toLocaleString()} - ${solped.solped.reqdate.toLocaleString()}</span><br />
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                    </table>
+                                                    <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Comentarios</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.comments}</span>
+                                                </td>
+                                            </tr>
+                                            ${detalleSolped}
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                        <table align="right">
+                                                            <tr>
+                                                                <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                                                            </tr>
+                                                        </table>
+                                                </td>
+                                            </tr>
+                                            ${htmlDetalleAprobacion}
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:30px;background:url(https://nitrofert.com.co/wp-content/uploads/2022/01/Fondo-home-nitrofert-3-2.jpg) repeat;border:2px solid #000000">
+                                        <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                            <tr>
+                                                <td style="padding:0;width:50%;" align="left">
+                                                    <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                                                </td>
+                                                <td style="padding:0;width:50%;" align="right">
+                                                   
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            <style>
+                table, td, div, h1, p {font-family: Arial, sans-serif;}
+                
+            </style>
+        </head>
+        </html>`;
+            return html;
+        });
+    }
+    registerSolpedSAP(infoUsuario, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests`;
+                    const configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
         });
     }
 }

@@ -36,33 +36,42 @@ class ConfigController{
        
        
             
-       const  menu:MenuInterface[] =  await db.query(sql);
-       let menupadres:MenuInterface[] = menu.filter(opcion => opcion.hierarchy=='P');
-       let menuhijos:MenuInterface[] = menu.filter(opcion => opcion.hierarchy=='H');
-       let menuportal:any[]=[{
-            label: 'Inicio',
-            items: [
-                { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/portal'] }
-            ]
-       }];
-       let items:any[];
+       
 
-       for(let opcionMenuPadre of menupadres ){
-            items=[];
-            for(let opcionMenuHijo of menuhijos ){
-                if(opcionMenuPadre.id == opcionMenuHijo.iddad){
-                    items.push({label: opcionMenuHijo.title, icon:opcionMenuHijo.icon, routerLink: [opcionMenuHijo.url]});
-                }
+       try {
+
+            const  menu:MenuInterface[] =  await db.query(sql);
+            let menupadres:MenuInterface[] = menu.filter(opcion => opcion.hierarchy=='P');
+            let menuhijos:MenuInterface[] = menu.filter(opcion => opcion.hierarchy=='H');
+            let menuportal:any[]=[{
+                    label: 'Inicio',
+                    items: [
+                        { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/portal'] }
+                    ]
+            }];
+            let items:any[];
+
+            for(let opcionMenuPadre of menupadres ){
+                    items=[];
+                    for(let opcionMenuHijo of menuhijos ){
+                        if(opcionMenuPadre.id == opcionMenuHijo.iddad){
+                            items.push({label: opcionMenuHijo.title, icon:opcionMenuHijo.icon, routerLink: [opcionMenuHijo.url]});
+                        }
+                    }
+                    menuportal.push({
+                        label: opcionMenuPadre.title,
+                        items:items
+                    });
             }
-            menuportal.push({
-                label: opcionMenuPadre.title,
-                items:items
-            });
-       }
 
-       console.log(menuportal);
+            console.log(menuportal);
 
-       res.json(menuportal);
+            res.json(menuportal);
+
+        }catch (error: any) {
+            console.error(error);
+                res.json(error);
+        }
     }
 
     

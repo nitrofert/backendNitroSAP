@@ -16,6 +16,7 @@ export interface PermisosInterface {
     create_accion?: number;
     update_accion?: number;
     delete_accion?: number;
+    aproved_accion?: number;
     id_menu?:number;
     id_perfil?: number;
 }
@@ -24,6 +25,8 @@ export enum Perfil {
     Administrador = "Administrador",
     AsitenteDeCompras = "Asitente de compras",
 }
+
+
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
