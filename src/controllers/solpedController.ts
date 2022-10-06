@@ -247,7 +247,7 @@ class SolpedController {
                 newSolpedLine = [];
             }
 
-            //console.log(newSolpedDet);
+            console.log(newSolpedDet);
             let queryInsertDetSolped = `
                Insert into ${bdmysql}.solped_det (id_solped,linenum,itemcode,dscription,reqdatedet,linevendor,
                 acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
@@ -272,6 +272,41 @@ class SolpedController {
 
 
 
+    }
+
+    public async cancelacionSolped(req: Request, res: Response) {
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken: DecodeTokenInterface = await helper.validateToken(jwt);
+        //******************************************************* */
+        const infoUsuario: InfoUsuario = decodedToken.infoUsuario;
+        const bdmysql = infoUsuario.bdmysql
+        const compania = infoUsuario.dbcompanysap;
+        //Obtener array de id de solped seleccionadas
+        const arraySolpedId = req.body;
+
+        console.log(arraySolpedId);
+        let connection = await db.getConnection();
+        await connection.beginTransaction();
+        try {
+
+            for (let id of arraySolpedId) {
+                let queryUpdateSolped = `UPDATE ${bdmysql}.solped t0 set t0.approved = 'C', t0.status='C' where t0.id in (?)`;
+                const result = await connection.query(queryUpdateSolped, [id]);
+            }
+
+            connection.commit();
+
+            res.json({ status: "ok", message: `Las solicitudes ${arraySolpedId} seeccionadas fueron canceladas.` });
+        
+        } catch (err) {
+            // Print errors
+            console.log(err);
+            // Roll back the transaction
+            connection.rollback();
+            res.json({ status: "error", message: err });
+        } 
     }
 
     public async envioAprobacionSolped(req: Request, res: Response) {
@@ -312,7 +347,7 @@ class SolpedController {
                 let pos_next_quote = data2[item].query.indexOf(`'`, pos_quote + 1);
                 let area = data2[item].query.substring(pos_quote + 1, pos_next_quote);
                 let numeric = data2[item].query.indexOf(`(19,6)`) + '(19,6)'.length + 1;
-                let condicion = data2[item].query.substring(numeric, data2[item].query.length);
+                let condicion = data2[item].query.substring(numeric, data2[item].query.length);  
                 data2[item].area = area;
                 data2[item].condicion = condicion;
                 arrayModelos.push(data2[item]);
@@ -355,8 +390,9 @@ class SolpedController {
                                         WHERE t0.id = ${id}
                                         HAVING total ${modelo.condicion}`;
 
-                        //console.log(queryModelo);
+                        console.log(queryModelo);
                         const result = await db.query(queryModelo);
+                        console.log(result.length);
                         //Si el resultado de la consulta es mayo a cero se toma el id del modelo valido
                         if (result.length > 0) {
                             modeloid = modelo.modeloid;
@@ -485,34 +521,37 @@ class SolpedController {
         let arrayAproved:any[] = [];
         try {
             await connection.beginTransaction();
-
+            //Recorrer array de id de solped a aprobar
             for (let idSolped of arraySolpedId) {
+
+                //Obtener la informacipn de la solped ppor id
                 Solped = await helper.getSolpedById(idSolped,bdmysql);
 
-                //Consulta de liena de aprobación 
+                //Consulta de liena de aprobación del usaurio aprobador
                 let queryLineaAprobacion = `Select * 
                                             from ${bdmysql}.aprobacionsolped t0 
                                             where t0.id_solped = ${idSolped} and 
                                                   t0.usersapaprobador ='${infoUsuario.codusersap}' and 
                                                   t0.estadoseccion='A'`;
                 console.log(queryLineaAprobacion);
-                let resultLineaAprobacion = await db.query(queryLineaAprobacion);
+                let resultLineaAprobacion = await connection.query(queryLineaAprobacion);
                 console.log(resultLineaAprobacion);
 
                 //Validar el estado de la linea de aprobación
                 if(resultLineaAprobacion[0].estadoap === 'P'){
                     //realiza el proceso de actualización de la linea de aprobacion  
                     let queryUpdateLineAproved = `Update ${bdmysql}.aprobacionsolped t0 Set t0.estadoap = 'A', t0.updated_at= CURRENT_TIMESTAMP where t0.id = ?`;
-                    let resultUpdateLineAproved = await db.query(queryUpdateLineAproved,[resultLineaAprobacion[0].id]);
+                    let resultUpdateLineAproved = await connection.query(queryUpdateLineAproved,[resultLineaAprobacion[0].id]);
                     //console.log(resultUpdateLineAproved);
                     //Obtener información del proximo aprobador
-                    let LineAprovedSolped:any = await helper.getNextLineAprovedSolped(idSolped, bdmysql,compania,logo);
+                    let LineAprovedSolped:any = await helper.getNextLineAprovedSolped(idSolped, bdmysql,compania,logo, resultLineaAprobacion[0].id);
+                    console.log(LineAprovedSolped);
                     if(LineAprovedSolped!=''){
                         
                         let aprobadorCrypt = await helper.generateToken(LineAprovedSolped,'240h');
                         console.log(aprobadorCrypt);
                         
-                        const html:string = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt);
+                        const html:string = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt,true);
                     
                         //Obtener datos de la solped a aprobar para notificación
                         
@@ -526,7 +565,7 @@ class SolpedController {
                         await helper.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);
-                        arrayAproved.push({idSolped,messageSolped});
+                        arrayAproved.push({idSolped,messageSolped,infoEmail});
                     }else{
                         
                         LineAprovedSolped =  {
@@ -549,67 +588,9 @@ class SolpedController {
                             }
                         };
                         console.log(LineAprovedSolped);
+
                         //Generar data para registro de la solped en SAP
-                        let DocumentLines:DocumentLine[] =[];
-                        let DocumentLine:DocumentLine;
-
-                        console.log(Solped);
-                        for(let item of Solped.solpedDet){
-                            DocumentLine={
-                                LineNum:item.linenum,
-                                Currency:item.trm===1?'$':item.moneda,
-                                //Rate: item.trm,
-                                ItemDescription:item.dscription,
-                                RequiredDate:item.reqdatedet,
-                                Quantity:item.quantity,
-                                Price:item.price,
-                                //LineTotal:item.linetotal,
-                                //GrossTotal:item.linegtotal,
-                                TaxCode:item.tax,
-                                CostingCode:item.ocrcode,
-                                CostingCode2:item.ocrcode2,
-                                CostingCode3:item.ocrcode3,
-                                WarehouseCode:item.whscode!==''?item.whscode:'SM_N300'
-                            };
-
-                            if(item.itemcode!==''){
-                                DocumentLine.ItemCode = item.itemcode;
-                            }
-                            if(item.linevendor!==''){
-                                DocumentLine.LineVendor = item.linevendor;
-                            }
-                            if(item.acctcode!==''){
-                                DocumentLine.AccountCode = item.acctcode;
-                            }
-                            if(item.whscode===''){
-                                if(Solped.solped.serie==='SPB'){
-                                    DocumentLine.WarehouseCode = 'SM_N300';
-                                }
-                            }else{
-                                DocumentLine.WarehouseCode = item.whscode;
-                            }
-
-                            DocumentLines.push(DocumentLine);
-                        }
-                            let dataForSAP:PurchaseRequestsInterface = {
-                                Requester:Solped.solped.usersap,
-                                RequesterName:Solped.solped.fullname,
-                                U_NF_DEPEN_SOLPED:Solped.solped.u_nf_depen_solped,
-                                DocType:Solped.solped.doctype,
-                                Series:Solped.solped.serie,
-                                DocDate: Solped.solped.docdate,
-                                DocDueDate:Solped.solped.docduedate,
-                                TaxDate:Solped.solped.taxdate,
-                                RequriedDate:Solped.solped.reqdate,
-                                
-                                //DocRate: Solped.solped.trm,
-                                Comments:Solped.solped.comments,
-                                //JournalMemo:Solped.solped.comments,
-                                DocumentLines
-                        
-                            };
-    
-                            console.log(JSON.stringify(dataForSAP));
+                        let dataForSAP:PurchaseRequestsInterface = await helper.loadInfoSolpedToJSONSAP(Solped);
 
                             //registrar Solped en SAP
                             const resultResgisterSAP = await helper.registerSolpedSAP(infoUsuario,dataForSAP);
@@ -622,11 +603,30 @@ class SolpedController {
                                 console.log(resultResgisterSAP.DocNum);
                                 LineAprovedSolped.infoSolped.sapdocnum = resultResgisterSAP.DocNum;
                                 console.log(LineAprovedSolped);
+
+                                //Actualizar solpedSAP
+                                let docEntry = resultResgisterSAP.DocEntry;
+                                let dataUpdateSolpedSAP = {
+                                    U_AUTOR_PORTAL:Solped.solped.usersap,
+                                    DocumentLines:[
+                                        {
+                                            U_ID_PORTAL:idSolped,
+                                            U_NF_NOM_AUT_PORTAL:Solped.solped.usersap
+                                        }
+                                    ]
+                                }
+                                console.log(dataUpdateSolpedSAP);
+                                console.log(JSON.stringify(dataUpdateSolpedSAP));
+                                //let resultUpdateSopledSAP = await helper.updateSolpedSAP(infoUsuario,dataUpdateSolpedSAP,docEntry);
+
                                 //Actualizar  sapdocnum, estado de aprobacion y de solped
                                 let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C'  where t0.id = ?`;
-                                let resultUpdateSolpedAproved = await db.query(queryUpdateSolpedAproved,[idSolped]);
-    
-                                const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'');
+                                let resultUpdateSolpedAproved = await connection.query(queryUpdateSolpedAproved,[idSolped]);
+
+                                //Registrar proceso de aprobacion solped en SAP
+                                let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario,bdmysql,idSolped,resultResgisterSAP.DocNum);
+
+                                const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',true);
                         
                                 //Obtener datos de la solped a aprobar para notificación
                                 
@@ -640,13 +640,9 @@ class SolpedController {
                                 await helper.sendNotification(infoEmail);
                                 messageSolped = `La solped ${idSolped} fue aprobada y registrada en SAP satisfactoriamente con el numero ${resultResgisterSAP.DocNum}`;
                                 console.log(messageSolped);
-                                arrayAproved.push({idSolped,messageSolped});
+                                arrayAproved.push({idSolped,messageSolped,infoEmail});
 
                             } 
-
-
-                        
-
 
                     }
                 }else{
@@ -692,7 +688,7 @@ class SolpedController {
     }
 
 
-    public async aproved(req: Request, res: Response) {
+    public async aprovedMail(req: Request, res: Response) {
 
         const { idcrypt } = req.params
         let connection = await db.getConnection();
@@ -710,11 +706,13 @@ class SolpedController {
             const id = lineaAprobacion.infoSolped.idlineap;
             const logo = lineaAprobacion.infoSolped.logo;
             let messageSolped = "";
+
             //Obtener datos de la solped segun id
             let Solped = await helper.getSolpedById(idSolped, bdmysql);
-            //Consulta de liena de aprobación 
+            
+            //Consulta de liena de aprobación por id de aprobacion
             let queryLineaAprobacion = `Select * from ${lineaAprobacion.infoSolped.bdmysql}.aprobacionsolped t0 where t0.id = ?`;
-            let resultLineaAprobacion = await db.query(queryLineaAprobacion,[id]);
+            let resultLineaAprobacion = await connection.query(queryLineaAprobacion,[id]);
 
             //console.log(resultLineaAprobacion);
 
@@ -722,19 +720,15 @@ class SolpedController {
             if(resultLineaAprobacion[0].estadoap === 'P'){
                 //realiza el proceso de actualización de la linea de aprobacion  
                 let queryUpdateLineAproved = `Update ${bdmysql}.aprobacionsolped t0 Set t0.estadoap = 'A', t0.updated_at= CURRENT_TIMESTAMP where t0.id = ?`;
-                let resultUpdateLineAproved = await db.query(queryUpdateLineAproved,[id]);
-                //console.log(resultUpdateLineAproved);
+                let resultUpdateLineAproved = await connection.query(queryUpdateLineAproved,[id]);
 
                 //Obtener información del proximo aprobador
-                let LineAprovedSolped:any = await helper.getNextLineAprovedSolped(idSolped, bdmysql,compania,logo);
+                let LineAprovedSolped:any = await helper.getNextLineAprovedSolped(idSolped, bdmysql,compania,logo,resultLineaAprobacion[0].id);
                     //verifica si existe otra linea de aprobación si existe envia notificacion al siguiente aprobador si no envia la solped a SAP
                     if(LineAprovedSolped!=''){
                         
                         let aprobadorCrypt = await helper.generateToken(LineAprovedSolped,'240h');
-                        console.log(aprobadorCrypt);
-                        
-                        const html:string = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt);
-                    
+                        const html:string = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt,true);
                         //Obtener datos de la solped a aprobar para notificación
                         
                         let infoEmail:any = {
@@ -753,70 +747,7 @@ class SolpedController {
                         LineAprovedSolped = lineaAprobacion;
                         console.log(LineAprovedSolped);
                         //Generar data para registro de la solped en SAP
-                        let DocumentLines:DocumentLine[] =[];
-                        let DocumentLine:DocumentLine;
-
-                        console.log(Solped.solpedDet);
-                        
-                        for(let item of Solped.solpedDet){
-                            DocumentLine={
-                                LineNum:item.linenum,
-                                Currency:item.trm===1?'$':item.moneda,
-                                //Rate: item.trm,
-                                ItemDescription:item.dscription,
-                                RequiredDate:item.reqdatedet,
-                                Quantity:item.quantity,
-                                Price:item.price,
-                                //LineTotal:item.linetotal,
-                                //GrossTotal:item.linegtotal,
-                                TaxCode:item.tax,
-                                CostingCode:item.ocrcode,
-                                CostingCode2:item.ocrcode2,
-                                CostingCode3:item.ocrcode3,
-                                WarehouseCode:item.whscode!==''?item.whscode:'SM_N300'
-                            };
-
-                            if(item.itemcode!==''){
-                                DocumentLine.ItemCode = item.itemcode;
-                            }
-                            if(item.linevendor!==''){
-                                DocumentLine.LineVendor = item.linevendor;
-                            }
-                            if(item.acctcode!==''){
-                                DocumentLine.AccountCode = item.acctcode;
-                            }
-                            if(item.whscode===''){
-                                if(Solped.solped.serie==='SPB'){
-                                    DocumentLine.WarehouseCode = 'SM_N300';
-                                }
-                            }else{
-                                DocumentLine.WarehouseCode = item.whscode;
-                            }
-
-                            DocumentLines.push(DocumentLine);
-                        }
-
-                        let dataForSAP:PurchaseRequestsInterface = {
-                            Requester:Solped.solped.usersap,
-                            RequesterName:Solped.solped.fullname,
-                            U_NF_DEPEN_SOLPED:Solped.solped.u_nf_depen_solped,
-                            DocType:Solped.solped.doctype,
-                            Series:Solped.solped.serie,
-                            DocDate: Solped.solped.docdate,
-                            DocDueDate:Solped.solped.docduedate,
-                            TaxDate:Solped.solped.taxdate,
-                            RequriedDate:Solped.solped.reqdate,
-                            
-                            //DocRate: Solped.solped.trm,
-                            Comments:Solped.solped.comments,
-                            //JournalMemo:Solped.solped.comments,
-                            DocumentLines
-                    
-                        };
-
-                        console.log(JSON.stringify(dataForSAP));
-
-                       
+                        let dataForSAP:PurchaseRequestsInterface = await helper.loadInfoSolpedToJSONSAP(Solped);
 
                         const infoUsuario:InfoUsuario = {
                             bdmysql,
@@ -843,17 +774,35 @@ class SolpedController {
                             //return res.json(resultResgisterSAP.error.message.value);
                             return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${resultResgisterSAP.error.message.value}`);
                         } else {
-                            console.log(resultResgisterSAP.DocNum);
+                            console.log(resultResgisterSAP.DocEntry,resultResgisterSAP.DocNum);
                             LineAprovedSolped.infoSolped.sapdocnum = resultResgisterSAP.DocNum;
+
+                            //Actualizar solpedSAP
+                            let docEntry = resultResgisterSAP.DocEntry;
+                            let dataUpdateSolpedSAP = {
+                                U_AUTOR_PORTAL:Solped.solped.usersap,
+                                DocumentLines:[
+                                    {
+                                        U_NF_NOM_AUT_PORTAL:Solped.solped.usersap,
+                                        U_ID_PORTAL:idSolped
+                                    }
+                                ]
+                            }
+                            console.log(dataUpdateSolpedSAP);
+                            console.log(JSON.stringify(dataUpdateSolpedSAP));
+                            //let resultUpdateSopledSAP = await helper.updateSolpedSAP(infoUsuario,dataUpdateSolpedSAP,docEntry);
+
+
                             console.log(LineAprovedSolped);
                             //Actualizar  sapdocnum, estado de aprobacion y de solped
                             let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C'  where t0.id = ?`;
-                            let resultUpdateSolpedAproved = await db.query(queryUpdateSolpedAproved,[idSolped]);
+                            let resultUpdateSolpedAproved = await connection.query(queryUpdateSolpedAproved,[idSolped]);
 
-                            const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'');
-                    
+                            //Registrar proceso de aprobacion solped en SAP
+                            let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario,bdmysql,idSolped,resultResgisterSAP.DocNum);
+
                             //Obtener datos de la solped a aprobar para notificación
-                            
+                            const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',true);
                             let infoEmail:any = {
                                 to: LineAprovedSolped.autor.email,
                                 cc:LineAprovedSolped.aprobador.email,
@@ -1055,10 +1004,10 @@ class SolpedController {
                     subject: `Notificacion de rechazo Solped ${idSolped}`,
                     html
                 }
-                console.log(infoEmail);
+                //console.log(infoEmail);
                 await helper.sendNotification(infoEmail);
                 connection.commit();
-                res.json([{ status: "ok", message: "La solicitud de pedido # "+idSolped+" fue rechazada" }]);
+                res.json([{ status: "ok", message: `La solicitud de pedido # ${idSolped} fue rechazada` }]);
 
             }else{
                 console.log("error rject ya fue rechazada");

@@ -18,6 +18,11 @@ class WsSAPRoutes {
         this.router.get('/Xengine/items', wssapController_1.default.itemsXengine);
         this.router.get('/Xengine/monedas/:fechaTrm', wssapController_1.default.monedasXengine);
         this.router.get('/Xengine/aprobaciones', wssapController_1.default.AprobacionesXE);
+        this.router.get('/Xengine/cuentas', wssapController_1.default.CuentasXE);
+        this.router.get('/Xengine/series/:objtype?', wssapController_1.default.SeriesXE);
+        this.router.get('/Xengine/ordenes-open-usuario', wssapController_1.default.OrdenesUsuarioXE);
+        this.router.get('/Xengine/ordenes-open-usuario-sl', wssapController_1.default.OrdenesUsuarioSL);
+        this.router.get('/Xengine/pedido/:pedido', wssapController_1.default.PedidoByIdSL);
     }
 }
 const wssapRoutes = new WsSAPRoutes();

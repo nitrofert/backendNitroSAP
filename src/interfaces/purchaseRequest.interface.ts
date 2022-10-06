@@ -344,6 +344,7 @@ export interface PurchaseRequestsInterface {
     TaxExtension?:                              TaxExtension;
     AddressExtension?:                          AddressExtension;
     DocumentReferences?:                        any[];
+    U_AUTOR_PORTAL: string; 
 }
 
 export interface AddressExtension {
@@ -652,6 +653,8 @@ export interface DocumentLine {
     U_NF_ACUERDO?:                         null;
     LineTaxJurisdictions?:                 any[];
     DocumentLineAdditionalExpenses?:       any[];
+    U_ID_PORTAL?:   any;
+    U_NF_NOM_AUT_PORTAL?:string;
 }
 
 export interface TaxExtension {

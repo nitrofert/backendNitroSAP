@@ -18,6 +18,7 @@ const permisoRoutes_1 = __importDefault(require("./routes/permisoRoutes"));
 const solpedRoutes_1 = __importDefault(require("./routes/solpedRoutes"));
 const wssapRoutes_1 = __importDefault(require("./routes/wssapRoutes"));
 const sharedFunctionsRoutes_1 = __importDefault(require("./routes/sharedFunctionsRoutes"));
+const entradaRoutes_1 = __importDefault(require("./routes/entradaRoutes"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -45,6 +46,7 @@ class Server {
         this.app.use('/api/perfiles/', perfilesRoutes_1.default);
         this.app.use('/api/permisos/', permisoRoutes_1.default);
         this.app.use('/api/compras/solped', solpedRoutes_1.default);
+        this.app.use('/api/compras/entrada', entradaRoutes_1.default);
         this.app.use('/api/wssap', wssapRoutes_1.default);
         this.app.use('/api/shared/functions', sharedFunctionsRoutes_1.default);
     }

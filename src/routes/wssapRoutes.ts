@@ -17,6 +17,13 @@ class WsSAPRoutes{
         this.router.get('/Xengine/items', wssapController.itemsXengine);
         this.router.get('/Xengine/monedas/:fechaTrm', wssapController.monedasXengine);
         this.router.get('/Xengine/aprobaciones', wssapController.AprobacionesXE);
+        this.router.get('/Xengine/cuentas', wssapController.CuentasXE);
+        this.router.get('/Xengine/series/:objtype?', wssapController.SeriesXE);
+        this.router.get('/Xengine/ordenes-open-usuario', wssapController.OrdenesUsuarioXE);
+        this.router.get('/Xengine/ordenes-open-usuario-sl', wssapController.OrdenesUsuarioSL);
+        this.router.get('/Xengine/pedido/:pedido', wssapController.PedidoByIdSL);
+
+
        
     }
 }

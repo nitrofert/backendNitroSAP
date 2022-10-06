@@ -15,11 +15,12 @@ class SolpedRoutes{
         this.router.put('/', solpedController.update);
         this.router.get('/:id',solpedController.getSolpedById); 
         this.router.post('/envio-aprobacion',solpedController.envioAprobacionSolped);
-        this.router.get('/aprobar/:idcrypt',solpedController.aproved);  
+        this.router.get('/aprobar/:idcrypt',solpedController.aprovedMail);  
         this.router.get('/rechazar/:idcrypt',solpedController.reject);
         this.router.put('/rechazar',solpedController.rejectSolped);
         this.router.post('/aprobacion',solpedController.aproved_portal);
         this.router.get('/aprobaciones/:id',solpedController.listAprobaciones);  
+        this.router.post('/cancelacion',solpedController.cancelacionSolped);
 
     }
 }

@@ -236,18 +236,23 @@ class Helpers {
             return solpedObject;
         });
     }
-    getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo) {
+    getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo, idLinea) {
         return __awaiter(this, void 0, void 0, function* () {
+            let condicionLinea = "";
+            if (idLinea)
+                condicionLinea = ` and t0.id!=${idLinea}`;
             const queryNextApprovedLine = `
-        SELECT *, MIN(nivel)
+        SELECT *
         FROM ${bdmysql}.aprobacionsolped t0
-        WHERE id_solped = ${idSolped} AND estadoseccion = 'A' AND estadoap='P'
+        WHERE t0.id_solped = ${idSolped} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
         ORDER BY nivel ASC`;
             console.log(queryNextApprovedLine);
             const nextLineAprovedSolped = yield database_1.db.query(queryNextApprovedLine);
-            console.log(nextLineAprovedSolped, nextLineAprovedSolped.length, nextLineAprovedSolped[0].id);
+            console.log(nextLineAprovedSolped);
+            console.log(nextLineAprovedSolped.length);
+            //console.log(nextLineAprovedSolped[0].id);
             let lineAprovedSolped;
-            if (nextLineAprovedSolped[0].id !== null) {
+            if (nextLineAprovedSolped.length > 0) {
                 lineAprovedSolped = {
                     autor: {
                         fullname: nextLineAprovedSolped[0].nombreautor,
@@ -315,7 +320,23 @@ class Helpers {
     DetalleAprobacionSolped(idSolped, bdmysql) {
         return __awaiter(this, void 0, void 0, function* () {
             const detalleAprobacionSolped = yield database_1.db.query(`
-        SELECT *
+        SELECT t0.id,
+               t0.id_solped,
+               t0.iduserautor, 
+               t0.usersapautor, 
+               t0.emailautor, 
+               t0.nombreautor,
+               t0.area,
+               t0.condicion,
+               t0.usersapaprobador,
+               t0.emailaprobador,
+               t0.nombreaprobador,
+               t0.nivel,
+               t0.estadoap,
+               t0.estadoseccion,
+               t0.created_at,
+               t0.updated_at,
+               t0.comments
         FROM ${bdmysql}.aprobacionsolped t0
         WHERE id_solped = ? AND estadoseccion = 'A' and estadoap !='P'
         ORDER BY nivel ASC`, [idSolped]);
@@ -323,7 +344,7 @@ class Helpers {
             return detalleAprobacionSolped;
         });
     }
-    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key) {
+    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
             let subtotal = 0;
@@ -332,9 +353,9 @@ class Helpers {
             const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
             let htmlDetalleAprobacion = '';
             let lineaDetalleAprobacion = '';
-            if (detalleAprobacionSolped.length > 0) {
-                for (let item of detalleAprobacionSolped) {
-                    lineaDetalleAprobacion = lineaDetalleAprobacion + `
+            //if (detalleAprobacionSolped.length > 0) {
+            for (let item of detalleAprobacionSolped) {
+                lineaDetalleAprobacion = lineaDetalleAprobacion + `
                                             <tr>
                                                 <td>
                                                     <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
@@ -347,26 +368,41 @@ class Helpers {
                                                 </td>
                                             </tr>
                 `;
-                }
-                htmlDetalleAprobacion = `<tr>
-                                        <td style="border:2px solid #000000; padding: 10px;">
-                                            <table align="center" style="width: 100%;">
-                                                <tr>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
-                                                    </td>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
-                                                    </td>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
-                                                    </td>
-                                                </tr>
-                                                ${lineaDetalleAprobacion}
-                                            </table>
-                                        </td>
-                                    </tr>`;
             }
+            lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${LineAprovedSolped.aprobador.fullname}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">Aprobado</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${new Date().toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+            if (accionAprobacion) {
+                htmlDetalleAprobacion = `<tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table align="center" style="width: 100%;">
+                                                    <tr>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                        </td>
+                                                    </tr>
+                                                    ${lineaDetalleAprobacion}
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            }
+            //}
             let lineaDetalleSolped = ``;
             for (let item of solpedDet) {
                 subtotal = subtotal + item.linetotal;
@@ -570,7 +606,7 @@ class Helpers {
             return html;
         });
     }
-    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key) {
+    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
             let subtotal = 0;
@@ -579,9 +615,9 @@ class Helpers {
             const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
             let htmlDetalleAprobacion = '';
             let lineaDetalleAprobacion = '';
-            if (detalleAprobacionSolped.length > 0) {
-                for (let item of detalleAprobacionSolped) {
-                    lineaDetalleAprobacion = lineaDetalleAprobacion + `
+            //if (detalleAprobacionSolped.length > 0) {
+            for (let item of detalleAprobacionSolped) {
+                lineaDetalleAprobacion = lineaDetalleAprobacion + `
                                             <tr>
                                                 <td>
                                                     <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
@@ -594,26 +630,41 @@ class Helpers {
                                                 </td>
                                             </tr>
                 `;
-                }
-                htmlDetalleAprobacion = `<tr>
-                                        <td style="border:2px solid #000000; padding: 10px;">
-                                            <table align="center" style="width: 100%;">
-                                                <tr>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
-                                                    </td>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
-                                                    </td>
-                                                    <td>
-                                                        <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
-                                                    </td>
-                                                </tr>
-                                                ${lineaDetalleAprobacion}
-                                            </table>
-                                        </td>
-                                    </tr>`;
             }
+            lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${LineAprovedSolped.aprobador.fullname}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">Aprobado</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${new Date().toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+            if (accionAprobacion) {
+                htmlDetalleAprobacion = `<tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table align="center" style="width: 100%;">
+                                                    <tr>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                        </td>
+                                                    </tr>
+                                                    ${lineaDetalleAprobacion}
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            }
+            //}
             let lineaDetalleSolped = ``;
             for (let item of solpedDet) {
                 subtotal = subtotal + item.linetotal;
@@ -1054,13 +1105,360 @@ class Helpers {
             return html;
         });
     }
+    loadInfoSolpedToJSONSAP(Solped) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let dataSolopedJSONSAP;
+            let DocumentLines = [];
+            let DocumentLine;
+            for (let item of Solped.solpedDet) {
+                DocumentLine = {
+                    LineNum: item.linenum,
+                    //Currency:item.trm===1?'$':item.moneda,
+                    Currency: item.moneda === 'COP' ? '$' : item.moneda,
+                    //Rate: item.trm,
+                    ItemDescription: item.dscription,
+                    RequiredDate: item.reqdatedet,
+                    //LineTotal:item.linetotal,
+                    //GrossTotal:item.linegtotal,
+                    TaxCode: item.tax,
+                    CostingCode: item.ocrcode,
+                    CostingCode2: item.ocrcode2,
+                    CostingCode3: item.ocrcode3,
+                    WarehouseCode: item.whscode !== '' ? item.whscode : 'SM_N300'
+                };
+                if (item.itemcode !== '') {
+                    DocumentLine.ItemCode = item.itemcode;
+                }
+                if (item.linevendor !== '') {
+                    DocumentLine.LineVendor = item.linevendor;
+                }
+                if (item.acctcode !== '') {
+                    DocumentLine.AccountCode = item.acctcode;
+                }
+                if (item.whscode === '') {
+                    if (Solped.solped.serie === 'SPB') {
+                        DocumentLine.WarehouseCode = 'SM_N300';
+                    }
+                }
+                else {
+                    DocumentLine.WarehouseCode = item.whscode;
+                }
+                if (Solped.solped.doctype == 'S') {
+                    DocumentLine.LineTotal = item.linetotal;
+                }
+                else {
+                    DocumentLine.Price = item.price,
+                        DocumentLine.Quantity = item.quantity;
+                }
+                DocumentLine.TaxLiable = 'tYES';
+                DocumentLine.U_ID_PORTAL = item.id_solped;
+                DocumentLine.U_NF_NOM_AUT_PORTAL = Solped.solped.usersap;
+                DocumentLines.push(DocumentLine);
+            }
+            dataSolopedJSONSAP = {
+                Requester: Solped.solped.usersap,
+                RequesterName: Solped.solped.fullname,
+                U_NF_DEPEN_SOLPED: Solped.solped.u_nf_depen_solped,
+                DocType: Solped.solped.doctype,
+                Series: Solped.solped.serie,
+                DocDate: Solped.solped.docdate,
+                DocDueDate: Solped.solped.docduedate,
+                TaxDate: Solped.solped.taxdate,
+                RequriedDate: Solped.solped.reqdate,
+                //DocRate: Solped.solped.trm,
+                Comments: Solped.solped.comments,
+                U_AUTOR_PORTAL: Solped.solped.usersap,
+                //JournalMemo:Solped.solped.comments,
+                DocumentLines
+            };
+            console.log(JSON.stringify(dataSolopedJSONSAP));
+            return dataSolopedJSONSAP;
+        });
+    }
     registerSolpedSAP(infoUsuario, data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
+                console.log(JSON.stringify(data));
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests`;
-                    const configWs2 = {
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    updateSolpedSAP(infoUsuario, data, docEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${docEntry})`;
+                    let configWs2 = {
+                        method: "PATCH",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    //const data2 = await response2.json();
+                    console.log(response2);
+                    helper.logoutWsSAP(bieSession);
+                    return response2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    registerProcApSolpedSAP(infoUsuario, bdmysql, idSolped, docNumSAP) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let queryListAprobacionesSolped = `
+                SELECT t0.id AS "key",t1.sapdocnum,t1.id, t0.updated_at,t0.nombreaprobador,t0.estadoap,t0.comments
+                FROM ${bdmysql}.aprobacionsolped t0 
+                INNER JOIN ${bdmysql}.solped t1 ON t1.id = t0.id_solped 
+                WHERE t0.id_solped =${idSolped} and t0.estadoseccion='A'`;
+                let resultListAprobacionesSolped = yield database_1.db.query(queryListAprobacionesSolped);
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/U_NF_APRO_SOLPED_WEB`;
+                    let arrayResult = [];
+                    let data;
+                    for (let item of resultListAprobacionesSolped) {
+                        data = { "Code": item.key,
+                            "Name": item.key,
+                            "U_NF_FECHA_APRO": item.updated_at,
+                            "U_NF_NOM_APROB": item.nombreaprobador,
+                            "U_NF_ESTADO_APRO": "A",
+                            "U_NF_COM_AROB": item.comments,
+                            "U_NF_NUM_SOLPED_WEB": item.id,
+                            "U_NF_NUM_SOLPED_SAP": docNumSAP };
+                        let configWs2 = {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'cookie': bieSession || ''
+                            },
+                            body: JSON.stringify(data)
+                        };
+                        let response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                        let data2 = yield response2.json();
+                        arrayResult.push(data2);
+                        console.log(data2);
+                    }
+                    helper.logoutWsSAP(bieSession);
+                    return arrayResult;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradaById(idEntrada, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const entradaResult = yield database_1.db.query(`
+      
+        SELECT T0.*, T1.*, T2.email 
+        FROM ${bdmysql}.entrada T0 
+        INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
+        INNER JOIN usuariosportal.users T2 ON T2.id = T0.id_user
+        WHERE t0.id = ?`, [idEntrada]);
+            //console.log((solpedResult));
+            let entrada = {
+                id: idEntrada,
+                id_user: entradaResult[0].id_user,
+                usersap: entradaResult[0].usersap,
+                fullname: entradaResult[0].fullname,
+                Series: entradaResult[0].serie,
+                DocType: entradaResult[0].doctype,
+                status: entradaResult[0].status,
+                sapdocnum: entradaResult[0].sapdocnum,
+                DocDate: entradaResult[0].docdate,
+                DocDueDate: entradaResult[0].docduedate,
+                TaxDate: entradaResult[0].taxdate,
+                reqdate: entradaResult[0].reqdate,
+                CardCode: entradaResult[0].codigoproveedor,
+                CardName: entradaResult[0].nombreproveedor,
+                DocNum: entradaResult[0].pedidonumsap,
+                Comments: entradaResult[0].comments,
+                trm: entradaResult[0].trm,
+                currency: entradaResult[0].currency
+            };
+            let entradaDet = [];
+            let DocumentLines = [];
+            for (let item of entradaResult) {
+                entradaDet.push({
+                    id_entrada: item.id_entrada,
+                    LineNum: item.linenum,
+                    LineStatus: item.linestatus === 'O' ? 'bost_Open' : 'bost_Close',
+                    ItemCode: item.itemcode,
+                    ItemDescription: item.dscription,
+                    reqdatedet: item.reqdatedet,
+                    AccountCode: item.acctcode,
+                    cantidad: item.quantity,
+                    Currency: item.moneda,
+                    trm: item.trm,
+                    Price: item.price,
+                    LineTotal: item.linetotal,
+                    TaxCode: item.tax,
+                    TaxTotal: item.taxvalor,
+                    linegtotal: item.linegtotal,
+                    CostingCode: item.ocrcode,
+                    CostingCode2: item.ocrcode2,
+                    CostingCode3: item.ocrcode3,
+                    WarehouseCode: item.whscode,
+                    id_user: item.id_user,
+                    BaseOpenQuantity: item.cantidad_pedido,
+                    RemainingOpenQuantity: item.cantidad_pendiente,
+                    BaseDocNum: item.basedocnum,
+                    BaseEntry: item.baseentry,
+                    BaseLine: item.baseline,
+                    BaseType: item.basetype
+                });
+                DocumentLines.push({
+                    id_entrada: item.id_entrada,
+                    LineNum: item.linenum,
+                    LineStatus: item.linestatus === 'O' ? 'bost_Open' : 'bost_Close',
+                    ItemCode: item.itemcode,
+                    ItemDescription: item.dscription,
+                    reqdatedet: item.reqdatedet,
+                    AccountCode: item.acctcode,
+                    cantidad: item.quantity,
+                    Currency: item.moneda,
+                    trm: item.trm,
+                    Price: item.price,
+                    LineTotal: item.linetotal,
+                    TaxCode: item.tax,
+                    TaxTotal: item.taxvalor,
+                    linegtotal: item.linegtotal,
+                    CostingCode: item.ocrcode,
+                    CostingCode2: item.ocrcode2,
+                    CostingCode3: item.ocrcode3,
+                    WarehouseCode: item.whscode,
+                    id_user: item.id_user,
+                    BaseOpenQuantity: item.cantidad_pedido,
+                    RemainingOpenQuantity: item.cantidad_pendiente,
+                    BaseDocNum: item.basedocnum,
+                    BaseEntry: item.baseentry,
+                    BaseLine: item.baseline,
+                    BaseType: item.basetype
+                });
+            }
+            let entradaObject = {
+                entrada,
+                entradaDet
+            };
+            let infoEntrada = {
+                id: idEntrada,
+                id_user: entradaResult[0].id_user,
+                usersap: entradaResult[0].usersap,
+                fullname: entradaResult[0].fullname,
+                Series: entradaResult[0].serie,
+                DocType: entradaResult[0].doctype,
+                status: entradaResult[0].status,
+                sapdocnum: entradaResult[0].sapdocnum,
+                DocDate: entradaResult[0].docdate,
+                DocDueDate: entradaResult[0].docduedate,
+                TaxDate: entradaResult[0].taxdate,
+                reqdate: entradaResult[0].reqdate,
+                CardCode: entradaResult[0].codigoproveedor,
+                CardName: entradaResult[0].nombreproveedor,
+                DocNum: entradaResult[0].pedidonumsap,
+                Comments: entradaResult[0].comments,
+                trm: entradaResult[0].trm,
+                currency: entradaResult[0].currency,
+                DocumentLines
+            };
+            console.log(entradaObject, infoEntrada);
+            return infoEntrada;
+        });
+    }
+    loadInfoEntradaToJSONSAP(Entrada) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let dataEntradaJSONSAP;
+            let DocumentLines = [];
+            let DocumentLine;
+            for (let item of Entrada.EntradaDet) {
+                DocumentLine = {
+                    //LineNum:item.linenum,
+                    //Currency:item.trm===1?'$':item.moneda,
+                    //Currency:item.moneda==='COP'?'$':item.moneda,
+                    //Rate: item.trm,
+                    ItemDescription: item.dscription,
+                    //RequiredDate:item.reqdatedet,
+                    Quantity: item.cantidad,
+                    Price: item.precio,
+                    //LineTotal:item.linetotal,
+                    //GrossTotal:item.linegtotal,
+                    TaxCode: item.tax,
+                    CostingCode: item.ocrcode,
+                    CostingCode2: item.ocrcode2,
+                    CostingCode3: item.ocrcode3,
+                    WarehouseCode: item.whscode !== '' ? item.whscode : 'SM_N300',
+                    BaseType: item.BaseType,
+                    BaseEntry: item.BaseEntry,
+                    BaseLine: item.BaseLine
+                };
+                if (item.itemcode !== '') {
+                    DocumentLine.ItemCode = item.itemcode;
+                }
+                if (item.acctcode !== '') {
+                    DocumentLine.AccountCode = item.acctcode;
+                }
+                if (item.whscode === '') {
+                    DocumentLine.WarehouseCode = 'SM_N300';
+                }
+                else {
+                    DocumentLine.WarehouseCode = item.whscode;
+                }
+                DocumentLines.push(DocumentLine);
+            }
+            dataEntradaJSONSAP = {
+                DocType: Entrada.entrada.doctype,
+                Series: Entrada.entrada.serie,
+                DocDate: Entrada.entrada.docdate,
+                DocDueDate: Entrada.entrada.docduedate,
+                TaxDate: Entrada.entrada.taxdate,
+                //RequriedDate:Entrada.entrada.reqdate,
+                CardCode: Entrada.entrada.codigoproveedor,
+                CardName: Entrada.entrada.nombreproveedor,
+                Comments: Entrada.entrada.comments,
+                U_AUTOR_PORTAL: Entrada.entrada.usersap,
+                DocumentLines
+            };
+            console.log(JSON.stringify(dataEntradaJSONSAP));
+            return dataEntradaJSONSAP;
+        });
+    }
+    registerEntradaSAP(infoUsuario, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes`;
+                    let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',

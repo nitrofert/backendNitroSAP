@@ -15,6 +15,7 @@ import permisoRoutes from './routes/permisoRoutes';
 import solpedRoutes from './routes/solpedRoutes';
 import wssapRoutes from './routes/wssapRoutes';
 import sharedFunctionsRoutes from './routes/sharedFunctionsRoutes';
+import entradaRoutes from './routes/entradaRoutes';
 
 
 class Server{
@@ -49,8 +50,10 @@ class Server{
         this.app.use('/api/perfiles/',perfilRoutes);
         this.app.use('/api/permisos/',permisoRoutes);
         this.app.use('/api/compras/solped',solpedRoutes);
+        this.app.use('/api/compras/entrada',entradaRoutes);
         this.app.use('/api/wssap',wssapRoutes);
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
+        
         
         
     }
