@@ -16,7 +16,7 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 class WssapController {
     constructor() {
-        this.url_sap_xe = 'http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/';
+        this.url_sap_xe = 'https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/';
         this.url_sap_sl = 'https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/';
     }
     BusinessPartners(req, res) {
@@ -26,8 +26,8 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
             //console.log("BusinessPartners ",bieSession);
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/BusinessPartners?$filter=startswith(CardCode,'P'), CardType eq 'cSupplier'&$select=CardCode,CardName`;
@@ -55,8 +55,8 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
             //console.log("Items",bieSession);
             if (bieSession != '') {
                 const configWs2 = {
@@ -83,8 +83,8 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
             //console.log("Items",bieSession);
             if (bieSession != '') {
                 const configWs2 = {
@@ -111,9 +111,9 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -132,9 +132,9 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsItems.xsjs?compania=${compania}`;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -153,11 +153,11 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
             let { fechaTrm } = req.params;
             //console.log(await helper.format(fechaTrm));
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsMonedas.xsjs?fecha=${yield helpers_1.default.format(fechaTrm)}&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${yield helpers_1.default.format(fechaTrm)}&compania=${compania}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -176,14 +176,14 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
             let { objtype } = req.params;
             let filtroObjtype = "";
             if (objtype)
                 filtroObjtype = `&tipodoc=${objtype}`;
             //console.log(await helper.format(fechaTrm));
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
             console.log(url2);
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
@@ -203,12 +203,12 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
             let { id } = req.params;
             //console.log(id);
             let proveedor = '';
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -227,14 +227,14 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
             let { id } = req.params;
             //console.log(id);
             let proveedor = '';
             let querys = `SELECT * FROM "PRUEBAS_NITROFERT_PRD"."OITM"`;
             //console.log(querys);
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAprobaciones.xsjs?&querys=${querys}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&querys=${querys}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -253,11 +253,11 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
-            const userSap = infoUsuario.codusersap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+            const userSap = infoUsuario[0].codusersap;
             //console.log(await helper.format(fechaTrm));
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -277,13 +277,13 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
-            const perfilesUsuario = decodedToken.perfilesUsuario;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
+            const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
             //console.log("Items",bieSession);
             let filtroPorUsuario = "";
             if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                filtroPorUsuario = ` and PurchaseOrders/DocumentLines/U_NF_NOM_AUT_PORTAL eq '${infoUsuario.codusersap}' `;
+                filtroPorUsuario = ` and PurchaseOrders/DocumentLines/U_NF_NOM_AUT_PORTAL eq '${infoUsuario[0].codusersap}' `;
             }
             let data = {
                 QueryPath: `$crossjoin(PurchaseOrders,PurchaseOrders/DocumentLines)`,
@@ -338,9 +338,8 @@ class WssapController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario);
-            const perfilesUsuario = decodedToken.perfilesUsuario;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
             //console.log("Items",bieSession);
             let { pedido } = req.params;
             if (bieSession != '') {

@@ -29,15 +29,26 @@ class Server{
     }
 
     config():void{
-        this.app.set('port', process.env.PORT || 3000);
+        this.app.set('port', process.env.PORT || 3001);
         this.app.use(morgan('dev'));
-        this.app.use(cors());
+        this.app.use(cors({ 
+            origin:['http://portal.nitrofert.com.co','http://nitroportal.nitrofert.com.co','http://localhost:4200'],
+            methods:["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"],
+            allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials'],
+            //optionsSuccessStatus:200,
+            credentials:true,
+            maxAge:3600,
+            preflightContinue:true
+            }));
         this.app.use(express.json());
         this.app.use(express.urlencoded({'extended':false}));
+        console.log('Config');
     }
-
+    
     midelwares(){
+        
         this.app.use(verifyToken.validToken);
+        console.log('Midelwares');
     }
 
     routes():void{
@@ -54,7 +65,7 @@ class Server{
         this.app.use('/api/wssap',wssapRoutes);
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
         
-        
+        console.log('Routes');
         
     }
 

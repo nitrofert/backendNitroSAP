@@ -17,14 +17,15 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class MenuController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                console.log(req.headers.origin);
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const menu = yield database_1.db.query(`
             
             SELECT t0.*,t1.title AS 'padre' 
@@ -41,14 +42,14 @@ class MenuController {
     }
     listFather(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const menu = yield database_1.db.query(`
             
             SELECT t0.*, '' as padre 
@@ -65,15 +66,15 @@ class MenuController {
     }
     orderNum(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const { hierarchy, iddad } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const { hierarchy, iddad } = req.params;
                 let result;
                 if (hierarchy == 'P') {
                     result = yield database_1.db.query("Select IFNULL(MAX(ordernum),0)+1 as ordernum from menu where hierarchy= ?", [hierarchy]);
@@ -100,14 +101,14 @@ class MenuController {
     }
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const newMenu = req.body;
                 console.log(newMenu);
                 const result = yield database_1.db.query('INSERT INTO menu set ?', [newMenu]);
@@ -121,15 +122,15 @@ class MenuController {
     }
     getMenuById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const { id } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const { id } = req.params;
                 const menu = yield database_1.db.query(`
             
             SELECT t0.*,'' AS 'padre' 
@@ -146,16 +147,17 @@ class MenuController {
     }
     update(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                //console.log(req)
                 const menu = req.body;
-                console.log(menu);
+                //console.log(menu);
                 const idMenu = menu.id;
                 const newMenu = {
                     title: menu.title,
@@ -167,6 +169,7 @@ class MenuController {
                     icon: menu.icon
                 };
                 const result = yield database_1.db.query('update menu set ? where id = ?', [newMenu, idMenu]);
+                //console.log(idMenu,newMenu,result);
                 res.json(result);
             }
             catch (error) {

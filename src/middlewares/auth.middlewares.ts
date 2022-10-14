@@ -4,9 +4,10 @@ import helper from "../lib/helpers";
 class VerifyToken {
 
     async validToken(req: Request, res: Response, next: NextFunction) {
+       
         try {
             let jwt = req.headers.authorization;
-            
+            //console.log('jwt',jwt)
             // verifica que la cabecera authorization este definida
             if (!jwt) {
                 //Verifica si la ruta tiene permiso para acceder sin token

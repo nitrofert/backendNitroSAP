@@ -9,7 +9,8 @@ import helper from "../lib/helpers";
 class ConfigController{
     
     public async list(req: Request, res: Response){
-
+        try {
+            
         //Obtener datos del usurio logueado que realizo la petición
         const {id} = req.params;
         console.log(req.params);
@@ -38,7 +39,7 @@ class ConfigController{
             
        
 
-       try {
+       
 
             const  menu:MenuInterface[] =  await db.query(sql);
             let menupadres:MenuInterface[] = menu.filter(opcion => opcion.hierarchy=='P');

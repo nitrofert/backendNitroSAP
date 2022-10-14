@@ -8,7 +8,7 @@ import helper from "../lib/helpers";
 class PermisoController{
     
     public async list(req: Request, res: Response){
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -19,7 +19,7 @@ class PermisoController{
 
        
 
-       try {
+       
             const  permisos:PermisosInterface[] =  await db.query(`
         
             SELECT t0.id AS idPerfil,
@@ -45,7 +45,7 @@ class PermisoController{
     }
 
     public async create(req: Request, res: Response): Promise<void>{
-
+        try {
          //Obtener datos del usurio logueado que realizo la petición
          let jwt = req.headers.authorization;
          if(jwt){
@@ -60,7 +60,7 @@ class PermisoController{
          
 
 
-         try {
+         
             
             //Validar si el permiso esta registrado
             const existePermiso = await db.query(`
@@ -105,7 +105,7 @@ class PermisoController{
 
 
      public async getById(req: Request, res: Response){
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -118,7 +118,7 @@ class PermisoController{
 
       
 
-       try {
+       
             const  perfil:PermisosInterface[] =  await db.query(`
         
             SELECT t0.*
@@ -135,7 +135,7 @@ class PermisoController{
     }
 
      public async update(req: Request, res: Response){
-
+        try {
          //Obtener datos del usurio logueado que realizo la petición
          let jwt = req.headers.authorization;
          if(jwt){
@@ -146,7 +146,7 @@ class PermisoController{
   
 
 
-         try {
+         
         
             const perfil = req.body;
             console.log(perfil);
@@ -168,7 +168,7 @@ class PermisoController{
     }
 
     public async delete(req: Request, res: Response){
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -179,7 +179,7 @@ class PermisoController{
 
        
 
-        try {
+        
         
             const perfil = req.body;
             console.log(perfil);

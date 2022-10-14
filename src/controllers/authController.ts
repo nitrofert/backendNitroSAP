@@ -9,6 +9,7 @@ import fetch from 'node-fetch';
 
 class AuthController{
 
+
     public async login(req: Request, res: Response){
         
         //console.log(req.body);
@@ -48,7 +49,7 @@ class AuthController{
         INNER JOIN companies t2 ON t2.id = t1.id_company
         WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`,[user[0].id,user[0].companyid]);
         
-        const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil 
+        /*const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil 
                                                 FROM perfiles t0 
                                                 INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id 
                                                 WHERE t1.id_user = ?`,[user[0].id]);
@@ -86,19 +87,98 @@ class AuthController{
             menuUsuario:{
                 opcionesMenu,
                 opcionesSubMenu
-            }
+            } 
         }
+
+        */
 
     
         //Retorno de respuesta exitosa y datos del usuario logueado o token
         //console.log(JSON.stringify(userConfig));
-        
-        const dataUser:string = JSON.stringify(userConfig);
-        //const token:String = jwt.sign(dataUser,'secreetkey',signInOptions);
-        const token:string = await helper.generateToken(userConfig);
-        //console.log({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,token});
-        return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,token});
+
+        const userId:number = infoUsuario[0].id;
+        const company:string = infoUsuario[0].id_company;
+       
+        //const token:string = await helper.generateToken(userConfig);
+
+        const tokenid:string = await helper.generateToken({userId, company});
+        const token:string = tokenid;
+        //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
+        return res.json({message:`!Bienvenido ${infoUsuario[0].fullname}¡`, status:200,infoUsuario,token,tokenid});
+    } 
+
+    public async infoUsuario(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            return res.json(infoUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
     }
+
+    public async perfilesUsuario(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const perfilesUsuario = await helper.getPerfilesUsuario(decodedToken.userId);
+            return res.json(perfilesUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    public async menuUsuario(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const menuUsuario = await helper.getMenuUsuario(decodedToken.userId);
+            return res.json(menuUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    } 
+
+    public async permisosUsuario(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const permisosUsuario = await helper.getPermisoUsuario(decodedToken.userId);
+            return res.json(permisosUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+ 
 
     public recovery(req: Request, res: Response){
         const formRecovery = req.body;
@@ -113,22 +193,18 @@ class AuthController{
     }
 
     public async dependenciesUser(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
-
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
-        
-
-        try {
-
-            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario.codusersap}'`);
-            res.json(dependenciasUsuario);
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
+        const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
+        res.json(dependenciasUsuario);
 
         }catch (error: any) {
             console.error(error);
@@ -137,21 +213,22 @@ class AuthController{
     }
 
     public async areasSolpedUser(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
         
 
-        try {
+        
 
-            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
             res.json(dependenciasUsuario);
 
         }catch (error: any) {
@@ -161,21 +238,22 @@ class AuthController{
     }
 
     public async almacenUser(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
         
 
-        try {
+        
 
-            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario.codusersap}'`);
+            const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario[0].codusersap}'`);
             res.json(dependenciasUsuario);
 
         }catch (error: any) {
@@ -185,21 +263,21 @@ class AuthController{
     }
 
     public async almacenUserXE(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
-        const compania = infoUsuario.dbcompanysap;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const compania = infoUsuario[0].dbcompanysap;
        
         
-        const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-        try {
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        
 
             const response2 = await fetch(url2);
             const data2 = await response2.json();  
@@ -212,23 +290,31 @@ class AuthController{
     }
 
     public async dependenciesUserXE(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const compania = infoUsuario.dbcompanysap;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const compania = infoUsuario[0].dbcompanysap;
 
 
-        const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-        try {
+        //const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        //const url2 = `http://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`; 
+        console.log(url2);
+        //https://nitrofert-hbt.heinsohncloud.com.co:4300/
+
+        
+       
 
             const response2 = await fetch(url2);
             const data2 = await response2.json();  
+            //console.log(data2);
             return res.json(data2); 
 
         }catch (error: any) {
@@ -238,21 +324,21 @@ class AuthController{
     }
 
     public async areasUserXE(req: Request, res: Response) {
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const compania = infoUsuario.dbcompanysap;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const compania = infoUsuario[0].dbcompanysap;
 
 
-        const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
         //console.log(url2);
-        try {
+        
 
             const response2 = await fetch(url2);
             const data2 = await response2.json();  

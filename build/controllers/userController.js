@@ -17,14 +17,14 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class UserController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const users = yield database_1.db.query("SELECT * FROM users");
                 res.json(users);
             }
@@ -36,14 +36,14 @@ class UserController {
     }
     getUserById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const { id } = req.params;
                 const user = yield database_1.db.query("SELECT * FROM usuariosportal.users where id= ?", [id]);
                 res.json(user);
@@ -56,14 +56,14 @@ class UserController {
     }
     getCompaniesUserById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const { id } = req.params;
                 const userCompanies = yield database_1.db.query(`
             SELECT t0.id,t0.companyname, 
@@ -84,14 +84,14 @@ class UserController {
     }
     getPerfilesUserById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const { id } = req.params;
                 const userPerfiles = yield database_1.db.query(`
             SELECT *, 
@@ -121,14 +121,14 @@ class UserController {
     }
     update(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const user = req.body;
                 console.log(user);
                 const idUser = user.id;
@@ -155,14 +155,14 @@ class UserController {
     }
     setCompaniesUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const accessRequest = req.body;
                 let sqlAccess = "";
                 if (accessRequest.valor == 0) {
@@ -184,14 +184,14 @@ class UserController {
     }
     setPerfilUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const perfilRequest = req.body;
                 let sqlAccess = "";
                 if (perfilRequest.valor == 0) {

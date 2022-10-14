@@ -17,14 +17,14 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class PerfilController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const perfil = yield database_1.db.query(`
         
             SELECT t0.* 
@@ -40,14 +40,14 @@ class PerfilController {
     }
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const newPerfil = req.body;
                 console.log(newPerfil);
                 const result = yield database_1.db.query('INSERT INTO perfiles set ?', [newPerfil]);
@@ -61,15 +61,15 @@ class PerfilController {
     }
     getPerfilById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const { id } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const { id } = req.params;
                 const perfil = yield database_1.db.query(`
             
             SELECT t0.*
@@ -86,14 +86,14 @@ class PerfilController {
     }
     update(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const perfil = req.body;
                 console.log(perfil);
                 const idPerfil = perfil.id;

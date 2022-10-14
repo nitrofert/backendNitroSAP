@@ -8,7 +8,7 @@ import helper from "../lib/helpers";
 class UserController{
     
     public async list(req: Request, res: Response){
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -19,7 +19,7 @@ class UserController{
 
       
 
-       try {
+       
         
         const  users:UserInterface[] =  await db.query("SELECT * FROM users"); 
        
@@ -34,7 +34,7 @@ class UserController{
     }
 
     public async getUserById(req: Request, res: Response){
-       
+        try {
          //Obtener datos del usurio logueado que realizo la petición
          let jwt = req.headers.authorization;
          if(jwt){
@@ -45,7 +45,7 @@ class UserController{
          //******************************************************* */
         
 
-        try {
+       
         
             const {id} = req.params;
             const  user:UserInterface[] =  await db.query("SELECT * FROM usuariosportal.users where id= ?",[id]); 
@@ -58,6 +58,7 @@ class UserController{
      }
 
      public async getCompaniesUserById(req: Request, res: Response){
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -68,7 +69,7 @@ class UserController{
         //******************************************************* */
        
 
-       try {
+       
         
             const {id} = req.params;
             const  userCompanies =  await db.query(`
@@ -90,6 +91,7 @@ class UserController{
      }
 
      public async getPerfilesUserById(req: Request, res: Response){
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -100,7 +102,7 @@ class UserController{
         //******************************************************* */
        
 
-       try {
+       
         
             const {id} = req.params;
             const  userPerfiles =  await db.query(`
@@ -131,7 +133,7 @@ class UserController{
      }
 
      public async update(req: Request, res: Response){
-        
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -141,7 +143,7 @@ class UserController{
         //******************************************************* */
         
 
-         try {
+         
             
                 const user:UserInterface = req.body;
                 console.log(user);
@@ -172,6 +174,7 @@ class UserController{
     }
 
     public async setCompaniesUser(req: Request, res: Response){
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -183,7 +186,7 @@ class UserController{
         
         
 
-        try {
+        
         
             const accessRequest = req.body;
             let sqlAccess = "";
@@ -207,6 +210,7 @@ class UserController{
     }
 
     public async setPerfilUser(req: Request, res: Response){
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -218,7 +222,7 @@ class UserController{
         
         
 
-        try {
+        
         
             const perfilRequest = req.body;
             let sqlAccess = "";

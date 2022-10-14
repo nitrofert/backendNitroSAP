@@ -8,6 +8,7 @@ const menuController_1 = __importDefault(require("../controllers/menuController"
 class MenuRoutes {
     constructor() {
         this.router = (0, express_1.Router)();
+        console.log('menu routes');
         this.config();
     }
     config() {

@@ -12,6 +12,10 @@ class AuthRoutes {
     }
     config() {
         this.router.post('/login', authController_1.default.login);
+        this.router.get('/infoUsuario', authController_1.default.infoUsuario);
+        this.router.get('/menuUsuario', authController_1.default.menuUsuario);
+        this.router.get('/perfilesUsuario', authController_1.default.perfilesUsuario);
+        this.router.get('/permisosUsuario', authController_1.default.permisosUsuario);
         this.router.post('/recovery', authController_1.default.recovery);
         this.router.post('/restore', authController_1.default.restore);
         this.router.get('/dependenciesUser', authController_1.default.dependenciesUser);

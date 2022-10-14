@@ -10,25 +10,22 @@ import { DocumentLine, PurchaseRequestsInterface } from "../interfaces/purchaseR
 class EntradaController {
 
     public async list(req: Request, res: Response) {
-
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization || '';
-        jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken: DecodeTokenInterface = await helper.validateToken(jwt);
-
-        //******************************************************* */
-
-        
-
         try {
-        
-            const infoUsuario: InfoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const perfilesUsuario: PerfilesUsuario[] = decodedToken.perfilesUsuario;
+            
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            //******************************************************* */
+            
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const perfilesUsuario: PerfilesUsuario[] =  await helper.getPerfilesUsuario(decodedToken.userId);
             let where = "";
 
             if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                where = ` WHERE t0.id_user=${infoUsuario.id} `;
+                where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
             }
 
         
@@ -61,14 +58,14 @@ class EntradaController {
     }
 
     public async create(req: Request, res: Response): Promise<void> {
-
+        
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken: DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
         //******************************************************* */
-        const infoUsuario: InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql
+        const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql
         const newEntrada = req.body;
         console.log(newEntrada);
         let connection = await db.getConnection();
@@ -132,7 +129,7 @@ class EntradaController {
                 let dataForSAP:any = await helper.loadInfoEntradaToJSONSAP(newEntrada);
                 console.log(dataForSAP);
                 //registrar Entrada en SAP
-                const resultResgisterSAP = await helper.registerEntradaSAP(infoUsuario,dataForSAP);
+                const resultResgisterSAP = await helper.registerEntradaSAP(infoUsuario[0],dataForSAP);
 
                 if (resultResgisterSAP.error) {
                     console.log(resultResgisterSAP.error.message.value);
@@ -175,25 +172,18 @@ class EntradaController {
     }
 
     public async getEntradaById(req: Request, res: Response) {
-
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization || '';
-        jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken: DecodeTokenInterface = await helper.validateToken(jwt);
-        //******************************************************* */
-        const infoUsuario: InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql
-
-        const { id } = req.params;
-        console.log(infoUsuario, bdmysql,id );
-        
-
         try {
-        
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql
+            const { id } = req.params;
+            console.log(infoUsuario[0], bdmysql,id );
             let entradaObject = await helper.getEntradaById(id, bdmysql);
-
             res.json(entradaObject);
-
         }catch (error: any) {
             console.error(error);
             return res.json(error);

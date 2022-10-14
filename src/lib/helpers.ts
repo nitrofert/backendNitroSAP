@@ -42,12 +42,21 @@ class Helpers {
     }
 
     async validateToken(token: string): Promise<any> {
+        try{
 
-        const verifyOptions: VerifyOptions = {
-            algorithms: ['RS256'],
-        };
+            const verifyOptions: VerifyOptions = {
+                algorithms: ['RS256'],
+            };
 
-        return await verify(token, 'secreetkey');
+            return await verify(token, 'secreetkey');
+
+         }catch (error: any) {
+            console.error(error);
+           
+        }
+        
+
+        
 
     }
 
@@ -140,6 +149,69 @@ class Helpers {
 
     }
 
+    async getInfoUsuario(userid: number, company:string): Promise<any> {
+        
+        const infoUsuario = await db.query(`
+        SELECT t0.id, fullname, email, username, codusersap, t0.status, 
+            id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  
+        FROM users t0 
+        INNER JOIN company_users t1 ON t1.id_user = t0.id
+        INNER JOIN companies t2 ON t2.id = t1.id_company
+        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`,[userid,company]);
+
+        return infoUsuario;
+    }
+
+    async getPermisoUsuario(userid: number): Promise<any> {
+        
+        const permisosUsuario = await db.query(`SELECT * 
+                                                        FROM perfil_menu_accions t0 
+                                                        INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
+                                                        INNER JOIN menu t2 ON t2.id = t0.id_menu
+                                                        WHERE t0.id_perfil IN (SELECT tt0.id_perfil FROM perfil_users tt0 WHERE tt0.id_user = ?)`,[userid]);
+
+        return permisosUsuario;
+    }
+
+    async getPerfilesUsuario(userid: number): Promise<any> {
+        
+        const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil 
+                                                FROM perfiles t0 
+                                                INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id 
+                                                WHERE t1.id_user = ?`,[userid]);
+
+        return perfilesUsuario;
+    }
+
+    async getMenuUsuario(userid: number): Promise<any> {
+        
+        const opcionesMenu = await db.query(`SELECT t0.* 
+        FROM menu t0 
+        INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
+        WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
+            t0.hierarchy ='P' AND
+            t1.read_accion = true
+        ORDER BY t0.ordernum ASC;`,[userid]);
+
+const opcionesSubMenu = await db.query(`SELECT t0.* 
+            FROM menu t0 
+            INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
+            WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
+                t0.hierarchy ='H' AND
+                t1.read_accion = true AND
+                t0.visible =1
+            ORDER BY t0.ordernum ASC;`,[userid]);
+
+
+            let menuUsuario =  {
+                                    opcionesMenu,
+                                    opcionesSubMenu
+                               }
+                                
+
+        return  menuUsuario;
+    }
+
     async format(strDate: string) {
         const inputDate: Date = new Date(strDate);
         let date, month, year;
@@ -167,7 +239,7 @@ class Helpers {
         FROM ${bdmysql}.solped T0 
         INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
         INNER JOIN usuariosportal.users T2 ON T2.id = T0.id_user
-        WHERE t0.id = ?`, [idSolped]);
+        WHERE T0.id = ?`, [idSolped]);
 
         //console.log((solpedResult));
 
@@ -227,7 +299,7 @@ class Helpers {
         return solpedObject;
     }
 
-    async getNextLineAprovedSolped(idSolped: number, bdmysql: string, companysap: string, logo: string,idLinea?:number): Promise<any> {
+    async getNextLineAprovedSolped(idSolped: number, bdmysql: string, companysap: string, logo: string,origin:string='http://localhost:4200',idLinea?:number): Promise<any> {
         
         let condicionLinea = "";
         if(idLinea) condicionLinea = ` and t0.id!=${idLinea}`;
@@ -265,7 +337,8 @@ class Helpers {
                     idlineap: nextLineAprovedSolped[0].id,
                     bdmysql,
                     companysap,
-                    logo
+                    logo,
+                    origin
                 }
             }
         } else {
@@ -344,7 +417,7 @@ class Helpers {
         return detalleAprobacionSolped;
     }
 
-    async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, accionAprobacion?:boolean): Promise<string> {
+    async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
         let subtotal = 0;
@@ -353,6 +426,7 @@ class Helpers {
         const detalleAprobacionSolped = await helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
         let htmlDetalleAprobacion = '';
         let lineaDetalleAprobacion = '';
+
         
         //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
@@ -490,9 +564,9 @@ class Helpers {
         if(key!==''){
             bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="http://localhost:3000/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
                                         
-                                        <td><a href="http://localhost:3000/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>
                                     </tr>
                                 </table>`;
         }

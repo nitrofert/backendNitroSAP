@@ -17,18 +17,18 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class EntradaController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
             try {
-                const infoUsuario = decodedToken.infoUsuario;
-                const bdmysql = infoUsuario.bdmysql;
-                const perfilesUsuario = decodedToken.perfilesUsuario;
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
                 let where = "";
                 if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                    where = ` WHERE t0.id_user=${infoUsuario.id} `;
+                    where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
                 }
                 //console.log(decodedToken);
                 let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
@@ -62,8 +62,8 @@ class EntradaController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
             const newEntrada = req.body;
             console.log(newEntrada);
             let connection = yield database_1.db.getConnection();
@@ -121,7 +121,7 @@ class EntradaController {
                     let dataForSAP = yield helpers_1.default.loadInfoEntradaToJSONSAP(newEntrada);
                     console.log(dataForSAP);
                     //registrar Entrada en SAP
-                    const resultResgisterSAP = yield helpers_1.default.registerEntradaSAP(infoUsuario, dataForSAP);
+                    const resultResgisterSAP = yield helpers_1.default.registerEntradaSAP(infoUsuario[0], dataForSAP);
                     if (resultResgisterSAP.error) {
                         console.log(resultResgisterSAP.error.message.value);
                         connection.rollback();
@@ -157,16 +157,16 @@ class EntradaController {
     }
     getEntradaById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const { id } = req.params;
-            console.log(infoUsuario, bdmysql, id);
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const { id } = req.params;
+                console.log(infoUsuario[0], bdmysql, id);
                 let entradaObject = yield helpers_1.default.getEntradaById(id, bdmysql);
                 res.json(entradaObject);
             }

@@ -18,6 +18,7 @@ class VerifyToken {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 let jwt = req.headers.authorization;
+                //console.log('jwt',jwt)
                 // verifica que la cabecera authorization este definida
                 if (!jwt) {
                     //Verifica si la ruta tiene permiso para acceder sin token

@@ -27,14 +27,24 @@ class Server {
         this.routes();
     }
     config() {
-        this.app.set('port', process.env.PORT || 3000);
+        this.app.set('port', process.env.PORT || 3001);
         this.app.use((0, morgan_1.default)('dev'));
-        this.app.use((0, cors_1.default)());
+        this.app.use((0, cors_1.default)({
+            origin: ['http://portal.nitrofert.com.co', 'http://nitroportal.nitrofert.com.co', 'http://localhost:4200'],
+            methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+            allowedHeaders: ['Access-Control-Allow-Origin', 'Content-Type', 'Authorization', 'withCredentials'],
+            //optionsSuccessStatus:200,
+            credentials: true,
+            maxAge: 3600,
+            preflightContinue: true
+        }));
         this.app.use(express_1.default.json());
         this.app.use(express_1.default.urlencoded({ 'extended': false }));
+        console.log('Config');
     }
     midelwares() {
         this.app.use(auth_middlewares_1.default.validToken);
+        console.log('Midelwares');
     }
     routes() {
         this.app.use(indexRoutes_1.default);
@@ -49,6 +59,7 @@ class Server {
         this.app.use('/api/compras/entrada', entradaRoutes_1.default);
         this.app.use('/api/wssap', wssapRoutes_1.default);
         this.app.use('/api/shared/functions', sharedFunctionsRoutes_1.default);
+        console.log('Routes');
     }
     start() {
         this.app.listen(this.app.get('port'), () => {

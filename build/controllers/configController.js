@@ -17,17 +17,18 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class ConfigController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            const { id } = req.params;
-            console.log(req.params);
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-                //console.log(decodedToken);
-            }
-            //******************************************************* */
-            const sql = `SELECT t0.* 
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                const { id } = req.params;
+                console.log(req.params);
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                    //console.log(decodedToken);
+                }
+                //******************************************************* */
+                const sql = `SELECT t0.* 
         FROM menu t0 
         INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
         WHERE t1.id_perfil IN (SELECT t10.id 
@@ -37,8 +38,7 @@ class ConfigController {
              
               t1.read_accion = TRUE
         ORDER BY t0.ordernum ASC`;
-            console.log(sql);
-            try {
+                console.log(sql);
                 const menu = yield database_1.db.query(sql);
                 let menupadres = menu.filter(opcion => opcion.hierarchy == 'P');
                 let menuhijos = menu.filter(opcion => opcion.hierarchy == 'H');

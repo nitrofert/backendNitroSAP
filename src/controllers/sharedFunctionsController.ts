@@ -10,16 +10,16 @@ import fetch from 'node-fetch';
 class SharedFunctionsController {
 
     public async taxes(req: Request, res: Response) {
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
         //console.log(bdmysql);
         let where = "";
         if(req.params.taxOption){
@@ -27,7 +27,7 @@ class SharedFunctionsController {
         }
 
         
-        try {
+        
         
             const solped: any[] = await db.query(`Select * from ${bdmysql}.taxes ${where}`);
             res.json(solped);
@@ -40,22 +40,22 @@ class SharedFunctionsController {
     }
 
     public async taxesXE(req: Request, res: Response) {
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
-        const compania = infoUsuario.dbcompanysap;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
+        const compania = infoUsuario[0].dbcompanysap;
        
         
-        const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
     
-        try {
+        
         
             const response2 = await fetch(url2); 
             const data2 = await response2.json();  
@@ -69,25 +69,26 @@ class SharedFunctionsController {
     }
 
     public async cuentasDependenciaXE(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization || '';
         jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken:DecodeTokenInterface = await helper.validateToken(jwt);
+        const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
 
-        const infoUsuario:InfoUsuario = decodedToken.infoUsuario;
-        const bdmysql = infoUsuario.bdmysql;
-        const compania = infoUsuario.dbcompanysap;
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
+        const compania = infoUsuario[0].dbcompanysap;
        
         let dependencia = req.params.dependencia;
         console.log(dependencia);
         
-        const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
         
 
-        try {
+       
         
             const response2 = await fetch(url2); 
             const data2 = await response2.json();  

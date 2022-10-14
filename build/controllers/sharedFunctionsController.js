@@ -18,19 +18,19 @@ const node_fetch_1 = __importDefault(require("node-fetch"));
 class SharedFunctionsController {
     taxes(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            //console.log(bdmysql);
-            let where = "";
-            if (req.params.taxOption) {
-                where = ` where ${req.params.taxOption} = 'Y'`;
-            }
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                //console.log(bdmysql);
+                let where = "";
+                if (req.params.taxOption) {
+                    where = ` where ${req.params.taxOption} = 'Y'`;
+                }
                 const solped = yield database_1.db.query(`Select * from ${bdmysql}.taxes ${where}`);
                 res.json(solped);
             }
@@ -42,16 +42,16 @@ class SharedFunctionsController {
     }
     taxesXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const compania = infoUsuario[0].dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
@@ -64,18 +64,18 @@ class SharedFunctionsController {
     }
     cuentasDependenciaXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const compania = infoUsuario.dbcompanysap;
-            let dependencia = req.params.dependencia;
-            console.log(dependencia);
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const compania = infoUsuario[0].dbcompanysap;
+                let dependencia = req.params.dependencia;
+                console.log(dependencia);
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);

@@ -17,14 +17,14 @@ const helpers_1 = __importDefault(require("../lib/helpers"));
 class ComapnyController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const companies = yield database_1.db.query("SELECT * from companies");
                 // console.log(companies);
                 res.json(companies);
@@ -37,14 +37,14 @@ class ComapnyController {
     }
     listActive(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
                 const companies = yield database_1.db.query("SELECT * from companies where status ='A'");
                 // console.log(companies);
                 res.json(companies);
@@ -57,15 +57,15 @@ class ComapnyController {
     }
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const newCompany = req.body;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const newCompany = req.body;
                 //console.log(newCompany);
                 const result = yield database_1.db.query('INSERT INTO companies set ?', [newCompany]);
                 res.json(result);
@@ -78,15 +78,15 @@ class ComapnyController {
     }
     getCompanyById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const { id } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const { id } = req.params;
                 const comapny = yield database_1.db.query(`
       
             SELECT t0.*
@@ -103,25 +103,25 @@ class ComapnyController {
     }
     update(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization;
-            if (jwt) {
-                jwt = jwt.slice('bearer'.length).trim();
-                const decodedToken = yield helpers_1.default.validateToken(jwt);
-            }
-            //******************************************************* */
-            const company = req.body;
-            //console.log(company);
-            const idCompany = company.id;
-            const newCompany = {
-                companyname: company.companyname,
-                status: company.status,
-                urlwsmysql: company.urlwsmysql,
-                logoempresa: company.logoempresa,
-                urlwssap: company.urlwssap,
-                dbcompanysap: company.dbcompanysap
-            };
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const company = req.body;
+                //console.log(company);
+                const idCompany = company.id;
+                const newCompany = {
+                    companyname: company.companyname,
+                    status: company.status,
+                    urlwsmysql: company.urlwsmysql,
+                    logoempresa: company.logoempresa,
+                    urlwssap: company.urlwssap,
+                    dbcompanysap: company.dbcompanysap
+                };
                 const result = yield database_1.db.query('update companies set ? where id = ?', [newCompany, idCompany]);
                 res.json(result);
             }

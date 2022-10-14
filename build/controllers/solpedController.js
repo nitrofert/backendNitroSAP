@@ -18,26 +18,21 @@ const node_fetch_1 = __importDefault(require("node-fetch"));
 class SolpedController {
     list(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
             try {
-                const infoUsuario = decodedToken.infoUsuario;
-                const bdmysql = infoUsuario.bdmysql;
-                const perfilesUsuario = decodedToken.perfilesUsuario;
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
                 let where = "";
                 if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                    where = ` WHERE t0.id_user=${infoUsuario.id} `;
+                    where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
                 }
                 if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
-                    /*where = ` WHERE '${infoUsuario.codusersap}' = (CASE
-                                        WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                                        WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                                        ELSE ""
-                                    END) `;*/
-                    where = ` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario.codusersap}') `;
+                    where = ` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') `;
                 }
                 //console.log(decodedToken);
                 let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
@@ -62,7 +57,7 @@ class SolpedController {
             t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,t0.u_nf_depen_solped,
             t0.approved,t0.comments,t0.trm
             ORDER BY t0.id DESC`;
-                //console.log(queryList);
+                // console.log(queryList);
                 const solped = yield database_1.db.query(queryList);
                 //console.log(solped);
                 res.json(solped);
@@ -80,8 +75,8 @@ class SolpedController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
             const newSolped = req.body;
             //console.log(newSolped.solped);
             let connection = yield database_1.db.getConnection();
@@ -148,15 +143,15 @@ class SolpedController {
     }
     getSolpedById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const { id } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const { id } = req.params;
                 let solpedObject = yield helpers_1.default.getSolpedById(id, bdmysql);
                 res.json(solpedObject);
             }
@@ -173,8 +168,8 @@ class SolpedController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
             const newSolped = req.body;
             console.log(newSolped);
             let connection = yield database_1.db.getConnection();
@@ -251,9 +246,9 @@ class SolpedController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const compania = infoUsuario[0].dbcompanysap;
             //Obtener array de id de solped seleccionadas
             const arraySolpedId = req.body;
             console.log(arraySolpedId);
@@ -283,14 +278,16 @@ class SolpedController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const compania = infoUsuario.dbcompanysap;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const compania = infoUsuario[0].dbcompanysap;
+            const origin = req.headers.origin;
             //Obtener array de id de solped seleccionadas
             const arraySolpedId = req.body;
+            let urlbk = req.protocol + '://' + req.get('host');
             console.log(arraySolpedId);
             //Obtener aray de modelos de autorización para la aprobacion de la solped SAP
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
             //console.log(url2);
             let connection = yield database_1.db.getConnection();
             yield connection.beginTransaction();
@@ -400,11 +397,11 @@ class SolpedController {
                     for (let idSolped of arraySolpedId) {
                         //obtener remitente y siguiente destinarario de aprobación solped
                         solpedNotificacion = yield helpers_1.default.getSolpedById(idSolped, bdmysql);
-                        let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, infoUsuario.logoempresa);
+                        let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, infoUsuario[0].logoempresa, origin);
                         if (LineAprovedSolped != '') {
                             let aprobadorCrypt = yield helpers_1.default.generateToken(LineAprovedSolped, '240h');
                             console.log(aprobadorCrypt);
-                            const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, infoUsuario.logoempresa, solpedNotificacion, aprobadorCrypt);
+                            const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, infoUsuario[0].logoempresa, solpedNotificacion, aprobadorCrypt, urlbk);
                             //console.log(html);
                             //Obtener datos de la solped a aprobar
                             let infoEmail = {
@@ -441,11 +438,12 @@ class SolpedController {
             jwt = jwt.slice('bearer'.length).trim();
             const decodedToken = yield helpers_1.default.validateToken(jwt);
             //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const compania = infoUsuario[0].dbcompanysap;
+            const logo = infoUsuario[0].logoempresa;
             const arraySolpedId = req.body;
-            const compania = infoUsuario.dbcompanysap;
-            const logo = infoUsuario.logoempresa;
+            let urlbk = req.protocol + '://' + req.get('host');
             console.log(arraySolpedId);
             let connection = yield database_1.db.getConnection();
             let Solped;
@@ -463,7 +461,7 @@ class SolpedController {
                     let queryLineaAprobacion = `Select * 
                                             from ${bdmysql}.aprobacionsolped t0 
                                             where t0.id_solped = ${idSolped} and 
-                                                  t0.usersapaprobador ='${infoUsuario.codusersap}' and 
+                                                  t0.usersapaprobador ='${infoUsuario[0].codusersap}' and 
                                                   t0.estadoseccion='A'`;
                     console.log(queryLineaAprobacion);
                     let resultLineaAprobacion = yield connection.query(queryLineaAprobacion);
@@ -475,12 +473,12 @@ class SolpedController {
                         let resultUpdateLineAproved = yield connection.query(queryUpdateLineAproved, [resultLineaAprobacion[0].id]);
                         //console.log(resultUpdateLineAproved);
                         //Obtener información del proximo aprobador
-                        let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, logo, resultLineaAprobacion[0].id);
+                        let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, logo, req.headers.origin, resultLineaAprobacion[0].id);
                         console.log(LineAprovedSolped);
                         if (LineAprovedSolped != '') {
                             let aprobadorCrypt = yield helpers_1.default.generateToken(LineAprovedSolped, '240h');
                             console.log(aprobadorCrypt);
-                            const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, true);
+                            const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true);
                             //Obtener datos de la solped a aprobar para notificación
                             let infoEmail = {
                                 to: LineAprovedSolped.aprobador.email,
@@ -510,14 +508,15 @@ class SolpedController {
                                     idlineap: resultLineaAprobacion[0].id,
                                     bdmysql,
                                     companysap: compania,
-                                    logo
+                                    logo,
+                                    origin: req.headers.origin
                                 }
                             };
                             console.log(LineAprovedSolped);
                             //Generar data para registro de la solped en SAP
                             let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(Solped);
                             //registrar Solped en SAP
-                            const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario, dataForSAP);
+                            const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
                             if (resultResgisterSAP.error) {
                                 error = true;
                                 console.log(resultResgisterSAP.error.message.value);
@@ -545,7 +544,7 @@ class SolpedController {
                                 let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C'  where t0.id = ?`;
                                 let resultUpdateSolpedAproved = yield connection.query(queryUpdateSolpedAproved, [idSolped]);
                                 //Registrar proceso de aprobacion solped en SAP
-                                let resultResgisterProcApSA = yield helpers_1.default.registerProcApSolpedSAP(infoUsuario, bdmysql, idSolped, resultResgisterSAP.DocNum);
+                                let resultResgisterProcApSA = yield helpers_1.default.registerProcApSolpedSAP(infoUsuario[0], bdmysql, idSolped, resultResgisterSAP.DocNum);
                                 const html = yield helpers_1.default.loadBodyMailApprovedSolped(LineAprovedSolped, logo, Solped, '', true);
                                 //Obtener datos de la solped a aprobar para notificación
                                 let infoEmail = {
@@ -614,6 +613,8 @@ class SolpedController {
                 const compania = lineaAprobacion.infoSolped.companysap;
                 const id = lineaAprobacion.infoSolped.idlineap;
                 const logo = lineaAprobacion.infoSolped.logo;
+                const origin = lineaAprobacion.infoSolped.origin;
+                let urlbk = req.protocol + '://' + req.get('host');
                 let messageSolped = "";
                 //Obtener datos de la solped segun id
                 let Solped = yield helpers_1.default.getSolpedById(idSolped, bdmysql);
@@ -627,11 +628,11 @@ class SolpedController {
                     let queryUpdateLineAproved = `Update ${bdmysql}.aprobacionsolped t0 Set t0.estadoap = 'A', t0.updated_at= CURRENT_TIMESTAMP where t0.id = ?`;
                     let resultUpdateLineAproved = yield connection.query(queryUpdateLineAproved, [id]);
                     //Obtener información del proximo aprobador
-                    let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, logo, resultLineaAprobacion[0].id);
+                    let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, logo, origin, resultLineaAprobacion[0].id);
                     //verifica si existe otra linea de aprobación si existe envia notificacion al siguiente aprobador si no envia la solped a SAP
                     if (LineAprovedSolped != '') {
                         let aprobadorCrypt = yield helpers_1.default.generateToken(LineAprovedSolped, '240h');
-                        const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, true);
+                        const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true);
                         //Obtener datos de la solped a aprobar para notificación
                         let infoEmail = {
                             to: LineAprovedSolped.aprobador.email,
@@ -643,7 +644,8 @@ class SolpedController {
                         yield helpers_1.default.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);
-                        return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                        //req.headers.origin
+                        return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     }
                     else {
                         LineAprovedSolped = lineaAprobacion;
@@ -670,7 +672,7 @@ class SolpedController {
                             console.log(resultResgisterSAP.error.message.value, "rollbak to do");
                             connection.rollback();
                             //return res.json(resultResgisterSAP.error.message.value);
-                            return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${resultResgisterSAP.error.message.value}`);
+                            return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${resultResgisterSAP.error.message.value}`);
                         }
                         else {
                             console.log(resultResgisterSAP.DocEntry, resultResgisterSAP.DocNum);
@@ -708,7 +710,7 @@ class SolpedController {
                             messageSolped = `La solped ${idSolped} fue aprobada y registrada en SAP satisfactoriamente con el numero ${resultResgisterSAP.DocNum}`;
                             console.log(messageSolped);
                             connection.commit();
-                            return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                            return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                             //return JSON.parse(resultResgisterSAP.DocNum);
                         }
                     }
@@ -718,12 +720,12 @@ class SolpedController {
                     if (resultLineaAprobacion[0].estadoap === 'A') {
                         messageSolped = `La solped  ${idSolped} ya fue aprobada`;
                         console.log(messageSolped);
-                        return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                        return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     }
                     else {
                         messageSolped = `La solped  ${idSolped} ya fue rechazada`;
                         console.log(messageSolped);
-                        return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                        return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     }
                 }
             }
@@ -732,12 +734,12 @@ class SolpedController {
                 console.log(error);
                 if (error.name === 'TokenExpiredError') {
                     let messageSolped = `Token expiro`;
-                    return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                    return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     //res.status(401).json({ message: 'Token expiro ' });
                     //return;
                 }
                 console.log({ message: 'Fallo la autenticación del usuario' });
-                return res.redirect("http://localhost:4200/#/pages/notfound");
+                return res.redirect(`${origin}/#/pages/notfound`);
             }
             finally {
                 if (connection)
@@ -747,15 +749,15 @@ class SolpedController {
     }
     listAprobaciones(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const { id } = req.params;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const { id } = req.params;
                 let queryList = `SELECT * FROM ${bdmysql}.aprobacionsolped t0 WHERE t0.id_solped = ?`;
                 let listAprobacionesSolped = yield database_1.db.query(queryList, [id]);
                 res.json(listAprobacionesSolped);
@@ -777,6 +779,7 @@ class SolpedController {
                 const compania = lineaAprobacion.infoSolped.companysap;
                 const id = lineaAprobacion.infoSolped.idlineap;
                 const logo = lineaAprobacion.infoSolped.logo;
+                const origin = lineaAprobacion.infoSolped.origin;
                 let messageSolped = "";
                 let queryLineaAprobacion = `Select * from ${lineaAprobacion.infoSolped.bdmysql}.aprobacionsolped t0 where t0.id = ?`;
                 let resultLineaAprobacion = yield database_1.db.query(queryLineaAprobacion, [id]);
@@ -792,18 +795,18 @@ class SolpedController {
                     let resultUpdateSeccionAproved = await db.query(queryUpdateSeccionAproved,[idSolped]);
     
                     //Envia notificación de rechazo */
-                    res.redirect(`http://localhost:4200/#/reject/solped/${idcrypt}`);
+                    res.redirect(`${origin}/#/reject/solped/${idcrypt}`);
                 }
                 else {
                     if (resultLineaAprobacion[0].estadoap === 'A') {
                         messageSolped = `La solped  ${idSolped} ya fue aprobada`;
                         console.log(messageSolped);
-                        return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                        return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     }
                     else {
                         messageSolped = `La solped  ${idSolped} ya fue rechazada`;
                         console.log(messageSolped);
-                        return res.redirect(`http://localhost:4200/#/mensaje/solped/${idcrypt}/${messageSolped}`);
+                        return res.redirect(`${origin}/#/mensaje/solped/${idcrypt}/${messageSolped}`);
                     }
                 }
             }
@@ -814,7 +817,7 @@ class SolpedController {
                     return;
                 }
                 console.log({ message: 'Fallo la autenticación del usuario' });
-                return res.redirect("http://localhost:4200/#/pages/notfound");
+                return res.redirect(`${origin}/#/pages/notfound`);
             }
         });
     }

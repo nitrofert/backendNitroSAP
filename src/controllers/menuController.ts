@@ -8,6 +8,9 @@ import helper from "../lib/helpers";
 class MenuController{
     
     public async list(req: Request, res: Response){
+       
+        try {
+            console.log(req.headers.origin);
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -17,19 +20,13 @@ class MenuController{
         }   
         //******************************************************* */
 
-       
-
-       try {
-
             const  menu:MenuInterface[] =  await db.query(`
             
             SELECT t0.*,t1.title AS 'padre' 
             FROM menu t0
             LEFT JOIN menu t1 ON t0.iddad = t1.id
             ORDER BY t0.ordernum ASC`);
-            
-
-
+ 
             res.json(menu);
 
         }catch (error: any) {
@@ -39,18 +36,16 @@ class MenuController{
     }
 
     public async listFather(req: Request, res: Response){
+        try {
 
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization;
-        if(jwt){
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = await helper.validateToken(jwt);
-        }   
-        //******************************************************* */
 
-       
-
-       try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if(jwt){
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }   
+            //******************************************************* */
 
             const  menu:MenuInterface[] =  await db.query(`
             
@@ -68,20 +63,17 @@ class MenuController{
     }
 
     public async orderNum(req: Request, res: Response){
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if(jwt){
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }   
+            //******************************************************* */
 
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization;
-        if(jwt){
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = await helper.validateToken(jwt);
-        }   
-        //******************************************************* */
-
-        const {hierarchy, iddad } = req.params; 
+            const {hierarchy, iddad } = req.params; 
        
-
-              
-       try {
 
             let result;
             
@@ -113,18 +105,15 @@ class MenuController{
   
 
     public async create(req: Request, res: Response): Promise<void>{
+        try {
 
-         //Obtener datos del usurio logueado que realizo la petición
-         let jwt = req.headers.authorization;
-         if(jwt){
-             jwt = jwt.slice('bearer'.length).trim();
-             const decodedToken = await helper.validateToken(jwt);
-         }   
-         //******************************************************* */
-
-         
-
-         try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if(jwt){
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }   
+            //******************************************************* */
 
             const newMenu = req.body;
             console.log(newMenu);
@@ -138,21 +127,18 @@ class MenuController{
      }
 
 
-     public async getMenuById(req: Request, res: Response){
+    public async getMenuById(req: Request, res: Response){
+        try {
 
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization;
-        if(jwt){
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = await helper.validateToken(jwt);
-        }   
-        //******************************************************* */
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if(jwt){
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }   
+            //******************************************************* */
 
-        const { id } = req.params; 
-
-       
-
-       try {
+            const { id } = req.params; 
 
             const  menu:MenuInterface[] =  await db.query(`
             
@@ -171,20 +157,18 @@ class MenuController{
 
      public async update(req: Request, res: Response){
 
-         //Obtener datos del usurio logueado que realizo la petición
-         let jwt = req.headers.authorization;
-         if(jwt){
-             jwt = jwt.slice('bearer'.length).trim();
-             const decodedToken = await helper.validateToken(jwt);
-         }   
-         //******************************************************* */
+        try {
 
-         
-        
-         try {
-
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if(jwt){
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }   
+            //******************************************************* */
+                //console.log(req)
                 const menu = req.body;
-                console.log(menu);
+                //console.log(menu);
                 const idMenu = menu.id;
                 const newMenu = {
                 title:menu.title,
@@ -196,6 +180,7 @@ class MenuController{
                 icon:menu.icon
                 }
                 const result = await db.query('update menu set ? where id = ?', [newMenu,idMenu]);
+                //console.log(idMenu,newMenu,result);
                 res.json(result);
 
         }catch (error: any) {

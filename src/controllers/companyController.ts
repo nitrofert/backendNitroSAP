@@ -8,18 +8,19 @@ import helper from "../lib/helpers";
 class ComapnyController {
 
     public async list(req: Request, res: Response) {
+        try {
 
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization;
-        if (jwt) {
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = await helper.validateToken(jwt);
-        }
-        //******************************************************* */
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization;
+            if (jwt) {
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = await helper.validateToken(jwt);
+            }
+            //******************************************************* */
 
         
 
-        try {
+        
 
             const companies: CompanyInterface[] = await db.query("SELECT * from companies");
             // console.log(companies);
@@ -32,6 +33,7 @@ class ComapnyController {
     }
 
     public async listActive(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -43,7 +45,7 @@ class ComapnyController {
 
        
 
-        try {
+        
 
             const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
             // console.log(companies);
@@ -56,6 +58,7 @@ class ComapnyController {
     }
 
     public async create(req: Request, res: Response): Promise<void> {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -68,7 +71,7 @@ class ComapnyController {
         const newCompany = req.body;
        
 
-        try {
+        
 
              //console.log(newCompany);
             const result = await db.query('INSERT INTO companies set ?', [newCompany]);
@@ -82,6 +85,7 @@ class ComapnyController {
 
 
     public async getCompanyById(req: Request, res: Response) {
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -95,7 +99,7 @@ class ComapnyController {
 
         
 
-        try {
+        
 
             const comapny: CompanyInterface[] = await db.query(`
       
@@ -113,6 +117,8 @@ class ComapnyController {
     }
 
     public async update(req: Request, res: Response) {
+        
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -136,7 +142,7 @@ class ComapnyController {
         }
         
 
-        try {
+        
 
             const result = await db.query('update companies set ? where id = ?', [newCompany, idCompany]);
             res.json(result);

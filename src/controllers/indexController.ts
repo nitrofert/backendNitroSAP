@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 class IndexController{
     public index(req: Request, res: Response){
-        res.send('Manual API');
+        res.send('Manual API v2.1');
     }
 }
 

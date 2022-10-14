@@ -8,6 +8,7 @@ import helper from "../lib/helpers";
 class PerfilController{
     
     public async list(req: Request, res: Response){
+        try {
 
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
@@ -19,7 +20,7 @@ class PerfilController{
 
        
 
-       try {
+       
 
             const  perfil:PerfilInterface[] =  await db.query(`
         
@@ -38,6 +39,7 @@ class PerfilController{
     }
 
     public async create(req: Request, res: Response): Promise<void>{
+        try {
 
          //Obtener datos del usurio logueado que realizo la petición
          let jwt = req.headers.authorization;
@@ -49,7 +51,7 @@ class PerfilController{
 
          
 
-         try {
+         
 
             const newPerfil = req.body;
             console.log(newPerfil);
@@ -64,7 +66,7 @@ class PerfilController{
 
 
     public async getPerfilById(req: Request, res: Response){
-
+        try {
         //Obtener datos del usurio logueado que realizo la petición
         let jwt = req.headers.authorization;
         if(jwt){
@@ -77,7 +79,7 @@ class PerfilController{
 
        
 
-       try {
+       
 
             const  perfil:PerfilInterface[] =  await db.query(`
             
@@ -95,7 +97,8 @@ class PerfilController{
     }
 
      public async update(req: Request, res: Response){
-
+        try {
+            
          //Obtener datos del usurio logueado que realizo la petición
          let jwt = req.headers.authorization;
          if(jwt){
@@ -106,7 +109,7 @@ class PerfilController{
 
          
         
-         try {
+         
 
             const perfil = req.body;
             console.log(perfil);

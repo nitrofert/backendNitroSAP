@@ -8,6 +8,7 @@ class MenuRoutes{
     public router: Router = Router();
 
     constructor(){
+        console.log('menu routes');
         this.config();
     }
 

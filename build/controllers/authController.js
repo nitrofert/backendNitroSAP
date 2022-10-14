@@ -52,47 +52,125 @@ class AuthController {
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
         WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [user[0].id, user[0].companyid]);
-            const perfilesUsuario = yield database_1.db.query(`SELECT t0.id, t0.perfil 
-                                                FROM perfiles t0 
-                                                INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id 
-                                                WHERE t1.id_user = ?`, [user[0].id]);
-            const opcionesMenu = yield database_1.db.query(`SELECT t0.* 
-                                            FROM menu t0 
-                                            INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
-                                            WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
-                                                t0.hierarchy ='P' AND
-                                                t1.read_accion = true
-                                            ORDER BY t0.ordernum ASC;`, [user[0].id]);
-            const opcionesSubMenu = yield database_1.db.query(`SELECT t0.* 
-                                                FROM menu t0 
-                                                INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
+            /*const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil
+                                                    FROM perfiles t0
+                                                    INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id
+                                                    WHERE t1.id_user = ?`,[user[0].id]);
+            
+            const opcionesMenu = await db.query(`SELECT t0.*
+                                                FROM menu t0
+                                                INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id
                                                 WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
-                                                    t0.hierarchy ='H' AND
-                                                    t1.read_accion = true AND
-                                                    t0.visible =1
-                                                ORDER BY t0.ordernum ASC;`, [user[0].id]);
-            const permisosUsuario = yield database_1.db.query(`SELECT * 
-                                                        FROM perfil_menu_accions t0 
-                                                        INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
-                                                        INNER JOIN menu t2 ON t2.id = t0.id_menu
-                                                        WHERE t0.id_perfil IN (SELECT tt0.id_perfil FROM perfil_users tt0 WHERE tt0.id_user = ?)`, [user[0].id]);
+                                                    t0.hierarchy ='P' AND
+                                                    t1.read_accion = true
+                                                ORDER BY t0.ordernum ASC;`,[user[0].id]);
+    
+            const opcionesSubMenu = await db.query(`SELECT t0.*
+                                                    FROM menu t0
+                                                    INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id
+                                                    WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
+                                                        t0.hierarchy ='H' AND
+                                                        t1.read_accion = true AND
+                                                        t0.visible =1
+                                                    ORDER BY t0.ordernum ASC;`,[user[0].id]);
+    
+            const permisosUsuario = await db.query(`SELECT *
+                                                            FROM perfil_menu_accions t0
+                                                            INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
+                                                            INNER JOIN menu t2 ON t2.id = t0.id_menu
+                                                            WHERE t0.id_perfil IN (SELECT tt0.id_perfil FROM perfil_users tt0 WHERE tt0.id_user = ?)`,[user[0].id]);
+            
             const almacenesUsuario = [];
-            let userConfig = {
-                infoUsuario: infoUsuario[0],
+            
+    
+            let userConfig ={
+                infoUsuario:infoUsuario[0],
                 perfilesUsuario,
                 permisosUsuario,
-                menuUsuario: {
+                menuUsuario:{
                     opcionesMenu,
                     opcionesSubMenu
                 }
-            };
+            }
+    
+            */
             //Retorno de respuesta exitosa y datos del usuario logueado o token
             //console.log(JSON.stringify(userConfig));
-            const dataUser = JSON.stringify(userConfig);
-            //const token:String = jwt.sign(dataUser,'secreetkey',signInOptions);
-            const token = yield helpers_1.default.generateToken(userConfig);
-            //console.log({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,token});
-            return res.json({ message: `!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status: 200, infoUsuario, token });
+            const userId = infoUsuario[0].id;
+            const company = infoUsuario[0].id_company;
+            //const token:string = await helper.generateToken(userConfig);
+            const tokenid = yield helpers_1.default.generateToken({ userId, company });
+            const token = tokenid;
+            //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
+            return res.json({ message: `!Bienvenido ${infoUsuario[0].fullname}¡`, status: 200, infoUsuario, token, tokenid });
+        });
+    }
+    infoUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                return res.json(infoUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    perfilesUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                return res.json(perfilesUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    menuUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const menuUsuario = yield helpers_1.default.getMenuUsuario(decodedToken.userId);
+                return res.json(menuUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    permisosUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const permisosUsuario = yield helpers_1.default.getPermisoUsuario(decodedToken.userId);
+                return res.json(permisosUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
         });
     }
     recovery(req, res) {
@@ -105,15 +183,15 @@ class AuthController {
     }
     dependenciesUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
             try {
-                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
                 res.json(dependenciasUsuario);
             }
             catch (error) {
@@ -124,15 +202,15 @@ class AuthController {
     }
     areasSolpedUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
             try {
-                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario.codusersap}'`);
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.areas_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
                 res.json(dependenciasUsuario);
             }
             catch (error) {
@@ -143,15 +221,15 @@ class AuthController {
     }
     almacenUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
             try {
-                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario.codusersap}'`);
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.stores_users WHERE codusersap = '${infoUsuario[0].codusersap}'`);
                 res.json(dependenciasUsuario);
             }
             catch (error) {
@@ -162,16 +240,15 @@ class AuthController {
     }
     almacenUserXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const bdmysql = infoUsuario.bdmysql;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
@@ -184,17 +261,22 @@ class AuthController {
     }
     dependenciesUserXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                //const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                //const url2 = `http://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                console.log(url2);
+                //https://nitrofert-hbt.heinsohncloud.com.co:4300/
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
+                //console.log(data2);
                 return res.json(data2);
             }
             catch (error) {
@@ -205,16 +287,16 @@ class AuthController {
     }
     areasUserXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = yield helpers_1.default.validateToken(jwt);
-            //******************************************************* */
-            const infoUsuario = decodedToken.infoUsuario;
-            const compania = infoUsuario.dbcompanysap;
-            const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario.codusersap}&compania=${compania}`;
-            //console.log(url2);
             try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                //console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
