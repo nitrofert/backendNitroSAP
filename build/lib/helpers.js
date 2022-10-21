@@ -97,7 +97,9 @@ class Helpers {
                 '/api/companies/listActive',
                 '/api/permisos/list',
                 '/api/compras/solped/aprobar/',
-                '/api/compras/solped/rechazar/'
+                '/api/compras/solped/rechazar/',
+                '/api/compras/solped/upload/',
+                '/api/compras/solped/borrar-anexo/'
             ];
             let result = false;
             for (let item of routesAllowWithoutToken) {
@@ -289,9 +291,11 @@ class Helpers {
                     id_user: item.id_user
                 });
             }
+            const anexosSolpedResult = yield database_1.db.query(`SELECT * FROM ${bdmysql}.anexos t0 WHERE t0.id_solped =  ?`, [idSolped]);
             let solpedObject = {
                 solped,
-                solpedDet
+                solpedDet,
+                anexos: anexosSolpedResult
             };
             return solpedObject;
         });
@@ -408,6 +412,7 @@ class Helpers {
     loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
+            const anexosSolped = solped.anexos;
             let subtotal = 0;
             let totalimpuesto = 0;
             let total = 0;
@@ -498,6 +503,20 @@ class Helpers {
                                                         </td>
                                                     </tr>
             `;
+            }
+            let anexos = ``;
+            for (let anexo of anexosSolped) {
+                anexos = anexos + `<tr>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.tipo}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                </td>
+                              </tr>`;
             }
             let detalleSolped = `
                                         <tr>
@@ -635,6 +654,21 @@ class Helpers {
                                                         </table>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                    <table align="center" style="width:100%;">
+                                                        <tr>
+                                                            <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                                                        </tr>
+                                                        ${anexos}
+                                                    </table>
+                                                </td>
+                                            </tr>
                                             ${htmlDetalleAprobacion}
                                         </table>
                                     </td>
@@ -667,9 +701,10 @@ class Helpers {
             return html;
         });
     }
-    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key, accionAprobacion) {
+    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
+            const anexosSolped = solped.anexos;
             let subtotal = 0;
             let totalimpuesto = 0;
             let total = 0;
@@ -761,6 +796,20 @@ class Helpers {
                                                     </tr>
             `;
             }
+            let anexos = ``;
+            for (let anexo of anexosSolped) {
+                anexos = anexos + `<tr>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.tipo}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                </td>
+                              </tr>`;
+            }
             let detalleSolped = `
                                         <tr>
                                             <td style="border:2px solid #000000; padding: 10px;">
@@ -802,9 +851,9 @@ class Helpers {
             if (key !== '') {
                 bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="http://localhost:3000/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
                                         
-                                        <td><a href="http://localhost:3000/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
                                     </tr>
                                 </table>`;
             }
@@ -895,6 +944,21 @@ class Helpers {
                                                                 <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
                                                             </tr>
                                                         </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                    <table align="center" style="width:100%;">
+                                                        <tr>
+                                                            <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                                                        </tr>
+                                                        ${anexos}
+                                                    </table>
                                                 </td>
                                             </tr>
                                             ${htmlDetalleAprobacion}

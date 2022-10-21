@@ -4,7 +4,9 @@ import { CompanyInterface } from "../interfaces/company.interface";
 import { DecodeTokenInterface, InfoUsuario, PerfilesUsuario } from "../interfaces/decodedToken.interface";
 import helper from "../lib/helpers";
 import fetch from 'node-fetch';
+import path from 'path';
 import { DocumentLine, PurchaseRequestsInterface } from "../interfaces/purchaseRequest.interface";
+import fs from 'fs';
 
 
 class SolpedController {
@@ -133,7 +135,7 @@ class SolpedController {
             //console.log(resultInsertSolpedDet);
 
             connection.commit();
-            res.json({ message: `Se realizo correctamnente el registro de la solped ${solpedId}` });
+            res.json({ message: `Se realizo correctamnente el registro de la solped ${solpedId}`,solpednum:solpedId });
 
         } catch (err) {
             // Print errors
@@ -616,7 +618,7 @@ class SolpedController {
                                 //Registrar proceso de aprobacion solped en SAP
                                 let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario[0],bdmysql,idSolped,resultResgisterSAP.DocNum);
 
-                                const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',true);
+                                const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',urlbk,true);
                         
                                 //Obtener datos de la solped a aprobar para notificación
                                 
@@ -796,7 +798,7 @@ class SolpedController {
                             let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario,bdmysql,idSolped,resultResgisterSAP.DocNum);
 
                             //Obtener datos de la solped a aprobar para notificación
-                            const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',true);
+                            const html:string = await helper.loadBodyMailApprovedSolped(LineAprovedSolped,logo,Solped,'',urlbk,true);
                             let infoEmail:any = {
                                 to: LineAprovedSolped.autor.email,
                                 cc:LineAprovedSolped.aprobador.email,
@@ -945,7 +947,7 @@ class SolpedController {
         }
     }
 
-    async rejectSolped(req: Request, res: Response){
+    public async rejectSolped(req: Request, res: Response){
         
         let connection = await db.getConnection();
 
@@ -1018,6 +1020,101 @@ class SolpedController {
         }
         
     }
+
+    public async uploadAnexoSolped(req: Request, res: Response): Promise<void> {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+        //******************************************************* */
+        const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+        const bdmysql = infoUsuario[0].bdmysql;
+        const infoFile = req.body;
+        
+
+        try {
+
+            console.log(infoFile);
+            console.log(req.file);
+            
+            let anexo = {
+                id_solped:infoFile.solpedID,
+                tipo: infoFile.anexotipo,
+                nombre:req.file?.originalname ,
+                size:req.file?.size,
+                ruta:req.file?.path
+            }
+
+            let sqlInsertFileSolped = `Insert into ${bdmysql}.anexos set ?`;
+            let resultInsertFileSolped = await db.query(sqlInsertFileSolped, [anexo]);
+            
+
+            res.json({message:`El archio ${req.file?.originalname} fue cargado satisfactoriamente`, ruta:req.file?.path, idanexo:resultInsertFileSolped.insertId });
+
+
+        } catch (err) {
+            // Print errors
+            console.log(err);
+            // Roll back the transaction
+            res.json({ err, status: 501 });
+        } 
+
+
+
+
+
+    }
+
+    public async borrarAnexoSolped(req: Request, res: Response): Promise<void> {
+         //Obtener datos del usurio logueado que realizo la petición
+         let jwt = req.headers.authorization || '';
+         jwt = jwt.slice('bearer'.length).trim();
+         const decodedToken = await helper.validateToken(jwt);
+         //******************************************************* */
+         const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+         const bdmysql = infoUsuario[0].bdmysql;
+         const infoFile = req.body;
+         
+         let connection = await db.getConnection();
+
+        
+        try {
+
+            let pathFile = path.resolve(infoFile.ruta.toString());
+            
+            
+
+            let queryDeleteAnexoSolped = `Delete from ${bdmysql}.anexos where id= ${infoFile.idanexo}`;
+
+            console.log(queryDeleteAnexoSolped);
+
+            let resultDeleteAnexo =  await connection.query(queryDeleteAnexoSolped, [infoFile.idanexo]);
+            if(fs.existsSync(pathFile)){
+                console.log(pathFile);
+                fs.unlinkSync(pathFile);
+            }
+            
+
+            connection.commit();
+
+            res.json({ message: `El anexo ${infoFile.name} fue elimiinado y desasociado de la solped ${infoFile.idsolped}`});
+
+
+
+
+        } catch (err) {
+            // Print errors
+            console.log(err);
+            // Roll back the transaction
+            connection.rollback();
+            res.json({ err, status: 501 });
+        } finally {
+            if (connection) await connection.release();
+        }
+    }
+    
+
 
 
 }

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const solpedController_1 = __importDefault(require("../controllers/solpedController"));
+const multer_1 = __importDefault(require("../lib/multer"));
 class SolpedRoutes {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -22,6 +23,8 @@ class SolpedRoutes {
         this.router.post('/aprobacion', solpedController_1.default.aproved_portal);
         this.router.get('/aprobaciones/:id', solpedController_1.default.listAprobaciones);
         this.router.post('/cancelacion', solpedController_1.default.cancelacionSolped);
+        this.router.post('/upload', multer_1.default.single('myFile'), solpedController_1.default.uploadAnexoSolped);
+        this.router.post('/borraranexo', solpedController_1.default.borrarAnexoSolped);
     }
 }
 const solpedRoutes = new SolpedRoutes();

@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import morgan  from 'morgan';
 import cors from 'cors';
+import path from 'path'
 
 import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/userRoutes';
@@ -34,7 +35,7 @@ class Server{
         this.app.use(cors({ 
             origin:['http://portal.nitrofert.com.co','http://nitroportal.nitrofert.com.co','http://localhost:4200'],
             methods:["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"],
-            allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials'],
+            allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials','enctype'],
             //optionsSuccessStatus:200,
             credentials:true,
             maxAge:3600,
@@ -42,6 +43,7 @@ class Server{
             }));
         this.app.use(express.json());
         this.app.use(express.urlencoded({'extended':false}));
+        this.app.use('/uploads', express.static(path.resolve('uploads')));
         console.log('Config');
     }
     

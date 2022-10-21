@@ -7,6 +7,7 @@ import nitromail from "./mailer";
 import { Solped, SolpedInterface } from '../interfaces/solped.interface';
 import { DocumentLine, PurchaseRequestsInterface } from "../interfaces/purchaseRequest.interface";
 
+
 class Helpers {
 
     async encryptPassword(password: string): Promise<string> {
@@ -70,7 +71,9 @@ class Helpers {
             '/api/companies/listActive',
             '/api/permisos/list',
             '/api/compras/solped/aprobar/',
-            '/api/compras/solped/rechazar/'
+            '/api/compras/solped/rechazar/',
+            '/api/compras/solped/upload/',
+            '/api/compras/solped/borrar-anexo/'
         ];
         let result = false;
         for (let item of routesAllowWithoutToken) {
@@ -290,10 +293,14 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             });
         }
 
+        const anexosSolpedResult: any[] = await db.query(`SELECT * FROM ${bdmysql}.anexos t0 WHERE t0.id_solped =  ?`, [idSolped]);
+
+       
 
         let solpedObject = {
             solped,
-            solpedDet
+            solpedDet,
+            anexos:anexosSolpedResult
         }
 
         return solpedObject;
@@ -420,6 +427,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
     async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
+        const anexosSolped:any[] = solped.anexos
         let subtotal = 0;
         let totalimpuesto = 0;
         let total = 0;
@@ -519,6 +527,22 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                         </td>
                                                     </tr>
             `;
+        }
+
+        let anexos = ``;
+
+        for(let anexo of anexosSolped){
+            anexos = anexos+ `<tr>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.tipo}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                </td>
+                              </tr>`;
         }
 
         let detalleSolped = `
@@ -660,6 +684,21 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                         </table>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                    <table align="center" style="width:100%;">
+                                                        <tr>
+                                                            <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                                                        </tr>
+                                                        ${anexos}
+                                                    </table>
+                                                </td>
+                                            </tr>
                                             ${htmlDetalleAprobacion}
                                         </table>
                                     </td>
@@ -693,9 +732,10 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         return html;
     }
 
-    async loadBodyMailApprovedSolped(LineAprovedSolped: any, logo: string, solped: any, key: string, accionAprobacion?:boolean): Promise<string> {
+    async loadBodyMailApprovedSolped(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
+        const anexosSolped:any[] = solped.anexos
         let subtotal = 0;
         let totalimpuesto = 0;
         let total = 0;
@@ -794,6 +834,22 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             `;
         }
 
+        let anexos = ``;
+
+        for(let anexo of anexosSolped){
+            anexos = anexos+ `<tr>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.tipo}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                </td>
+                              </tr>`;
+        }
+
         let detalleSolped = `
                                         <tr>
                                             <td style="border:2px solid #000000; padding: 10px;">
@@ -837,9 +893,9 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         if(key!==''){
             bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="http://localhost:3000/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
                                         
-                                        <td><a href="http://localhost:3000/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
+                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
                                     </tr>
                                 </table>`;
         }
@@ -931,6 +987,21 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                                 <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
                                                             </tr>
                                                         </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                    <table align="center" style="width:100%;">
+                                                        <tr>
+                                                            <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                                                        </tr>
+                                                        ${anexos}
+                                                    </table>
                                                 </td>
                                             </tr>
                                             ${htmlDetalleAprobacion}
@@ -1683,6 +1754,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
 
     }
+
+   
 
 
 
