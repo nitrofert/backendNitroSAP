@@ -5,9 +5,10 @@ import path from 'path'
 // Settings
 const storage = multer.diskStorage({
     destination: 'uploads/solped',
-    filename: (req, file, cb) => {
+    filename: (req, file, cb) => { 
+        //console.log(file);
         let fileName= Date.now();
         cb(null, fileName + path.extname(file.originalname))
     }
 });
-export default multer({storage});
+export default multer({storage});  

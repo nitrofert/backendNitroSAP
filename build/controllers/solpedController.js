@@ -29,6 +29,7 @@ class SolpedController {
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const bdmysql = infoUsuario[0].bdmysql;
                 const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                //console.log(await helper.loginWsSAP(infoUsuario[0]));
                 let where = "";
                 if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
                     where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
@@ -297,7 +298,7 @@ class SolpedController {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 //console.log(response2.body); 
                 const data2 = yield response2.json();
-                //console.log(data2);
+                console.log(data2);
                 //Covertir en array el objeto obtenido desde el ws Xengine de SAP y parsear el area y la condición del query de SAP
                 let arrayModelos = [];
                 for (let item in data2) {
@@ -446,7 +447,7 @@ class SolpedController {
             const logo = infoUsuario[0].logoempresa;
             const arraySolpedId = req.body;
             let urlbk = req.protocol + '://' + req.get('host');
-            console.log(arraySolpedId);
+            //console.log(arraySolpedId);
             let connection = yield database_1.db.getConnection();
             let Solped;
             let messageSolped = "";
@@ -519,6 +520,7 @@ class SolpedController {
                             let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(Solped);
                             //registrar Solped en SAP
                             const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
+                            console.log(resultResgisterSAP);
                             if (resultResgisterSAP.error) {
                                 error = true;
                                 console.log(resultResgisterSAP.error.message.value);
@@ -928,6 +930,7 @@ class SolpedController {
             const infoFile = req.body;
             let connection = yield database_1.db.getConnection();
             try {
+                console.log(infoFile);
                 let pathFile = path_1.default.resolve(infoFile.ruta.toString());
                 let queryDeleteAnexoSolped = `Delete from ${bdmysql}.anexos where id= ${infoFile.idanexo}`;
                 console.log(queryDeleteAnexoSolped);
@@ -949,6 +952,354 @@ class SolpedController {
             finally {
                 if (connection)
                     yield connection.release();
+            }
+        });
+    }
+    downloadAnexoSolped(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const infoFile = req.body;
+            try {
+                console.log(infoFile);
+                let pathFile = path_1.default.resolve(infoFile.ruta.toString());
+                console.log(__dirname);
+                if (fs_1.default.existsSync(pathFile)) {
+                    console.log(pathFile);
+                    //fs.unlinkSync(pathFile);
+                    res.download(pathFile);
+                    /*let road = fs.createReadStream (pathFile); // Crear entrada de flujo de entrada
+                     res.writeHead(200, {
+                         'Content-Type': 'application/force-download',
+                         'Content-Disposition': 'attachment; filename=name'
+                     });
+                     
+                     road.pipe (res);*/
+                }
+                //res.json({ message: `El anexo ${infoFile.name} fue elimiinado y desasociado de la solped ${infoFile.idsolped}`});
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                res.json({ err, status: 501 });
+            }
+        });
+    }
+    listMP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
+                if (bieSession != '') {
+                    const configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    console.log(data2.value);
+                    helpers_1.default.logoutWsSAP(bieSession);
+                    return res.json(data2.value);
+                }
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    listMPS(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                let where = "";
+                let status = req.params.status;
+                if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
+                    where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.u_nf_status='${status}' `;
+                }
+                else {
+                    where = ` WHERE  t0.u_nf_status='${status}' `;
+                }
+                //console.log(decodedToken);
+                let queryList = `SELECT t0.id, t0.approved, t0.sapdocnum AS "DocNum",
+            CONCAT(t0.sapdocnum,'-',t1.linenum) AS "key",
+            t0.u_nf_status AS "U_NF_STATUS",
+            t1.linenum AS "LineNum",
+            t1.itemcode AS "ItemCode",
+            t1.dscription AS "ItemDescription",
+            t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
+            t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
+            t0.reqdate AS "RequriedDate",
+            t0.nf_agente AS "U_NF_AGENTE",
+            t0.nf_pago AS "U_NF_PAGO",
+            t1.quantity AS "Quantity",
+            '' AS "Incoterms",
+            t0.nf_tipocarga AS "U_NF_TIPOCARGA",
+            t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
+            t1.whscode AS "WarehouseCode",
+            t0.nf_motonave AS "U_NF_MOTONAVE",
+            t0.comments AS "Comments"
+              FROM ${bdmysql}.solped t0
+            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+            ${where}
+           
+            ORDER BY t0.id DESC`;
+                //console.log(queryList);
+                const solped = yield database_1.db.query(queryList);
+                //console.log(solped);
+                res.json(solped);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    createMP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const newSolped = req.body;
+            //console.log(newSolped.solped);
+            let connection = yield database_1.db.getConnection();
+            try {
+                yield connection.beginTransaction();
+                let querySolped = `Insert into ${bdmysql}.solped set ?`;
+                newSolped.solped.docdate = yield helpers_1.default.format(newSolped.solped.docdate);
+                newSolped.solped.docduedate = yield helpers_1.default.format(newSolped.solped.docduedate);
+                newSolped.solped.taxdate = yield helpers_1.default.format(newSolped.solped.taxdate);
+                newSolped.solped.reqdate = yield helpers_1.default.format(newSolped.solped.reqdate);
+                newSolped.solped.nf_lastshippping = yield helpers_1.default.format(newSolped.solped.nf_lastshippping);
+                newSolped.solped.nf_dateofshipping = yield helpers_1.default.format(newSolped.solped.nf_dateofshipping);
+                let resultInsertSolped = yield connection.query(querySolped, [newSolped.solped]);
+                //console.log(resultInsertSolped);
+                let solpedId = resultInsertSolped.insertId;
+                let newSolpedDet = [];
+                let newSolpedLine = [];
+                for (let item in newSolped.solpedDet) {
+                    newSolpedLine.push(solpedId);
+                    newSolpedLine.push(newSolped.solpedDet[item].linenum);
+                    newSolpedLine.push(newSolped.solpedDet[item].itemcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].dscription);
+                    newSolpedLine.push(yield helpers_1.default.format(newSolped.solpedDet[item].reqdatedet));
+                    newSolpedLine.push(newSolped.solpedDet[item].linevendor);
+                    newSolpedLine.push(newSolped.solpedDet[item].acctcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].acctcodename);
+                    newSolpedLine.push(newSolped.solpedDet[item].quantity);
+                    newSolpedLine.push(newSolped.solpedDet[item].price);
+                    newSolpedLine.push(newSolped.solpedDet[item].moneda);
+                    newSolpedLine.push(newSolped.solpedDet[item].trm);
+                    newSolpedLine.push(newSolped.solpedDet[item].linetotal);
+                    newSolpedLine.push(newSolped.solpedDet[item].tax);
+                    newSolpedLine.push(newSolped.solpedDet[item].taxvalor);
+                    newSolpedLine.push(newSolped.solpedDet[item].linegtotal);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode2);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode3);
+                    newSolpedLine.push(newSolped.solpedDet[item].whscode);
+                    newSolpedLine.push(newSolped.solpedDet[item].id_user);
+                    newSolpedDet.push(newSolpedLine);
+                    newSolpedLine = [];
+                }
+                //console.log(newSolpedDet);
+                let queryInsertDetSolped = `
+                Insert into ${bdmysql}.solped_det (id_solped,linenum,itemcode,dscription,reqdatedet,linevendor,
+                 acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
+                 ocrcode3,whscode,id_user) values ?
+            `;
+                const resultInsertSolpedDet = yield connection.query(queryInsertDetSolped, [newSolpedDet]);
+                //console.log(resultInsertSolpedDet);
+                connection.commit();
+                res.json({ message: `Se realizo correctamnente el registro de la solped ${solpedId}`, solpednum: solpedId });
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                connection.rollback();
+                res.json({ err, status: 501 });
+            }
+            finally {
+                if (connection)
+                    yield connection.release();
+            }
+        });
+    }
+    updateMP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const newSolped = req.body;
+            let connection = yield database_1.db.getConnection();
+            try {
+                yield connection.beginTransaction();
+                let solpedId = newSolped.solped.id;
+                newSolped.solped.docdate = yield helpers_1.default.format(newSolped.solped.docdate);
+                newSolped.solped.docduedate = yield helpers_1.default.format(newSolped.solped.docduedate);
+                newSolped.solped.taxdate = yield helpers_1.default.format(newSolped.solped.taxdate);
+                newSolped.solped.reqdate = yield helpers_1.default.format(newSolped.solped.reqdate);
+                newSolped.solped.nf_lastshippping = yield helpers_1.default.format(newSolped.solped.nf_lastshippping);
+                newSolped.solped.nf_dateofshipping = yield helpers_1.default.format(newSolped.solped.nf_dateofshipping);
+                console.log('Encabezado', newSolped.solped);
+                //Actualizar encabezado solped 
+                let querySolped = `Update ${bdmysql}.solped set ? where id = ?`;
+                let resultUpdateSolped = yield connection.query(querySolped, [newSolped.solped, solpedId]);
+                //console.log(resultUpdateSolped);
+                //Borrar detalle Solped seleccionada
+                querySolped = `Delete from ${bdmysql}.solped_det where id_solped = ?`;
+                let resultDeleteSolpedDet = yield connection.query(querySolped, [solpedId]);
+                //console.log(resultDeleteSolpedDet);
+                let newSolpedDet = [];
+                let newSolpedLine = [];
+                for (let item in newSolped.solpedDet) {
+                    newSolpedLine.push(solpedId);
+                    newSolpedLine.push(newSolped.solpedDet[item].linenum);
+                    newSolpedLine.push(newSolped.solpedDet[item].itemcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].dscription);
+                    newSolpedLine.push(yield helpers_1.default.format(newSolped.solpedDet[item].reqdatedet));
+                    newSolpedLine.push(newSolped.solpedDet[item].linevendor);
+                    newSolpedLine.push(newSolped.solpedDet[item].acctcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].acctcodename);
+                    newSolpedLine.push(newSolped.solpedDet[item].quantity);
+                    newSolpedLine.push(newSolped.solpedDet[item].price);
+                    newSolpedLine.push(newSolped.solpedDet[item].moneda);
+                    newSolpedLine.push(newSolped.solpedDet[item].trm);
+                    newSolpedLine.push(newSolped.solpedDet[item].linetotal);
+                    newSolpedLine.push(newSolped.solpedDet[item].tax);
+                    newSolpedLine.push(newSolped.solpedDet[item].taxvalor);
+                    newSolpedLine.push(newSolped.solpedDet[item].linegtotal);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode2);
+                    newSolpedLine.push(newSolped.solpedDet[item].ocrcode3);
+                    newSolpedLine.push(newSolped.solpedDet[item].whscode);
+                    newSolpedLine.push(newSolped.solpedDet[item].id_user);
+                    newSolpedDet.push(newSolpedLine);
+                    newSolpedLine = [];
+                }
+                console.log('Detalle', newSolpedDet);
+                let queryInsertDetSolped = `
+               Insert into ${bdmysql}.solped_det (id_solped,linenum,itemcode,dscription,reqdatedet,linevendor,
+                acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
+                ocrcode3,whscode,id_user) values ?
+           `;
+                const resultInsertSolpedDet = yield connection.query(queryInsertDetSolped, [newSolpedDet]);
+                //console.log(resultInsertSolpedDet);
+                //Si la solped ya fue enviada a SAP, actualizar la info en SAP
+                connection.commit();
+                res.json({ message: `Se realizo correctamnente la actualización de la solped ${solpedId}` });
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                connection.rollback();
+                res.json({ err, status: 501 });
+            }
+            finally {
+                if (connection)
+                    yield connection.release();
+            }
+        });
+    }
+    enviarSolpedSAP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const { id } = req.body;
+            console.log(req.body);
+            try {
+                let infoSolped = yield helpers_1.default.getSolpedById(id, bdmysql);
+                let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(infoSolped);
+                //registrar Solped en SAP
+                const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
+                console.log(resultResgisterSAP);
+                if (resultResgisterSAP.error) {
+                    console.log(resultResgisterSAP.error.message.value);
+                    res.json({ err: resultResgisterSAP.error.message.value, status: 501 });
+                }
+                else {
+                    //Actualizar  sapdocnum, estado de aprobacion y de solped
+                    let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C'  where t0.id = ?`;
+                    let resultUpdateSolpedAproved = yield database_1.db.query(queryUpdateSolpedAproved, [id]);
+                    let messageSolped = `La solped ${id} fue aprobada y registrada en SAP satisfactoriamente con el numero ${resultResgisterSAP.DocNum}`;
+                    res.json({ message: messageSolped });
+                }
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                res.json({ err, status: 501 });
+            }
+        });
+    }
+    actualizarSolpedSAP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const infoSolped = req.body;
+            console.log(req.body);
+            let id = infoSolped.solped.id;
+            let serie = infoSolped.solped.serie;
+            let DocNum = infoSolped.solped.sapdocnum;
+            try {
+                let infoSolped = yield helpers_1.default.getSolpedById(id, bdmysql);
+                let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(infoSolped);
+                //Obtener DocEntry de la solpred desde sap
+                let idSolped = yield helpers_1.default.getSolpedByIdSL(infoUsuario[0], DocNum, serie);
+                let DocEntry = idSolped.value[0].DocEntry;
+                //actualizar Solped en SAP
+                let resultUpdateSolped = yield helpers_1.default.updateSolpedSAP(infoUsuario[0], dataForSAP, DocEntry);
+                console.log(resultUpdateSolped);
+                res.json({ message: 'Se realizo la actualizacon de la solped en SAP' });
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                res.json({ err, status: 501 });
             }
         });
     }

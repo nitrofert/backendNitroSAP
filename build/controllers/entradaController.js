@@ -176,6 +176,28 @@ class EntradaController {
             }
         });
     }
+    getEntradaByIdSL(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const { id } = req.params;
+                console.log(id);
+                let entradaObject = yield helpers_1.default.getEntradaByIdSL(infoUsuario[0], id);
+                console.log('resultSL', entradaObject);
+                res.json(entradaObject);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
 }
 const entradaController = new EntradaController();
 exports.default = entradaController;

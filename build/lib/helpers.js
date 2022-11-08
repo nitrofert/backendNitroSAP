@@ -99,7 +99,9 @@ class Helpers {
                 '/api/compras/solped/aprobar/',
                 '/api/compras/solped/rechazar/',
                 '/api/compras/solped/upload/',
-                '/api/compras/solped/borrar-anexo/'
+                '/api/compras/solped/borrar-anexo/',
+                '/api/nitroLQ/titulos',
+                '/api/nitroLQ/titulos/pagos'
             ];
             let result = false;
             for (let item of routesAllowWithoutToken) {
@@ -121,7 +123,6 @@ class Helpers {
                 },
                 body: JSON.stringify(jsonLog)
             };
-            //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
@@ -169,7 +170,7 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             const infoUsuario = yield database_1.db.query(`
         SELECT t0.id, fullname, email, username, codusersap, t0.status, 
-            id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  
+            id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  ,nit, direccion, telefono
         FROM users t0 
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
@@ -262,7 +263,15 @@ class Helpers {
                 u_nf_depen_solped: solpedResult[0].u_nf_depen_solped,
                 approved: solpedResult[0].approved,
                 comments: solpedResult[0].comments,
-                trm: solpedResult[0].trm
+                trm: solpedResult[0].trm,
+                u_nf_status: solpedResult[0].u_nf_status,
+                nf_lastshippping: solpedResult[0].nf_lastshippping,
+                nf_dateofshipping: solpedResult[0].nf_dateofshipping,
+                nf_agente: solpedResult[0].nf_agente,
+                nf_pago: solpedResult[0].nf_pago,
+                nf_tipocarga: solpedResult[0].nf_tipocarga,
+                nf_puertosalida: solpedResult[0].nf_puertosalida,
+                nf_motonave: solpedResult[0].nf_motonave
             };
             let solpedDet = [];
             for (let item of solpedResult) {
@@ -1296,6 +1305,30 @@ class Helpers {
                 //JournalMemo:Solped.solped.comments,
                 DocumentLines
             };
+            if (Solped.solped.u_nf_status != null) {
+                dataSolopedJSONSAP.U_NF_STATUS = Solped.solped.u_nf_status;
+            }
+            if (Solped.solped.nf_lastshippping != null) {
+                dataSolopedJSONSAP.U_NF_LASTSHIPPPING = Solped.solped.nf_lastshippping;
+            }
+            if (Solped.solped.nf_dateofshipping != null) {
+                dataSolopedJSONSAP.U_NF_DATEOFSHIPPING = Solped.solped.nf_dateofshipping;
+            }
+            if (Solped.solped.nf_agente != null) {
+                dataSolopedJSONSAP.U_NF_AGENTE = Solped.solped.nf_agente;
+            }
+            if (Solped.solped.nf_pago != null) {
+                dataSolopedJSONSAP.U_NF_PAGO = Solped.solped.nf_pago;
+            }
+            if (Solped.solped.nf_tipocarga != null) {
+                dataSolopedJSONSAP.U_NF_TIPOCARGA = Solped.solped.nf_tipocarga;
+            }
+            if (Solped.solped.nf_puertosalida != null) {
+                dataSolopedJSONSAP.U_NF_PUERTOSALIDA = Solped.solped.nf_puertosalida;
+            }
+            if (Solped.solped.nf_motonave != null) {
+                dataSolopedJSONSAP.U_NF_MOTONAVE = Solped.solped.nf_motonave;
+            }
             console.log(JSON.stringify(dataSolopedJSONSAP));
             return dataSolopedJSONSAP;
         });
@@ -1583,6 +1616,266 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes`;
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getSolpedByIdSL(infoUsuario, DocNum, Serie) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${Serie} and DocNum eq ${DocNum}&$select=DocEntry, DocNum`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradaByIdSL(infoUsuario, DocNum) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(DocNum);
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    // console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    /************** Seccion Liquitech *****************/
+    loginWsLQ() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const jsonLog = { "username": "nitrocredit", "password": "administrador" };
+            const url = `https://dev.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
+            let configWs = {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonLog)
+            };
+            //console.log(configWs);
+            try {
+                const response = yield (0, node_fetch_1.default)(url, configWs);
+                const data = yield response.json();
+                if (response.ok) {
+                    console.log('successfully logged  Liquitech');
+                    return data;
+                }
+                else {
+                    return '';
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getTitulosLQ(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+            let configWs = {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            };
+            //console.log(configWs);
+            try {
+                const response = yield (0, node_fetch_1.default)(url, configWs);
+                const data = yield response.json();
+                if (response.ok) {
+                    console.log('successfully logged  Liquitech');
+                    return data;
+                }
+                else {
+                    return '';
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getPagosLQ(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
+            let configWs = {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            };
+            //console.log(configWs);
+            try {
+                const response = yield (0, node_fetch_1.default)(url, configWs);
+                const data = yield response.json();
+                if (response.ok) {
+                    console.log('successfully logged  Liquitech', response, data);
+                    return data;
+                }
+                else {
+                    return '';
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getTituloById(no_titulo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let infoUsuario = {
+                    id: 0,
+                    fullname: '',
+                    email: '',
+                    username: 'ABALLESTEROS',
+                    codusersap: 'ABALLESTEROS',
+                    status: '',
+                    id_company: 0,
+                    companyname: 'NITROFERT_PRD',
+                    logoempresa: '',
+                    bdmysql: '',
+                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    urlwssap: ''
+                };
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$select=U_NIT,U_FECHA_FACT,U_TOTAL,U_FACTURA&$filter=U_FACTURA eq '${no_titulo}'`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getNitProveedorByTitulo(titulo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let infoUsuario = {
+                    id: 0,
+                    fullname: '',
+                    email: '',
+                    username: 'ABALLESTEROS',
+                    codusersap: 'ABALLESTEROS',
+                    status: '',
+                    id_company: 0,
+                    companyname: 'NITROFERT_PRD',
+                    logoempresa: '',
+                    bdmysql: '',
+                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    urlwssap: ''
+                };
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Invoices,BusinessPartners)?$expand=Invoices($select=DocEntry,DocNum),BusinessPartners($select=CardCode,FederalTaxID)&$filter=Invoices/CardCode eq BusinessPartners/CardCode and Invoices/DocNum eq ${titulo}`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    InsertTituloSL(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let infoUsuario = {
+                    id: 0,
+                    fullname: '',
+                    email: '',
+                    username: 'ABALLESTEROS',
+                    codusersap: 'ABALLESTEROS',
+                    status: '',
+                    id_company: 0,
+                    companyname: 'NITROFERT_PRD',
+                    logoempresa: '',
+                    bdmysql: '',
+                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    urlwssap: ''
+                };
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL`;
                     let configWs2 = {
                         method: "POST",
                         headers: {

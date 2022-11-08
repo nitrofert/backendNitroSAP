@@ -9,6 +9,7 @@ class IndexRoutes {
     }
     config() {
         this.router.get('/', indexController_1.indexController.index);
+        this.router.get('/download/anexo/:filename', indexController_1.indexController.getAnexo);
     }
 }
 const indexRoutes = new IndexRoutes();

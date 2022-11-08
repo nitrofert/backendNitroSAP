@@ -344,7 +344,15 @@ export interface PurchaseRequestsInterface {
     TaxExtension?:                              TaxExtension;
     AddressExtension?:                          AddressExtension;
     DocumentReferences?:                        any[];
-    U_AUTOR_PORTAL: string; 
+    U_AUTOR_PORTAL: string;
+    U_NF_STATUS?: string;
+    U_NF_LASTSHIPPPING?:string;
+    U_NF_DATEOFSHIPPING?:string;
+    U_NF_AGENTE?:string;
+    U_NF_PAGO?:string;
+    U_NF_TIPOCARGA?:string;
+    U_NF_PUERTOSALIDA?:string;
+    U_NF_MOTONAVE?:string;
 }
 
 export interface AddressExtension {

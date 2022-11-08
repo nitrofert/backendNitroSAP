@@ -13,6 +13,8 @@ class EntradaRoutes{
         this.router.get('/list', entradaController.list);
         this.router.post('/', entradaController.create);
         this.router.get('/:id',entradaController.getEntradaById);
+        this.router.get('/impresion/:id',entradaController.getEntradaByIdSL);
+        
         /*this.router.put('/', entradaController.update);
          
         this.router.post('/envio-aprobacion',entradaController.envioAprobacionSolped);

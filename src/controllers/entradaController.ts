@@ -190,6 +190,30 @@ class EntradaController {
         }
     }
 
+    public async getEntradaByIdSL(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql
+            const { id } = req.params;
+            
+            console.log(id );
+            let entradaObject = await helper.getEntradaByIdSL(infoUsuario[0],id);
+
+            console.log('resultSL',entradaObject);
+            res.json(entradaObject);
+
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
     
 
 }

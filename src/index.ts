@@ -17,6 +17,7 @@ import solpedRoutes from './routes/solpedRoutes';
 import wssapRoutes from './routes/wssapRoutes';
 import sharedFunctionsRoutes from './routes/sharedFunctionsRoutes';
 import entradaRoutes from './routes/entradaRoutes';
+import authRoutesLQ from './routes/authRoutesLQ';
 
 
 class Server{
@@ -43,14 +44,17 @@ class Server{
             }));
         this.app.use(express.json());
         this.app.use(express.urlencoded({'extended':false}));
+        //this.app.use('/uploads', express.static(path.resolve('uploads')));
         this.app.use('/uploads', express.static(path.resolve('uploads')));
-        console.log('Config');
+        //console.log(path.join(__dirname,'../uploads'));
+        //console.log(path.resolve('uploads'));
+
     }
     
     midelwares(){
         
         this.app.use(verifyToken.validToken);
-        console.log('Midelwares');
+        //console.log('Midelwares');
     }
 
     routes():void{
@@ -66,8 +70,10 @@ class Server{
         this.app.use('/api/compras/entrada',entradaRoutes);
         this.app.use('/api/wssap',wssapRoutes);
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
+        this.app.use('/api/nitroLQ',authRoutesLQ);
+
         
-        console.log('Routes');
+        //console.log('Routes');
         
     }
 

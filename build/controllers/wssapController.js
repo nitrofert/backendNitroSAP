@@ -158,6 +158,7 @@ class WssapController {
             let { fechaTrm } = req.params;
             //console.log(await helper.format(fechaTrm));
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${yield helpers_1.default.format(fechaTrm)}&compania=${compania}`;
+            console.log(url2);
             try {
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
@@ -353,11 +354,47 @@ class WssapController {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${pedido})`;
                 const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                 const data2 = yield response2.json();
-                //console.log(data2);
+                console.log(data2);
                 helpers_1.default.logoutWsSAP(bieSession);
                 return res.json(data2);
             }
             return res.json({ error: 501 });
+        });
+    }
+    getAreasSolpedSL(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bieSession = yield helpers_1.default.loginWsSAP(infoUsuario[0]);
+                //console.log("Items",bieSession);
+                let { pedido } = req.params;
+                if (bieSession != '') {
+                    const configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU?$select=NF_ALM_USUARIOS_SOLCollection`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(USU,USU/NF_ALM_USUARIOS_SOLCollection)?$expand=USU/NF_ALM_USUARIOS_SOLCollection($select=U_NF_DIM2_DEP)&$filter=USU/Code eq USU/NF_ALM_USUARIOS_SOLCollection/Code and USU/NF_ALM_USUARIOS_SOLCollection/U_NF_DIM2_DEP ne null`;
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helpers_1.default.logoutWsSAP(bieSession);
+                    return res.json(data2);
+                }
+                return res.json({ error: 501 });
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
         });
     }
 }

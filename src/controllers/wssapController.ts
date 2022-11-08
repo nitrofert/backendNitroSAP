@@ -203,6 +203,7 @@ class WssapController {
             //console.log(await helper.format(fechaTrm));
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${await helper.format(fechaTrm)}&compania=${compania}`;
+            console.log(url2);
             try {
         
                 const response2 = await fetch(url2);
@@ -452,7 +453,7 @@ class WssapController {
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
     
-            //console.log(data2);
+            console.log(data2);
     
             helper.logoutWsSAP(bieSession); 
             
@@ -461,6 +462,57 @@ class WssapController {
         
         return res.json({error:501}); 
     }
+
+    public async getAreasSolpedSL(req: Request, res: Response) {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bieSession = await helper.loginWsSAP(infoUsuario[0]);
+        
+        //console.log("Items",bieSession);
+
+        let { pedido } = req.params;
+        
+         
+        if(bieSession!=''){
+            const configWs2 = {
+                method:"GET", 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cookie': bieSession || ''   
+                }    
+            }
+    
+            //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU?$select=NF_ALM_USUARIOS_SOLCollection`;
+            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(USU,USU/NF_ALM_USUARIOS_SOLCollection)?$expand=USU/NF_ALM_USUARIOS_SOLCollection($select=U_NF_DIM2_DEP)&$filter=USU/Code eq USU/NF_ALM_USUARIOS_SOLCollection/Code and USU/NF_ALM_USUARIOS_SOLCollection/U_NF_DIM2_DEP ne null`;
+    
+            const response2 = await fetch(url2, configWs2);
+            const data2 = await response2.json();
+    
+            //console.log(data2);
+    
+            helper.logoutWsSAP(bieSession); 
+            
+           return res.json(data2);
+        }
+        
+        return res.json({error:501}); 
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+        
+    }
+
+
 
 
 

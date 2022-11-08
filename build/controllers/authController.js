@@ -47,7 +47,7 @@ class AuthController {
             //Obtener datos de usuario para ecriptar en token jwt
             const infoUsuario = yield database_1.db.query(`
         SELECT t0.id, fullname, email, username, codusersap, t0.status, 
-               id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  
+               id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap ,nit,direccion,telefono 
         FROM users t0 
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company

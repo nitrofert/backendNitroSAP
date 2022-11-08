@@ -27,6 +27,13 @@ class SolpedRoutes{
         this.router.post('/cancelacion',solpedController.cancelacionSolped);
         this.router.post('/upload', multer.single('myFile'), solpedController.uploadAnexoSolped);
         this.router.post('/borraranexo', solpedController.borrarAnexoSolped);
+        this.router.post('/download', solpedController.downloadAnexoSolped);
+        this.router.get('/list/mp', solpedController.listMP);
+        this.router.get('/list/mps/:status', solpedController.listMPS);
+        this.router.post('/mp', solpedController.createMP);
+        this.router.put('/mp', solpedController.updateMP);
+        this.router.post('/enviar-sap',solpedController.enviarSolpedSAP);
+        this.router.put('/enviar-sap',solpedController.actualizarSolpedSAP);
 
     }
 }

@@ -11,6 +11,7 @@ class IndexRoutes{
 
     config():void{
         this.router.get('/' , indexController.index);
+        this.router.get('/download/anexo/:filename' , indexController.getAnexo);
     }
 }
 

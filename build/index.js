@@ -20,6 +20,7 @@ const solpedRoutes_1 = __importDefault(require("./routes/solpedRoutes"));
 const wssapRoutes_1 = __importDefault(require("./routes/wssapRoutes"));
 const sharedFunctionsRoutes_1 = __importDefault(require("./routes/sharedFunctionsRoutes"));
 const entradaRoutes_1 = __importDefault(require("./routes/entradaRoutes"));
+const authRoutesLQ_1 = __importDefault(require("./routes/authRoutesLQ"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -41,12 +42,14 @@ class Server {
         }));
         this.app.use(express_1.default.json());
         this.app.use(express_1.default.urlencoded({ 'extended': false }));
+        //this.app.use('/uploads', express.static(path.resolve('uploads')));
         this.app.use('/uploads', express_1.default.static(path_1.default.resolve('uploads')));
-        console.log('Config');
+        //console.log(path.join(__dirname,'../uploads'));
+        //console.log(path.resolve('uploads'));
     }
     midelwares() {
         this.app.use(auth_middlewares_1.default.validToken);
-        console.log('Midelwares');
+        //console.log('Midelwares');
     }
     routes() {
         this.app.use(indexRoutes_1.default);
@@ -61,7 +64,8 @@ class Server {
         this.app.use('/api/compras/entrada', entradaRoutes_1.default);
         this.app.use('/api/wssap', wssapRoutes_1.default);
         this.app.use('/api/shared/functions', sharedFunctionsRoutes_1.default);
-        console.log('Routes');
+        this.app.use('/api/nitroLQ', authRoutesLQ_1.default);
+        //console.log('Routes');
     }
     start() {
         this.app.listen(this.app.get('port'), () => {
