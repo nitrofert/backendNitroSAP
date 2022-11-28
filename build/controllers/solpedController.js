@@ -32,10 +32,13 @@ class SolpedController {
                 //console.log(await helper.loginWsSAP(infoUsuario[0]));
                 let where = "";
                 if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                    where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
+                    where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.serie!='189'`;
+                }
+                if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {
+                    where = ` WHERE t0.serie!='189'`;
                 }
                 if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
-                    where = ` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') `;
+                    where = ` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and t0.serie!='189'`;
                 }
                 //console.log(decodedToken);
                 let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
@@ -408,7 +411,8 @@ class SolpedController {
                             //console.log(html);
                             //Obtener datos de la solped a aprobar
                             let infoEmail = {
-                                to: LineAprovedSolped.aprobador.email,
+                                //to: LineAprovedSolped.aprobador.email,
+                                to: 'aballesteros@nitrofert.com.co',
                                 cc: LineAprovedSolped.autor.email,
                                 subject: `Solicitud de aprobación Solped ${idSolped}`,
                                 html
@@ -484,7 +488,8 @@ class SolpedController {
                             const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true);
                             //Obtener datos de la solped a aprobar para notificación
                             let infoEmail = {
-                                to: LineAprovedSolped.aprobador.email,
+                                //to: LineAprovedSolped.aprobador.email,
+                                to: 'aballesteros@nitrofert.com.co',
                                 cc: LineAprovedSolped.autor.email,
                                 subject: `Solicitud de aprobación Solped ${idSolped}`,
                                 html
@@ -553,7 +558,8 @@ class SolpedController {
                                 //Obtener datos de la solped a aprobar para notificación
                                 let infoEmail = {
                                     to: LineAprovedSolped.autor.email,
-                                    cc: LineAprovedSolped.aprobador.email,
+                                    //cc:LineAprovedSolped.aprobador.email,
+                                    cc: 'aballesteros@nitrofert.com.co',
                                     subject: `Aprobación Solped ${idSolped}`,
                                     html
                                 };
@@ -639,7 +645,8 @@ class SolpedController {
                         const html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true);
                         //Obtener datos de la solped a aprobar para notificación
                         let infoEmail = {
-                            to: LineAprovedSolped.aprobador.email,
+                            //to: LineAprovedSolped.aprobador.email,
+                            to: 'aballesteros@nitrofert.com.co',
                             cc: LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -705,7 +712,8 @@ class SolpedController {
                             const html = yield helpers_1.default.loadBodyMailApprovedSolped(LineAprovedSolped, logo, Solped, '', urlbk, true);
                             let infoEmail = {
                                 to: LineAprovedSolped.autor.email,
-                                cc: LineAprovedSolped.aprobador.email,
+                                //cc:LineAprovedSolped.aprobador.email,
+                                cc: 'aballesteros@nitrofert.com.co',
                                 subject: `Aprobación Solped ${idSolped}`,
                                 html
                             };
@@ -857,7 +865,8 @@ class SolpedController {
                     //Obtener datos de la solped a aprobar
                     let infoEmail = {
                         to: lineaAprobacion.autor.email,
-                        cc: lineaAprobacion.aprobador.email,
+                        //cc:lineaAprobacion.aprobador.email,
+                        cc: 'aballesteros@',
                         subject: `Notificacion de rechazo Solped ${idSolped}`,
                         html
                     };
@@ -1012,7 +1021,7 @@ class SolpedController {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    console.log(data2.value);
+                    //console.log(data2.value);
                     helpers_1.default.logoutWsSAP(bieSession);
                     return res.json(data2.value);
                 }
@@ -1036,13 +1045,32 @@ class SolpedController {
                 const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
                 let where = "";
                 let status = req.params.status;
+                let serie = 0;
+                let seriesDoc = yield helpers_1.default.getSeriesXE(infoUsuario[0].dbcompanysap, '1470000113');
+                for (let item in seriesDoc) {
+                    if (seriesDoc[item].name === 'SPMP') {
+                        serie = seriesDoc[item].code;
+                    }
+                }
                 if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                    where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.u_nf_status='${status}' `;
+                    where = ` WHERE t0.serie='${serie}' `;
                 }
                 else {
-                    where = ` WHERE  t0.u_nf_status='${status}' `;
+                    where = ` WHERE  t0.serie='${serie}' `;
                 }
-                //console.log(decodedToken);
+                let solped_open_sap = yield helpers_1.default.getSolpedMPopenSL(infoUsuario[0], serie);
+                let array_solped_sap = [0];
+                for (let solped of solped_open_sap.value) {
+                    //console.log(solped.DocNum);
+                    array_solped_sap.push(solped.DocNum);
+                }
+                // console.log(JSON.stringify(array_solped_sap).replace('[','(').replace(']',')'));
+                if (where == '') {
+                    where = ` WHERE  t0.sapdocnum in ${JSON.stringify(array_solped_sap).replace('[', '(').replace(']', ')')} `;
+                }
+                else {
+                    where = where + ` and  t0.sapdocnum in ${JSON.stringify(array_solped_sap).replace('[', '(').replace(']', ')')} `;
+                }
                 let queryList = `SELECT t0.id, t0.approved, t0.sapdocnum AS "DocNum",
             CONCAT(t0.sapdocnum,'-',t1.linenum) AS "key",
             t0.u_nf_status AS "U_NF_STATUS",
@@ -1055,12 +1083,14 @@ class SolpedController {
             t0.nf_agente AS "U_NF_AGENTE",
             t0.nf_pago AS "U_NF_PAGO",
             t1.quantity AS "Quantity",
-            '' AS "Incoterms",
+            t0.nf_Incoterms AS "U_NT_Incoterms",
             t0.nf_tipocarga AS "U_NF_TIPOCARGA",
             t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
             t1.whscode AS "WarehouseCode",
             t0.nf_motonave AS "U_NF_MOTONAVE",
-            t0.comments AS "Comments"
+            t0.comments AS "Comments",
+            t1.unidad AS "MeasureUnit",
+            t1.linevendor as "CarCode"
               FROM ${bdmysql}.solped t0
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             ${where}
@@ -1068,7 +1098,107 @@ class SolpedController {
             ORDER BY t0.id DESC`;
                 //console.log(queryList);
                 const solped = yield database_1.db.query(queryList);
-                //console.log(solped);
+                console.log(solped);
+                res.json(solped);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    listMPS2(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                let where = "";
+                let status = req.params.status;
+                let serie = 0;
+                let seriesDoc = yield helpers_1.default.getSeriesXE(infoUsuario[0].dbcompanysap, '1470000113');
+                for (let item in seriesDoc) {
+                    if (seriesDoc[item].name === 'SPMP') {
+                        serie = seriesDoc[item].code;
+                    }
+                }
+                if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
+                    where = ` WHERE t0.serie='${serie}' and t0.sapdocnum =0 `;
+                }
+                else {
+                    where = ` WHERE  t0.serie='${serie}' and t0.sapdocnum=0 `;
+                }
+                //console.log(JSON.stringify(array_solped_sap).replace('[','(').replace(']',')'));
+                /*if(where==''){
+                    where = ` WHERE  t0.sapdocnum in ${JSON.stringify(array_solped_sap).replace('[','(').replace(']',')')} `;
+                }else{
+                    where = where+ ` and  t0.sapdocnum in ${JSON.stringify(array_solped_sap).replace('[','(').replace(']',')')} `;
+                }*/
+                let solped_open_sap = yield helpers_1.default.getAllSolpedMPopenSL(infoUsuario[0], serie);
+                let array_solped_sap = yield helpers_1.default.covertirResultadoSLArray(solped_open_sap);
+                //console.log(solped_open_sap);
+                let queryList = `SELECT 
+            t0.id, 
+            t0.approved, 
+            t0.sapdocnum AS "DocNum",
+            CONCAT(t0.id,'-',t0.sapdocnum,'-',t1.linenum) AS "key",
+            t0.u_nf_status AS "U_NF_STATUS",
+            t1.linenum AS "LineNum",
+            t1.itemcode AS "ItemCode",
+            t1.dscription AS "ItemDescription",
+            t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
+            t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
+            t0.reqdate AS "RequriedDate",
+            t0.nf_agente AS "U_NF_AGENTE",
+            t0.nf_pago AS "U_NF_PAGO",
+            t1.quantity AS "Quantity",
+            t0.nf_Incoterms AS "U_NT_Incoterms",
+            t0.nf_tipocarga AS "U_NF_TIPOCARGA",
+            t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
+            t1.whscode AS "WarehouseCode",
+            t0.nf_motonave AS "U_NF_MOTONAVE",
+            t0.comments AS "Comments",
+            t1.unidad AS "MeasureUnit",
+            t1.linevendor as "CarCode"
+              FROM ${bdmysql}.solped t0
+            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+            ${where}
+           
+            ORDER BY t0.id DESC`;
+                //console.log(queryList);
+                const solped = yield database_1.db.query(queryList);
+                console.log(solped);
+                for (let linea of array_solped_sap) {
+                    solped.push({
+                        id: linea.id,
+                        approved: linea.approved,
+                        DocNum: linea.DocNum,
+                        key: linea.key,
+                        U_NF_STATUS: linea.U_NF_STATUS,
+                        LineNum: linea.lineNum,
+                        ItemCode: linea.ItemCode,
+                        ItemDescription: linea.ItemDescription,
+                        U_NF_LASTSHIPPPING: linea.U_NF_LASTSHIPPPING,
+                        U_NF_DATEOFSHIPPING: linea.U_NF_DATEOFSHIPPING,
+                        RequriedDate: linea.RequriedDate,
+                        U_NF_AGENTE: linea.U_NF_AGENTE,
+                        U_NF_PAGO: linea.U_NF_PAGO,
+                        Quantity: linea.Quantity,
+                        U_NT_Incoterms: linea.U_NT_Incoterms,
+                        U_NF_TIPOCARGA: linea.U_NF_TIPOCARGA,
+                        U_NF_PUERTOSALIDA: linea.U_NF_PUERTOSALIDA,
+                        WarehouseCode: linea.WarehouseCode,
+                        U_NF_MOTONAVE: linea.U_NF_MOTONAVE,
+                        Comments: linea.Comments,
+                        MeasureUnit: linea.MeasureUnit,
+                        CarCode: linea.CardCode
+                    });
+                }
                 res.json(solped);
             }
             catch (error) {
@@ -1087,7 +1217,7 @@ class SolpedController {
             const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const newSolped = req.body;
-            //console.log(newSolped.solped);
+            //console.log(newSolped);
             let connection = yield database_1.db.getConnection();
             try {
                 yield connection.beginTransaction();
@@ -1125,15 +1255,18 @@ class SolpedController {
                     newSolpedLine.push(newSolped.solpedDet[item].ocrcode3);
                     newSolpedLine.push(newSolped.solpedDet[item].whscode);
                     newSolpedLine.push(newSolped.solpedDet[item].id_user);
+                    newSolpedLine.push(newSolped.solpedDet[item].unidad);
+                    newSolpedLine.push(newSolped.solpedDet[item].zonacode);
                     newSolpedDet.push(newSolpedLine);
                     newSolpedLine = [];
                 }
-                //console.log(newSolpedDet);
+                console.log(newSolpedDet);
                 let queryInsertDetSolped = `
                 Insert into ${bdmysql}.solped_det (id_solped,linenum,itemcode,dscription,reqdatedet,linevendor,
-                 acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
-                 ocrcode3,whscode,id_user) values ?
+                    acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
+                 ocrcode3,whscode,id_user,unidad,zonacode) values ?
             `;
+                //console.log(queryInsertDetSolped);
                 const resultInsertSolpedDet = yield connection.query(queryInsertDetSolped, [newSolpedDet]);
                 //console.log(resultInsertSolpedDet);
                 connection.commit();
@@ -1172,7 +1305,7 @@ class SolpedController {
                 newSolped.solped.reqdate = yield helpers_1.default.format(newSolped.solped.reqdate);
                 newSolped.solped.nf_lastshippping = yield helpers_1.default.format(newSolped.solped.nf_lastshippping);
                 newSolped.solped.nf_dateofshipping = yield helpers_1.default.format(newSolped.solped.nf_dateofshipping);
-                console.log('Encabezado', newSolped.solped);
+                //console.log('Encabezado',newSolped.solped);
                 //Actualizar encabezado solped 
                 let querySolped = `Update ${bdmysql}.solped set ? where id = ?`;
                 let resultUpdateSolped = yield connection.query(querySolped, [newSolped.solped, solpedId]);
@@ -1249,14 +1382,14 @@ class SolpedController {
                 let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(infoSolped);
                 //registrar Solped en SAP
                 const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
-                console.log(resultResgisterSAP);
+                //console.log(resultResgisterSAP);
                 if (resultResgisterSAP.error) {
                     console.log(resultResgisterSAP.error.message.value);
                     res.json({ err: resultResgisterSAP.error.message.value, status: 501 });
                 }
                 else {
                     //Actualizar  sapdocnum, estado de aprobacion y de solped
-                    let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C'  where t0.id = ?`;
+                    let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 Set t0.approved = 'A', t0.sapdocnum ='${resultResgisterSAP.DocNum}', t0.status='C', t0.u_nf_status='Solicitado'  where t0.id = ?`;
                     let resultUpdateSolpedAproved = yield database_1.db.query(queryUpdateSolpedAproved, [id]);
                     let messageSolped = `La solped ${id} fue aprobada y registrada en SAP satisfactoriamente con el numero ${resultResgisterSAP.DocNum}`;
                     res.json({ message: messageSolped });
@@ -1280,7 +1413,7 @@ class SolpedController {
             const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const infoSolped = req.body;
-            console.log(req.body);
+            //console.log(req.body);
             let id = infoSolped.solped.id;
             let serie = infoSolped.solped.serie;
             let DocNum = infoSolped.solped.sapdocnum;
@@ -1292,7 +1425,7 @@ class SolpedController {
                 let DocEntry = idSolped.value[0].DocEntry;
                 //actualizar Solped en SAP
                 let resultUpdateSolped = yield helpers_1.default.updateSolpedSAP(infoUsuario[0], dataForSAP, DocEntry);
-                console.log(resultUpdateSolped);
+                //console.log(resultUpdateSolped);
                 res.json({ message: 'Se realizo la actualizacon de la solped en SAP' });
             }
             catch (err) {
@@ -1300,6 +1433,78 @@ class SolpedController {
                 console.log(err);
                 // Roll back the transaction
                 res.json({ err, status: 501 });
+            }
+        });
+    }
+    listOCMP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                let status = req.params.status;
+                let listadoOCMP = yield helpers_1.default.getOcMPByStatusSL(infoUsuario[0], status);
+                res.json(listadoOCMP);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    actualizarPedidoSAP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const infoPedido = req.body;
+            //console.log(req.body);
+            let DocEntry = infoPedido.DocEntry;
+            let Datapedido = infoPedido.pedidoData;
+            let DocNum = infoPedido.DocNum;
+            try {
+                //actualizar Pedido en SAP
+                let resultUpdatePedido = yield helpers_1.default.updatePedidoSAP(infoUsuario[0], Datapedido, DocEntry);
+                //console.log(resultUpdateSolped);
+                res.json({ message: `Se realizo la actualizacon del pedido ${DocNum} en SAP` });
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                // Roll back the transaction
+                res.json({ err, status: 501 });
+            }
+        });
+    }
+    listInMP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                //let status = req.params.status;
+                //let listadoOCMP = await helper.getEntradasMPSL( infoUsuario[0]);
+                let listadoOCMP = yield helpers_1.default.getEntradasMPXE(infoUsuario[0]);
+                //console.log('Entradas',listadoOCMP);
+                res.json(listadoOCMP);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
             }
         });
     }

@@ -353,6 +353,7 @@ export interface PurchaseRequestsInterface {
     U_NF_TIPOCARGA?:string;
     U_NF_PUERTOSALIDA?:string;
     U_NF_MOTONAVE?:string;
+    U_NF_PEDMP?:string;
 }
 
 export interface AddressExtension {

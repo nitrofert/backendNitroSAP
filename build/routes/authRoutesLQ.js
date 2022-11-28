@@ -13,6 +13,7 @@ class AuthLQRoutes {
     config() {
         this.router.get('/titulos', authLQController_1.default.titulos);
         this.router.get('/titulos/pagos', authLQController_1.default.pagos);
+        this.router.get('/titulosypagos', authLQController_1.default.titulosYpagos);
     }
 }
 const authLQRoutes = new AuthLQRoutes();

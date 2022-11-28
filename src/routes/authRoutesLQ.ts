@@ -12,6 +12,7 @@ class AuthLQRoutes{
     config():void{
         this.router.get('/titulos', authLQController.titulos);
         this.router.get('/titulos/pagos', authLQController.pagos);
+        this.router.get('/titulosypagos', authLQController.titulosYpagos);
 
     }
 }

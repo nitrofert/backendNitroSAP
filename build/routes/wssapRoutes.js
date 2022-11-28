@@ -24,6 +24,8 @@ class WsSAPRoutes {
         this.router.get('/Xengine/ordenes-open-usuario-sl', wssapController_1.default.OrdenesUsuarioSL);
         this.router.get('/Xengine/pedido/:pedido', wssapController_1.default.PedidoByIdSL);
         this.router.get('/Areas/Solped', wssapController_1.default.getAreasSolpedSL);
+        this.router.get('/UnidadItem/:ItemCode', wssapController_1.default.getUnidadItemSL);
+        this.router.get('/almacenesmp', wssapController_1.default.getAlmacenesMPSL);
     }
 }
 const wssapRoutes = new WsSAPRoutes();

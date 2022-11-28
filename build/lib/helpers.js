@@ -127,7 +127,7 @@ class Helpers {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    console.log('successfully logged SAP');
+                    //console.log('successfully logged SAP');
                     return response.headers.get('set-cookie');
                 }
                 else {
@@ -271,7 +271,9 @@ class Helpers {
                 nf_pago: solpedResult[0].nf_pago,
                 nf_tipocarga: solpedResult[0].nf_tipocarga,
                 nf_puertosalida: solpedResult[0].nf_puertosalida,
-                nf_motonave: solpedResult[0].nf_motonave
+                nf_motonave: solpedResult[0].nf_motonave,
+                nf_pedmp: solpedResult[0].nf_pedmp,
+                nf_Incoterms: solpedResult[0].nf_Incoterms
             };
             let solpedDet = [];
             for (let item of solpedResult) {
@@ -297,7 +299,8 @@ class Helpers {
                     ocrcode2: item.ocrcode2,
                     ocrcode3: item.ocrcode3,
                     whscode: item.whscode,
-                    id_user: item.id_user
+                    id_user: item.id_user,
+                    zonecode: item.zonecode
                 });
             }
             const anexosSolpedResult = yield database_1.db.query(`SELECT * FROM ${bdmysql}.anexos t0 WHERE t0.id_solped =  ?`, [idSolped]);
@@ -359,10 +362,10 @@ class Helpers {
             let mailer = mailer_1.default.getTransporter();
             (yield mailer).sendMail({
                 from: `"Notificaciones NitroPortal" <${mailer_1.default.emailsend}>`,
-                //to: infoEmail.to,
-                to: `ralbor@nitrofert.com.co`,
-                cc: `ralbor@nitrofert.com.co`,
-                //cc:infoEmail.cc,
+                to: infoEmail.to,
+                //to: `ralbor@nitrofert.com.co`,
+                //cc: `ralbor@nitrofert.com.co`,
+                cc: infoEmail.cc,
                 subject: infoEmail.subject,
                 html: infoEmail.html,
                 headers: { 'x-myheader': 'test header' }
@@ -1306,7 +1309,7 @@ class Helpers {
                 DocumentLines
             };
             if (Solped.solped.u_nf_status != null) {
-                dataSolopedJSONSAP.U_NF_STATUS = Solped.solped.u_nf_status;
+                dataSolopedJSONSAP.U_NF_STATUS = Solped.solped.u_nf_status == 'Proyectado' ? 'Solicitado' : Solped.solped.u_nf_status;
             }
             if (Solped.solped.nf_lastshippping != null) {
                 dataSolopedJSONSAP.U_NF_LASTSHIPPPING = Solped.solped.nf_lastshippping;
@@ -1328,6 +1331,12 @@ class Helpers {
             }
             if (Solped.solped.nf_motonave != null) {
                 dataSolopedJSONSAP.U_NF_MOTONAVE = Solped.solped.nf_motonave;
+            }
+            if (Solped.solped.nf_pedmp != null) {
+                dataSolopedJSONSAP.U_NF_PEDMP = Solped.solped.nf_pedmp;
+            }
+            if (Solped.solped.nf_Incoterms != null) {
+                dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
             console.log(JSON.stringify(dataSolopedJSONSAP));
             return dataSolopedJSONSAP;
@@ -1690,6 +1699,333 @@ class Helpers {
             }
         });
     }
+    getSeriesXE(compania, objtype) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let filtroObjtype = "";
+                if (objtype)
+                    filtroObjtype = `&tipodoc=${objtype}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                //console.log(data2);
+                return (data2);
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getSolpedMPopenSL(infoUsuario, serie) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' &$select=DocNum`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getAllSolpedMPopenSL(infoUsuario, serie) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    sumarDiasFecha(fecha, dias) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                fecha.setDate(fecha.getDate() + dias);
+                return fecha;
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getOcMPByStatusSL(infoUsuario, status) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq 92 and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
+                    console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradasMPSL(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes?$filter=U_NF_PEDMP eq 'S' and DocumentStatus eq 'bost_Open'`;
+                    console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradasMPXE(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}`;
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    updatePedidoSAP(infoUsuario, data, docEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${docEntry})`;
+                    let configWs2 = {
+                        method: "PATCH",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    //const data2 = await response2.json();
+                    console.log(response2);
+                    helper.logoutWsSAP(bieSession);
+                    return response2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getInventariosMPXE(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}`;
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getInventariosTrackingMPXE(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}`;
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getInventariosProyectados(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bdmysql = infoUsuario.bdmysql;
+                const query = `SELECT 
+            'Proyectado' AS "TIPO",
+            '' AS "CardCode",
+            t0.sapdocnum AS "DocNum",
+            '' AS "DocCur",
+            '' AS "BaseRef",
+            t0.status AS "DocStatus",
+            '' AS "CANCELED",
+            t0.reqdate AS "FECHANECESIDAD",
+            t0.nf_pedmp AS "U_NF_PEDMP",
+            t0.nf_incoterms AS "U_NT_Incoterms",
+            t0.reqdate AS "ETA", 
+            t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
+            t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
+            t0.nf_agente AS "U_NF_AGENTE",
+            t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
+            t0.nf_motonave AS "U_NF_MOTONAVE",
+            t0.u_nf_status AS "U_NF_STATUS",
+            t1.linevendor AS "LineVendor",
+            t1.itemcode AS "ItemCode",
+            t1.whscode AS "WhsCode",
+            t1.zonacode AS "State_Code",
+            '' AS "PENTRADA",
+            t1.quantity AS "Quantity",
+            t1.price AS "Price",
+            t1.trm AS "Rate",
+            '' AS "OpenCreQty"
+            
+            FROM ${bdmysql}.solped t0 
+            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+            WHERE t0.serie = 189 AND 
+            t0.sapdocnum =0`;
+                const solpeds = yield database_1.db.query(query);
+                return (solpeds);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    covertirResultadoSLArray(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Convertir SL to array');
+            let dataArray = [];
+            let lineaArray;
+            let lineaDetalleArray = [];
+            for (let documento of data.value) {
+                lineaArray = {
+                    DocEntry: documento.DocEntry,
+                    DocNum: documento.DocNum,
+                    DocType: documento.DocType,
+                    DocDate: documento.DocDate,
+                    DocDueDate: documento.DocDueDate,
+                    DocCurrency: documento.DocCurrency,
+                    DocRate: documento.DocRate,
+                    Reference1: documento.Reference1,
+                    Comments: documento.Comments,
+                    Series: documento.Series,
+                    TaxDate: documento.TaxDate,
+                    DocObjectCode: documento.DocObjectCode,
+                    CreationDate: documento.CreationDate,
+                    UpdateDate: documento.UpdateDate,
+                    UserSign: documento.UserSign,
+                    DocTotalFc: documento.DocTotalFc,
+                    DocTotalSys: documento.DocTotalSys,
+                    RequriedDate: documento.RequriedDate,
+                    DocumentStatus: documento.DocumentStatus,
+                    Requester: documento.Requester,
+                    RequesterName: documento.RequesterName,
+                    RequesterEmail: documento.RequesterEmail,
+                    U_NF_AGENTE: documento.U_NF_AGENTE,
+                    U_NF_DATEOFSHIPPING: documento.U_NF_DATEOFSHIPPING,
+                    U_NF_LASTSHIPPPING: documento.U_NF_LASTSHIPPPING,
+                    U_NF_MOTONAVE: documento.U_NF_MOTONAVE,
+                    U_NF_PAGO: documento.U_NF_PAGO,
+                    U_NF_PUERTOSALIDA: documento.U_NF_PUERTOSALIDA,
+                    U_NF_STATUS: documento.U_NF_STATUS,
+                    U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
+                    U_NT_Incoterms: documento.U_NT_Incoterms,
+                    CardCode: '',
+                    CardName: '',
+                    ItemCode: '',
+                    ItemDescription: '',
+                    LineNum: 0,
+                    MeasureUnit: '',
+                    Quantity: 0,
+                    RemainingOpenQuantity: 0,
+                    approved: 'S',
+                    id: documento.DocEntry,
+                    key: 0,
+                    WarehouseCode: ''
+                };
+                if (documento.DocumentLines.length > 0) {
+                    for (let lineaDetalle of documento.DocumentLines) {
+                        console.log(lineaDetalle);
+                        lineaArray.CardCode = lineaDetalle.LineVendor;
+                        lineaArray.ItemCode = lineaDetalle.ItemCode;
+                        lineaArray.ItemDescription = lineaDetalle.ItemDescription;
+                        lineaArray.LineNum = lineaDetalle.LineNum;
+                        lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
+                        lineaArray.Quantity = lineaDetalle.Quantity;
+                        lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
+                        lineaArray.key = documento.DocEntry + '-' + documento.DocNum + '-' + lineaDetalle.LineNum;
+                        lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
+                        console.log(lineaArray);
+                        dataArray.push(lineaArray);
+                    }
+                }
+                break;
+            }
+            return dataArray;
+        });
+    }
     /************** Seccion Liquitech *****************/
     loginWsLQ() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -1707,7 +2043,7 @@ class Helpers {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    console.log('successfully logged  Liquitech');
+                    //console.log('successfully logged  Liquitech');
                     return data;
                 }
                 else {
@@ -1720,9 +2056,9 @@ class Helpers {
             }
         });
     }
-    getTitulosLQ(token) {
+    getTitulosLQ(token, nextPage) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+            const url = nextPage;
             let configWs = {
                 method: "GET",
                 headers: {
@@ -1733,9 +2069,10 @@ class Helpers {
             //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
-                const data = yield response.json();
                 if (response.ok) {
                     console.log('successfully logged  Liquitech');
+                    const data = yield response.json();
+                    //console.log(data);    
                     return data;
                 }
                 else {
@@ -1748,9 +2085,9 @@ class Helpers {
             }
         });
     }
-    getPagosLQ(token) {
+    getPagosLQ(token, nextPage) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
+            const url = `${nextPage}`;
             let configWs = {
                 method: "GET",
                 headers: {
@@ -1763,7 +2100,7 @@ class Helpers {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    console.log('successfully logged  Liquitech', response, data);
+                    //console.log('successfully logged  Liquitech',response,data);
                     return data;
                 }
                 else {
@@ -1795,7 +2132,8 @@ class Helpers {
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$select=U_NIT,U_FECHA_FACT,U_TOTAL,U_FACTURA&$filter=U_FACTURA eq '${no_titulo}'`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$filter=U_FACTURA eq '${no_titulo}'`;
+                    console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -1893,6 +2231,290 @@ class Helpers {
             }
             catch (error) {
                 console.log(error);
+                return '';
+            }
+        });
+    }
+    UpdateTituloSL(data, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let infoUsuario = {
+                    id: 0,
+                    fullname: '',
+                    email: '',
+                    username: 'ABALLESTEROS',
+                    codusersap: 'ABALLESTEROS',
+                    status: '',
+                    id_company: 0,
+                    companyname: 'NITROFERT_PRD',
+                    logoempresa: '',
+                    bdmysql: '',
+                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    urlwssap: ''
+                };
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL(${DocEntry})`;
+                    let configWs2 = {
+                        method: "PATCH",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    //const data2 = await response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return response2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getRefPagoTitulo(titulo, refPago) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let infoUsuario = {
+                    id: 0,
+                    fullname: '',
+                    email: '',
+                    username: 'ABALLESTEROS',
+                    codusersap: 'ABALLESTEROS',
+                    status: '',
+                    id_company: 0,
+                    companyname: 'NITROFERT_PRD',
+                    logoempresa: '',
+                    bdmysql: '',
+                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    urlwssap: ''
+                };
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(CXXL,CXXL/NF_CXC_LIQUITEC_DETCollection)?$expand=CXXL($select=DocEntry,DocNum,U_FACTURA),CXXL/NF_CXC_LIQUITEC_DETCollection($select=DocEntry,U_NF_REF_PAGO)&$filter=CXXL/DocEntry eq CXXL/NF_CXC_LIQUITEC_DETCollection/DocEntry and CXXL/U_FACTURA eq '${titulo}' and CXXL/NF_CXC_LIQUITEC_DETCollection/U_NF_REF_PAGO eq '${refPago}'`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    cunsumirTitulosLQ(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //const titulos = await helper.getTitulosLQ(infoLog.data.access_token);
+                let dataNewTitulo;
+                let dataUpdateTitulo;
+                let nextPage = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+                let titulos = [];
+                let titulosUpdate = [];
+                let titulosPage;
+                let no_titulo;
+                let tituloSap;
+                let resultInsertTitulo;
+                let resultUpdateTitulo;
+                //console.log(titulos.length,titulos.length); 
+                let fechaEjecucion = new Date();
+                while (nextPage != null) {
+                    console.log(nextPage);
+                    titulosPage = yield helper.getTitulosLQ(token, nextPage);
+                    console.log(titulosPage);
+                    if (titulosPage.results) {
+                        for (let titulo of titulosPage.results) {
+                            no_titulo = titulo.no_titulo;
+                            tituloSap = yield helper.getTituloById(no_titulo);
+                            //console.log(titulo);
+                            if (tituloSap.value.length == 0) {
+                                //Insertar factura en udo
+                                let nit_pagador_sap = yield helper.getNitProveedorByTitulo(no_titulo);
+                                dataNewTitulo = {
+                                    U_NIT: nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                    U_FECHA_FACT: titulo.fecha_emision,
+                                    U_TOTAL: titulo.valor_titulo,
+                                    U_FACTURA: titulo.no_titulo,
+                                    U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                    U_NF_CUFE_FV: titulo.cufe,
+                                    U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                    U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                    U_NF_VALOR_GIRO: titulo.valor_giro
+                                };
+                                resultInsertTitulo = yield helper.InsertTituloSL(dataNewTitulo);
+                                titulos.push(titulo);
+                            }
+                            else {
+                                //Update estado cabecera titulo
+                                dataUpdateTitulo = {
+                                    U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                    U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                    U_NF_CUFE_FV: titulo.cufe,
+                                    U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                    U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                    U_NF_VALOR_GIRO: titulo.valor_giro
+                                };
+                                resultUpdateTitulo = yield helper.UpdateTituloSL(dataUpdateTitulo, tituloSap.value[0].DocEntry);
+                                //console.log(resultUpdateTitulo);
+                                titulosUpdate.push(titulo);
+                            }
+                        }
+                        nextPage = titulosPage.next;
+                    }
+                    else {
+                        nextPage = null;
+                    }
+                }
+                let fechaFinalizacion = new Date();
+                //Envio Notificcación registros 
+                let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
+                    <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
+                if (titulos.length > 0) {
+                    html = html + `<h4>Títulos registrados</h4><br>${JSON.stringify(titulos)}<br>`;
+                }
+                if (titulosUpdate.length > 0) {
+                    html = html + `<h4>Títulos actualizados</h4><br>${JSON.stringify(titulosUpdate)}<br>`;
+                }
+                if (titulos.length == titulosUpdate.length && titulosUpdate.length == 0) {
+                    html = html + `<h4>No se encontraron títulos a registrar</h4><br>`;
+                }
+                let infoEmail = {
+                    //to: LineAprovedSolped.aprobador.email,
+                    to: 'ralbor@nitrofert.com.co',
+                    cc: 'aballesteros@nitrofert.com.co',
+                    subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
+                    html
+                };
+                //Envio de notificación al siguiente aprobador con copia al autor
+                yield helper.sendNotification(infoEmail);
+                return ({ 'Titulos registrados': titulos, 'Titulos actualizados': titulosUpdate });
+            }
+            catch (error) {
+                console.log(error);
+                let infoEmail = {
+                    //to: LineAprovedSolped.aprobador.email,
+                    to: 'ralbor@nitrofert.com.co',
+                    cc: 'aballesteros@nitrofert.com.co',
+                    subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
+                    html: error
+                };
+                //Envio de notificación al siguiente aprobador con copia al autor
+                yield helper.sendNotification(infoEmail);
+                return '';
+            }
+        });
+    }
+    cunsumirPagosLQ(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let fechaEjecucion = new Date();
+                let fechaFinPago = new Date();
+                let fechaFinPagoFormat = `${fechaFinPago.getFullYear()}-${fechaFinPago.getMonth() + 1}-${fechaFinPago.getUTCDate()}`;
+                let fechaInicioPago = yield helper.sumarDiasFecha(new Date(), -100);
+                let fechaInicioPagoFormat = `${fechaInicioPago.getFullYear()}-${fechaInicioPago.getMonth() + 1}-${fechaInicioPago.getUTCDate()}`;
+                console.log(fechaFinPagoFormat, fechaInicioPagoFormat);
+                //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
+                let nextPage = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+                //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
+                console.log(nextPage);
+                let pagos = [];
+                let pagosPage;
+                let refPago;
+                let dataNewPago;
+                let tituloSap;
+                let pagosTitulo;
+                let DocEntry;
+                while (nextPage != null) {
+                    console.log(nextPage);
+                    pagosPage = yield helper.getPagosLQ(token, nextPage);
+                    console.log(pagosPage);
+                    if (pagosPage.results) {
+                        for (let pago of pagosPage.results) {
+                            //console.log(pago);
+                            if (pago.valor_pagado != 0 && pago.referencia_pago != '') {
+                                //Buscar titulo en SAP
+                                tituloSap = yield helper.getTituloById(pago.no_titulo);
+                                if (tituloSap.value.length > 0) {
+                                    //console.log(tituloSap);
+                                    pagosTitulo = tituloSap.value[0].NF_CXC_LIQUITEC_DETCollection;
+                                    DocEntry = tituloSap.value[0].DocEntry;
+                                    dataNewPago = {
+                                        "U_NF_SALDO_LIQUITECH": pago.saldo_favor,
+                                        "NF_CXC_LIQUITEC_DETCollection": [
+                                            {
+                                                "U_FECHA_PAGO": pago.fecha_pago,
+                                                "U_VALOR_PAGO": pago.valor_pagado,
+                                                "U_NF_REF_PAGO": pago.referencia_pago
+                                            }
+                                        ]
+                                    };
+                                    if (pagosTitulo.length == 0 || pagosTitulo.filter(item => item.U_NF_REF_PAGO == pago.referencia_pago).length == 0) {
+                                        console.log(dataNewPago);
+                                        //Insertar pago a titulo
+                                        yield helper.UpdateTituloSL(dataNewPago, DocEntry);
+                                        pagos.push(pago);
+                                    }
+                                }
+                            }
+                        }
+                        nextPage = pagosPage.next === undefined ? null : pagosPage.next;
+                    }
+                    else {
+                        nextPage = null;
+                    }
+                }
+                let fechaFinalizacion = new Date();
+                let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
+            <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
+            <h4>Fecha de incio pagos:</h4> ${fechaInicioPago.toLocaleDateString().toString()}<br>
+            <h4>Fecha de fin pagos:</h4> ${fechaFinPago.toLocaleDateString().toString()}<br>`;
+                if (pagos.length > 0) {
+                    html = html + `<h4>Pagos registrados</h4><br>${JSON.stringify(pagos)}<br>`;
+                }
+                else {
+                    html = html + `<h4>No se encontraron pagos a registrar</h4><br>`;
+                }
+                let infoEmail = {
+                    //to: LineAprovedSolped.aprobador.email,
+                    to: 'ralbor@nitrofert.com.co',
+                    cc: 'aballesteros@nitrofert.com.co',
+                    subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
+                    html
+                };
+                //Envio de notificación al siguiente aprobador con copia al autor
+                yield helper.sendNotification(infoEmail);
+                return (pagos);
+            }
+            catch (error) {
+                console.log(error);
+                let infoEmail = {
+                    //to: LineAprovedSolped.aprobador.email,
+                    to: 'ralbor@nitrofert.com.co',
+                    cc: 'aballesteros@nitrofert.com.co',
+                    subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
+                    html: error
+                };
+                //Envio de notificación al siguiente aprobador con copia al autor
+                yield helper.sendNotification(infoEmail);
                 return '';
             }
         });

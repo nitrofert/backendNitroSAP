@@ -22,6 +22,8 @@ class WssapController {
        
         //******************************************************* */
 
+        try{
+
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const bieSession = await helper.loginWsSAP(infoUsuario[0]);
         //console.log("BusinessPartners ",bieSession);
@@ -52,10 +54,13 @@ class WssapController {
         }
      
         return res.json({error:501});
+
+    } catch (error) {
+        console.log(error);
+        return '';
+    }
         
     }
-
-
 
     public async Items(req: Request, res: Response) {
 
@@ -65,6 +70,8 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+
+        try{
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         
@@ -93,6 +100,11 @@ class WssapController {
         }
         
         return res.json({error:501}); 
+
+    } catch (error) {
+        console.log(error);
+        return '';
+    }
     }
 
     public async Cuentas(req: Request, res: Response) {
@@ -103,6 +115,8 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+
+        try{
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const bieSession = await helper.loginWsSAP(infoUsuario[0]);
@@ -130,9 +144,12 @@ class WssapController {
         }
         
         return res.json({error:501}); 
-    }
 
-    
+    } catch (error) {
+        console.log(error);
+        return '';
+    }
+    }
 
     public async CuentasXE(req: Request, res: Response) {
         //Obtener datos del usurio logueado que realizo la petición
@@ -141,13 +158,14 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+            try {
 
-        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
-        const compania = infoUsuario[0].dbcompanysap;
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
 
-            try {
+            
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
@@ -160,20 +178,23 @@ class WssapController {
     }
 
     public async itemsXengine(req: Request, res: Response) {
+        
 
-        //Obtener datos del usurio logueado que realizo la petición
-        let jwt = req.headers.authorization || '';
-        jwt = jwt.slice('bearer'.length).trim();
-        const decodedToken = await helper.validateToken(jwt);
-       
-        //******************************************************* */
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+        
+            //******************************************************* */
 
-        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
-        const compania = infoUsuario[0].dbcompanysap;
+            try {
+
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
 
-            try {
+            
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
@@ -195,6 +216,8 @@ class WssapController {
        
         //******************************************************* */
 
+        try {
+
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const compania = infoUsuario[0].dbcompanysap;
 
@@ -204,7 +227,7 @@ class WssapController {
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${await helper.format(fechaTrm)}&compania=${compania}`;
             console.log(url2);
-            try {
+            
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
@@ -225,9 +248,10 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
-
-        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
-        const compania = infoUsuario[0].dbcompanysap;
+        try{
+            
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
 
             let { objtype } = req.params;
 
@@ -238,7 +262,7 @@ class WssapController {
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
             console.log(url2);
-            try {
+            
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
@@ -260,6 +284,8 @@ class WssapController {
        
         //******************************************************* */
 
+        try {
+
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const compania = infoUsuario[0].dbcompanysap;
         let { id } = req.params;
@@ -268,7 +294,7 @@ class WssapController {
         let proveedor ='';
     
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
-        try {
+        
         
             const response2 = await fetch(url2);
             const data2 = await response2.json();   
@@ -289,6 +315,7 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+        try {
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const compania = infoUsuario[0].dbcompanysap;
@@ -302,7 +329,7 @@ class WssapController {
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&querys=${querys}`;
         
 
-        try {
+        
         
             const response2 = await fetch(url2);
             const data2 = await response2.json();   
@@ -324,6 +351,8 @@ class WssapController {
        
         //******************************************************* */
 
+        try {
+
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const compania = infoUsuario[0].dbcompanysap;
         const userSap = infoUsuario[0].codusersap;
@@ -333,7 +362,7 @@ class WssapController {
             //console.log(await helper.format(fechaTrm));
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
-            try {
+            
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();
@@ -356,6 +385,7 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+        try{
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const bieSession = await helper.loginWsSAP(infoUsuario[0]);
@@ -419,6 +449,10 @@ class WssapController {
         }
         
         return res.json({error:501}); 
+    } catch (error) {
+        console.log(error);
+        return '';
+    }
     }
 
 
@@ -430,6 +464,8 @@ class WssapController {
         const decodedToken = await helper.validateToken(jwt);
        
         //******************************************************* */
+
+        try{
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
         const bieSession = await helper.loginWsSAP(infoUsuario[0]);
@@ -461,6 +497,11 @@ class WssapController {
         }
         
         return res.json({error:501}); 
+
+    } catch (error) {
+        console.log(error);
+        return '';
+    }
     }
 
     public async getAreasSolpedSL(req: Request, res: Response) {
@@ -512,9 +553,107 @@ class WssapController {
         
     }
 
+    
 
+    public async getUnidadItemSL(req: Request, res: Response) {
 
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+        try {
 
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bieSession = await helper.loginWsSAP(infoUsuario[0]);
+        
+        //console.log("Items",bieSession);
+
+        let { ItemCode } = req.params;
+        
+         
+        if(bieSession!=''){
+            const configWs2 = {
+                method:"GET", 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cookie': bieSession || ''   
+                }    
+            }
+    
+            
+            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Items?$filter=ItemCode eq '${ItemCode}'&$select=PurchaseUnit`;
+    
+            const response2 = await fetch(url2, configWs2);
+            const data2 = await response2.json();
+    
+            //console.log(data2);
+    
+            helper.logoutWsSAP(bieSession); 
+            
+           return res.json(data2);
+        }
+        
+        return res.json({error:501}); 
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+        
+    }
+
+    public async getAlmacenesMPSL(req: Request, res: Response) {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const bieSession = await helper.loginWsSAP(infoUsuario[0]);
+        
+        //console.log("Items",bieSession);
+
+        
+        
+         
+        if(bieSession!=''){
+            const configWs2 = {
+                method:"GET", 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cookie': bieSession || ''   
+                }    
+            }
+    
+            
+            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Warehouses?$filter=Inactive eq 'N' and startswith(WarehouseCode,'AD') or   startswith(WarehouseCode,'TR')&$select=State,WarehouseCode,WarehouseName`;
+    
+            const response2 = await fetch(url2, configWs2);
+            const data2 = await response2.json();
+    
+            //console.log(data2);
+    
+            helper.logoutWsSAP(bieSession); 
+            
+           return res.json(data2);
+        }
+        
+        return res.json({error:501}); 
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+        
+    }
+
+    
 
 
 }

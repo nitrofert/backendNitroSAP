@@ -29,11 +29,14 @@ class SolpedRoutes{
         this.router.post('/borraranexo', solpedController.borrarAnexoSolped);
         this.router.post('/download', solpedController.downloadAnexoSolped);
         this.router.get('/list/mp', solpedController.listMP);
-        this.router.get('/list/mps/:status', solpedController.listMPS);
+        this.router.get('/list/mps/:status', solpedController.listMPS2);
+        this.router.get('/list/ocmp/:status', solpedController.listOCMP);
+        this.router.get('/list/inmp', solpedController.listInMP);
         this.router.post('/mp', solpedController.createMP);
         this.router.put('/mp', solpedController.updateMP);
         this.router.post('/enviar-sap',solpedController.enviarSolpedSAP);
         this.router.put('/enviar-sap',solpedController.actualizarSolpedSAP);
+        this.router.put('/enviar-sap-pedido',solpedController.actualizarPedidoSAP);
 
     }
 }
