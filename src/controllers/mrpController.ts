@@ -7,9 +7,13 @@ import fetch from 'node-fetch';
 import path from 'path';
 import { DocumentLine, PurchaseRequestsInterface } from "../interfaces/purchaseRequest.interface";
 import fs from 'fs';
+import csv from 'csv-parser';
 
 
 class MrpController {
+
+    
+    
 
 
     public async zonas(req: Request, res: Response) {
@@ -73,6 +77,7 @@ class MrpController {
                                                                 State: any;  ItemCode: any; 
                                                                 INVENTARIO: string; 
                                                               })=>infoItem.INVENTARIO ==='MP' && infoItem.ItemCode === item  && infoItem.State === zona);
+            console.log(inventarioMP);
                                                               
             let totalInvMP:number = 0;
             for(let item of inventarioMP){
@@ -85,6 +90,8 @@ class MrpController {
                                                                 INVENTARIO: string; 
                                                               })=>infoItem.INVENTARIO ==='PT' && infoItem.ItemCode === item  && infoItem.State === zona);
 
+            console.log(inventarioPT);
+
             let totalInvPT:number = 0;
             for(let item of inventarioPT){
                 totalInvPT = totalInvPT+eval(item.OnHand);
@@ -95,7 +102,9 @@ class MrpController {
 
             let totalInventario = {
                 inventarioMP: totalInvMP,
-                inventarioPT: totalInvPT
+                ubicacionInvetarioMP:inventarioMP,
+                inventarioPT: totalInvPT,
+                ubicacionInvetarioPT:inventarioPT
             }
 
             console.log(totalInventario);
@@ -139,7 +148,15 @@ class MrpController {
             new Date(data.ETA) <= new Date(fechafin) &&
             data.U_NF_STATUS != 'Descargado');
 
-            console.log(inventarioItemTransito);
+            //Inventario de materia prima en transito abierta con fecha anterior a la fecha de inicio calculadora
+            let inventarioItemTransitoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
+            data.State_Code === zona && 
+            data.ItemCode === item  &&
+            new Date(data.ETA) < new Date(fechainicio) &&
+            data.U_NF_STATUS != 'Descargado');
+
+            //console.log('inventarioItemTransitoPreFecha',inventarioItemTransitoPreFecha);
+            
 
             //Inventario de materia prima en transito que esta en una OC que su estatus es descargado en ZF
             let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
@@ -157,13 +174,20 @@ class MrpController {
                 }
             }
 
-            //Inventario de materia prima en transito que esta en una solped
+            //Inventario de materia prima que esta en una solped
             let inventarioItenSolicitado = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
             new Date(data.FECHANECESIDAD) <= new Date(fechafin));
 
+            //Inventario de materia prima  que esta en una solped abierta con fecha anterior a la fecha de inicio calculadora
+            let inventarioItenSolicitadoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
+            data.State_Code === zona && 
+            data.ItemCode === item  &&
+            new Date(data.FECHANECESIDAD) < new Date(fechainicio));
+
+            //console.log('inventarioItenSolicitadoPreFecha',inventarioItenSolicitadoPreFecha);
 
             //Obtener compras proyectadas de materia prima en Mysql Portal
             let comprasProyectadas = await helper.getInventariosProyectados(infoUsuario[0]);
@@ -173,12 +197,14 @@ class MrpController {
             new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
             new Date(data.FECHANECESIDAD) <= new Date(fechafin));
 
-            console.log(comprasProyectadasMP);
+            console.log('comprasProyectadasMP',comprasProyectadasMP);
 
             let consolidadoInventarios = {
                 inventarioItemTransito,
+                inventarioItemTransitoPreFecha,
                 totalInventarioItemZF,
                 inventarioItenSolicitado,
+                inventarioItenSolicitadoPreFecha,
                 inventarioItemZF,
                 comprasProyectadasMP
             }
@@ -194,9 +220,34 @@ class MrpController {
     }
     
 
-    
-    
     public async presupuestosVenta(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+           
+
+            let queryList = `SELECT * FROM ${bdmysql}.presupuestoventa Order by fechasemana ASC`;
+
+            let presupuesto = await db.query(queryList);
+
+            //console.log('Presupuesto',queryList,presupuesto);
+
+            res.json(presupuesto);
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+    
+    public async presupuestosVentaItem(req: Request, res: Response) {
         try {
             //Obtener datos del usurio logueado que realizo la petición
             let jwt = req.headers.authorization || '';
@@ -262,6 +313,282 @@ class MrpController {
             return res.json(error);
         }
     }
+
+    public async maxmin(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            
+
+            //console.log(req.body);
+
+            let queryList = `SELECT * FROM  ${bdmysql}.maxminitems`;
+            console.log(queryList);
+
+            let maxminresult = await db.query(queryList);
+
+            //console.log(inventarios);
+
+            res.json(maxminresult);
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    
+
+    public async cargarPresupuesto(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            let infoFilePresupuesto = req.body;
+
+            //console.log(infoFilePresupuesto);
+            let queryList = "";
+            let queryRegistro = "";
+            let lineasActualizadas = 0;
+            let lineasRegistradas = 0;
+            for(let linea of infoFilePresupuesto){
+                console.log(new Date(linea.fechasemana));
+                let fechasemana = new Date(linea.fechasemana);
+                queryList = `SELECT * 
+                             FROM ${bdmysql}.presupuestoventa 
+                             WHERE YEAR(fechasemana)=${fechasemana.getFullYear()} AND 
+                                   semana =${linea.semana} AND 
+                                   itemcode = '${linea.itemcode}' AND 
+                                   codigozona = '${linea.codigozona}'`;
+
+                //console.log(queryList);
+                let result = await db.query(queryList);
+
+                if(result.length>0){
+                    //Actaliza linea
+                    queryRegistro = `Update ${bdmysql}.presupuestoventa 
+                                     SET cantidad = ${linea.cantidad.replace(',','.')}
+                                     WHERE YEAR(fechasemana)=${fechasemana.getFullYear()} AND 
+                                           semana =${linea.semana} AND 
+                                           itemcode = '${linea.itemcode}' AND 
+                                           codigozona = '${linea.codigozona}'`;
+                    lineasActualizadas++;
+                }else{
+                    //Insertar nuevalinea
+                    let fechasemanaFormat = await helper.format(linea.fechasemana);
+                    queryRegistro = `INSERT INTO ${bdmysql}.presupuestoventa (fechasemana,semana,itemcode,codigozona,cantidad) 
+                                                                      values ('${fechasemanaFormat}',${linea.semana},'${linea.itemcode}','${linea.codigozona}',${linea.cantidad.replace(',','.')})`;
+                    lineasRegistradas++;
+                }
+
+                //console.log(queryRegistro);
+
+                let resultRegistro = await db.query(queryRegistro);
+                console.log(resultRegistro);
+
+            }
+
+            let msgResult = {
+                message:`Se ha realizado el cargue del presupuesto correctamente. Se actualizaron ${lineasActualizadas} lineas del presupuesto y se registraron ${lineasRegistradas} lineas nuevas `
+            }
+
+            
+
+            res.json(msgResult);
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    public async cargarPresupuesto2(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            let infoFilePresupuesto = req.body;
+
+            let anexo:any = {
+                
+                nombre:req.file?.originalname ,
+                size:req.file?.size,
+                ruta:req.file?.path
+            }
+
+            console.log(anexo);
+            console.log(fs.existsSync(anexo.ruta));
+            let msgResult :any;
+
+           
+
+            if(fs.existsSync(anexo.ruta)){
+                
+                let results:any[] =  [];
+                
+                fs.createReadStream(anexo.ruta)
+                .pipe(csv({separator: infoFilePresupuesto.separador}))
+                .on('data', (data) => results.push(data))
+                .on('end', async () => {
+                    //console.log(results);
+                    // [
+                    //   { NAME: 'Daffy Duck', AGE: '24' },
+                    //   { NAME: 'Bugs Bunny', AGE: '22' }
+                    // ]
+
+                    let queryList = "";
+                    let queryRegistro = "";
+                    let lineasActualizadas = 0;
+                    let lineasRegistradas = 0;
+                    for(let linea of results){
+                        console.log(new Date(linea.FECHASEMANA));
+                        let fechasemana = new Date(linea.FECHASEMANA);
+                        queryList = `SELECT * 
+                                    FROM ${bdmysql}.presupuestoventa 
+                                    WHERE YEAR(fechasemana)=${fechasemana.getFullYear()} AND 
+                                        semana =${linea.SEMANA} AND 
+                                        itemcode = '${linea.ITEM}' AND 
+                                        codigozona = '${linea.CODIGOZONA}'`;
+
+                        //console.log(queryList);
+                        let result = await db.query(queryList);
+
+                        if(result.length>0){
+                            //Actaliza linea
+                            queryRegistro = `Update ${bdmysql}.presupuestoventa 
+                                            SET cantidad = ${linea.CANTIDAD.replace(',','.')}
+                                            WHERE YEAR(fechasemana)=${fechasemana.getFullYear()} AND 
+                                                semana =${linea.SEMANA} AND 
+                                                itemcode = '${linea.ITEM}' AND 
+                                                codigozona = '${linea.CODIGOZONA}'`;
+                            lineasActualizadas++;
+                        }else{
+                            //Insertar nuevalinea
+                            let fechasemanaFormat = await helper.format(linea.FECHASEMANA);
+                            queryRegistro = `INSERT INTO ${bdmysql}.presupuestoventa (fechasemana,semana,itemcode,codigozona,cantidad) 
+                                                                            values ('${fechasemanaFormat}',${linea.SEMANA},'${linea.ITEM}','${linea.CODIGOZONA}',${linea.CANTIDAD.replace(',','.')})`;
+                            lineasRegistradas++;
+                        }
+
+                        //console.log(queryRegistro);
+
+                        let resultRegistro = await db.query(queryRegistro);
+                        //console.log(resultRegistro);
+
+                    }
+
+                    msgResult = {
+                        message:`Se ha realizado el cargue del presupuesto correctamente. Se actualizaron ${lineasActualizadas} lineas del presupuesto y se registraron ${lineasRegistradas} lineas nuevas `
+                    }
+
+                    
+
+                    res.json(msgResult);
+                });
+
+            }else{
+                 msgResult = {
+                    message:`No se ha cargado el archivo de presupuesto`
+                }
+
+                res.json(msgResult);
+    
+            } 
+        
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+ 
+
+    public async cargarMaxMin(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            let infoFileaxMin = req.body;
+
+            //console.log(infoFilePresupuesto);
+            let queryList = "";
+            let queryRegistro = "";
+            let lineasActualizadas = 0;
+            let lineasRegistradas = 0;
+            for(let linea of infoFileaxMin){
+                console.log(new Date(linea.fechasemana));
+                let fechasemana = new Date(linea.fechasemana);
+                queryList = `SELECT * 
+                             FROM ${bdmysql}.maxminitems 
+                             WHERE itemcode = '${linea.itemcode}' AND 
+                                   zona = '${linea.codigozona}'`;
+
+                //console.log(queryList);
+                let result = await db.query(queryList);
+
+                if(result.length>0){
+                    //Actaliza linea
+                    queryRegistro = `Update ${bdmysql}.maxminitems 
+                                     SET minimo = ${linea.minimo.replace(',','.')}, maximo = ${linea.maximo.replace(',','.')}
+                                     WHERE itemcode = '${linea.itemcode}' AND 
+                                           zona = '${linea.codigozona}'`;
+                    lineasActualizadas++;
+                }else{
+                    //Insertar nuevalinea
+                    let fechasemanaFormat = await helper.format(linea.fechasemana);
+                    queryRegistro = `INSERT INTO ${bdmysql}.maxminitems (itemcode,zona,minimo,maximo) 
+                                                                      values ('${linea.itemcode}','${linea.codigozona}',${linea.minimo.replace(',','.')},${linea.maximo.replace(',','.')})`;
+                    lineasRegistradas++;
+                }
+
+                //console.log(queryRegistro);
+
+                let resultRegistro = await db.query(queryRegistro);
+                console.log(resultRegistro);
+
+            }
+
+            let msgResult = {
+                message:`Se ha realizado el cargue de los máximos y mínimos correctamente. Se actualizaron ${lineasActualizadas} lineas  y se registraron ${lineasRegistradas} lineas nuevas `
+            }
+
+            
+
+            res.json(msgResult);
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    
     
 }
 

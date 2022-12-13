@@ -23,6 +23,7 @@ class AuthRoutes {
         this.router.get('/storesUser', authController_1.default.almacenUser);
         this.router.get('/storesUser2', authController_1.default.almacenUserXE);
         this.router.get('/areasUser', authController_1.default.areasUserXE);
+        this.router.get('/logout', authController_1.default.logout);
     }
 }
 const authRoutes = new AuthRoutes();

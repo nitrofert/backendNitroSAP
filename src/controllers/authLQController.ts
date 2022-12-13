@@ -23,7 +23,7 @@ class AuthLQController{
         //const titulos = await helper.getTitulosLQ(infoLog.data.access_token);
         let dataNewTitulo!:any ;
         let dataUpdateTitulo!:any ;
-        let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+        let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
         let titulos:any[] = [];
         let titulosUpdate:any[] = [];
         let titulosPage:any;
@@ -163,7 +163,7 @@ class AuthLQController{
 
         //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
 
-        let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+        let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
     
         //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
         console.log(nextPage); 

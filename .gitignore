@@ -41,6 +41,8 @@ build/Release
 node_modules/
 jspm_packages/
 src/keys.ts
+uploads/
+src/uploads
 
 # TypeScript v1 declaration files
 typings/

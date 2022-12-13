@@ -166,6 +166,22 @@ class Helpers {
             }
         });
     }
+    logaccion(infoUsuario, detalleaccion) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let databasportal = infoUsuario.bdmysql;
+                let databasesap = infoUsuario.dbcompanysap;
+                let idUsuario = infoUsuario.id;
+                let insertLog = `Insert INTO logs (fechalog,databasportal,databasesap,id_usuario,detalleaccion) values(NOW(),'${databasportal}','${databasesap}',${idUsuario},'${detalleaccion}')`;
+                let result = yield database_1.db.query(insertLog);
+                return result;
+            }
+            catch (error) {
+                console.log(error);
+                return error;
+            }
+        });
+    }
     getInfoUsuario(userid, company) {
         return __awaiter(this, void 0, void 0, function* () {
             const infoUsuario = yield database_1.db.query(`
@@ -421,7 +437,7 @@ class Helpers {
             return detalleAprobacionSolped;
         });
     }
-    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
+    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion, verBotones) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
             const anexosSolped = solped.anexos;
@@ -499,19 +515,19 @@ class Helpers {
                                                             <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal.toLocaleString()}</span>
                                                         </td> 
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal.toLocaleString()}</span>
                                                         </td>
                                                     </tr>
             `;
@@ -568,7 +584,7 @@ class Helpers {
                                             </td>
                                         </tr>`;
             let bottonsAproved = "";
-            if (key !== '') {
+            if (key !== '' && verBotones) {
                 bottonsAproved = `<table>
                                     <tr>
                                         <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
@@ -577,6 +593,7 @@ class Helpers {
                                     </tr>
                                 </table>`;
             }
+            let saludo = "";
             const html = `<!DOCTYPE html>
         <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
         <head>
@@ -610,7 +627,7 @@ class Helpers {
                                             style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
                                             <tr>
                                                 <td style="border:2px solid #000000">
-                                                    <h1>Solicitud de aprobación Solped ${solped.solped.id}</h1>
+                                                    <h1>Solicitud De Aprobación Solped # ${solped.solped.id}</h1>
                                                     <p> Hola ${LineAprovedSolped.aprobador.fullname} el usuario ${LineAprovedSolped.autor.fullname}
                                                         ha solicitado la aprobación de la solped # ${solped.solped.id}
                                                     </p>
@@ -636,9 +653,9 @@ class Helpers {
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${yield helper.format(solped.solped.docdate)} - ${yield helper.format(solped.solped.docduedate)}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.taxdate.toLocaleString()} - ${solped.solped.reqdate.toLocaleString()}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${yield helper.format(solped.solped.taxdate)} - ${yield helper.format(solped.solped.reqdate)}</span><br />
                                                             </td>
                                                         </tr>
                                                         
@@ -653,15 +670,15 @@ class Helpers {
                                                         <table align="right">
                                                             <tr>
                                                                 <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal.toFixed()}</span></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto.toLocaleString()}</span></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total.toLocaleString()}</span></td>
                                                             </tr>
                                                         </table>
                                                 </td>
@@ -1586,7 +1603,7 @@ class Helpers {
                     WarehouseCode: item.whscode !== '' ? item.whscode : 'SM_N300',
                     BaseType: item.BaseType,
                     BaseEntry: item.BaseEntry,
-                    BaseLine: item.BaseLine
+                    BaseLine: item.linenum
                 };
                 if (item.itemcode !== '') {
                     DocumentLine.ItemCode = item.itemcode;
@@ -1613,6 +1630,15 @@ class Helpers {
                 CardName: Entrada.entrada.nombreproveedor,
                 Comments: Entrada.entrada.comments,
                 U_AUTOR_PORTAL: Entrada.entrada.usersap,
+                U_NF_BIEN_OPORTUNIDAD: Entrada.entrada.U_NF_BIEN_OPORTUNIDAD,
+                U_NF_SERVICIO_CALIDAD: Entrada.entrada.U_NF_SERVICIO_CALIDAD,
+                U_NF_SERVICIO_TIEMPO: Entrada.entrada.U_NF_SERVICIO_TIEMPO,
+                U_NF_SERVICIO_SEGURIDAD: Entrada.entrada.U_NF_SERVICIO_SEGURIDAD,
+                U_NF_SERVICIO_AMBIENTE: Entrada.entrada.U_NF_SERVICIO_AMBIENTE,
+                U_NF_TIPO_HE: Entrada.entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
+                U_NF_PUNTAJE_HE: Entrada.entrada.U_NF_PUNTAJE,
+                U_NF_CALIFICACION: Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
+                Footer: Entrada.entrada.footer,
                 DocumentLines
             };
             console.log(JSON.stringify(dataEntradaJSONSAP));
@@ -1678,7 +1704,7 @@ class Helpers {
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,Footer,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -1750,6 +1776,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
+                    console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -1841,6 +1868,7 @@ class Helpers {
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}`;
+                //console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -1957,80 +1985,82 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('Convertir SL to array');
             let dataArray = [];
-            let lineaArray;
             let lineaDetalleArray = [];
             for (let documento of data.value) {
-                lineaArray = {
-                    DocEntry: documento.DocEntry,
-                    DocNum: documento.DocNum,
-                    DocType: documento.DocType,
-                    DocDate: documento.DocDate,
-                    DocDueDate: documento.DocDueDate,
-                    DocCurrency: documento.DocCurrency,
-                    DocRate: documento.DocRate,
-                    Reference1: documento.Reference1,
-                    Comments: documento.Comments,
-                    Series: documento.Series,
-                    TaxDate: documento.TaxDate,
-                    DocObjectCode: documento.DocObjectCode,
-                    CreationDate: documento.CreationDate,
-                    UpdateDate: documento.UpdateDate,
-                    UserSign: documento.UserSign,
-                    DocTotalFc: documento.DocTotalFc,
-                    DocTotalSys: documento.DocTotalSys,
-                    RequriedDate: documento.RequriedDate,
-                    DocumentStatus: documento.DocumentStatus,
-                    Requester: documento.Requester,
-                    RequesterName: documento.RequesterName,
-                    RequesterEmail: documento.RequesterEmail,
-                    U_NF_AGENTE: documento.U_NF_AGENTE,
-                    U_NF_DATEOFSHIPPING: documento.U_NF_DATEOFSHIPPING,
-                    U_NF_LASTSHIPPPING: documento.U_NF_LASTSHIPPPING,
-                    U_NF_MOTONAVE: documento.U_NF_MOTONAVE,
-                    U_NF_PAGO: documento.U_NF_PAGO,
-                    U_NF_PUERTOSALIDA: documento.U_NF_PUERTOSALIDA,
-                    U_NF_STATUS: documento.U_NF_STATUS,
-                    U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
-                    U_NT_Incoterms: documento.U_NT_Incoterms,
-                    CardCode: '',
-                    CardName: '',
-                    ItemCode: '',
-                    ItemDescription: '',
-                    LineNum: 0,
-                    MeasureUnit: '',
-                    Quantity: 0,
-                    RemainingOpenQuantity: 0,
-                    approved: 'S',
-                    id: documento.DocEntry,
-                    key: 0,
-                    WarehouseCode: ''
-                };
                 if (documento.DocumentLines.length > 0) {
                     for (let lineaDetalle of documento.DocumentLines) {
-                        console.log(lineaDetalle);
-                        lineaArray.CardCode = lineaDetalle.LineVendor;
-                        lineaArray.ItemCode = lineaDetalle.ItemCode;
-                        lineaArray.ItemDescription = lineaDetalle.ItemDescription;
-                        lineaArray.LineNum = lineaDetalle.LineNum;
-                        lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
-                        lineaArray.Quantity = lineaDetalle.Quantity;
-                        lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
-                        lineaArray.key = documento.DocEntry + '-' + documento.DocNum + '-' + lineaDetalle.LineNum;
-                        lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
-                        console.log(lineaArray);
-                        dataArray.push(lineaArray);
+                        if (lineaDetalle.LineStatus === 'bost_Open') {
+                            let lineaArray = {
+                                DocEntry: documento.DocEntry,
+                                DocNum: documento.DocNum,
+                                DocType: documento.DocType,
+                                DocDate: documento.DocDate,
+                                DocDueDate: documento.DocDueDate,
+                                DocCurrency: documento.DocCurrency,
+                                DocRate: documento.DocRate,
+                                Reference1: documento.Reference1,
+                                Comments: documento.Comments,
+                                Series: documento.Series,
+                                TaxDate: documento.TaxDate,
+                                DocObjectCode: documento.DocObjectCode,
+                                CreationDate: documento.CreationDate,
+                                UpdateDate: documento.UpdateDate,
+                                UserSign: documento.UserSign,
+                                DocTotalFc: documento.DocTotalFc,
+                                DocTotalSys: documento.DocTotalSys,
+                                RequriedDate: documento.RequriedDate,
+                                DocumentStatus: documento.DocumentStatus,
+                                Requester: documento.Requester,
+                                RequesterName: documento.RequesterName,
+                                RequesterEmail: documento.RequesterEmail,
+                                U_NF_AGENTE: documento.U_NF_AGENTE,
+                                U_NF_DATEOFSHIPPING: documento.U_NF_DATEOFSHIPPING,
+                                U_NF_LASTSHIPPPING: documento.U_NF_LASTSHIPPPING,
+                                U_NF_MOTONAVE: documento.U_NF_MOTONAVE,
+                                U_NF_PAGO: documento.U_NF_PAGO,
+                                U_NF_PUERTOSALIDA: documento.U_NF_PUERTOSALIDA,
+                                U_NF_STATUS: documento.U_NF_STATUS,
+                                U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
+                                U_NT_Incoterms: documento.U_NT_Incoterms,
+                                CardCode: '',
+                                CardName: '',
+                                ItemCode: '',
+                                ItemDescription: '',
+                                LineNum: 0,
+                                MeasureUnit: '',
+                                Quantity: 0,
+                                RemainingOpenQuantity: 0,
+                                approved: 'S',
+                                id: documento.DocEntry,
+                                key: '0',
+                                WarehouseCode: ''
+                            };
+                            lineaArray.CardCode = lineaDetalle.LineVendor;
+                            lineaArray.ItemCode = lineaDetalle.ItemCode;
+                            lineaArray.ItemDescription = lineaDetalle.ItemDescription;
+                            lineaArray.LineNum = lineaDetalle.LineNum;
+                            lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
+                            lineaArray.Quantity = lineaDetalle.Quantity;
+                            lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
+                            lineaArray.key = documento.DocEntry + '-' + documento.DocNum + '-' + lineaDetalle.LineNum;
+                            lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
+                            //console.log(documento.DocNum,lineaDetalle.ItemCode);
+                            dataArray.push(lineaArray);
+                        }
                     }
                 }
-                break;
+                //break;
             }
+            //console.log(dataArray);
+            console.log(dataArray.length);
             return dataArray;
         });
     }
     /************** Seccion Liquitech *****************/
     loginWsLQ() {
         return __awaiter(this, void 0, void 0, function* () {
-            const jsonLog = { "username": "nitrocredit", "password": "administrador" };
-            const url = `https://dev.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
+            const jsonLog = { "username": "NITROFERTSAS", "password": "Nitrocredit2022*" };
+            const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
             let configWs = {
                 method: "POST",
                 headers: {
@@ -2127,7 +2157,7 @@ class Helpers {
                     companyname: 'NITROFERT_PRD',
                     logoempresa: '',
                     bdmysql: '',
-                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    dbcompanysap: 'NITROFERT_PRD',
                     urlwssap: ''
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
@@ -2168,7 +2198,7 @@ class Helpers {
                     companyname: 'NITROFERT_PRD',
                     logoempresa: '',
                     bdmysql: '',
-                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    dbcompanysap: 'NITROFERT_PRD',
                     urlwssap: ''
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
@@ -2208,7 +2238,7 @@ class Helpers {
                     companyname: 'NITROFERT_PRD',
                     logoempresa: '',
                     bdmysql: '',
-                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    dbcompanysap: 'NITROFERT_PRD',
                     urlwssap: ''
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
@@ -2249,7 +2279,7 @@ class Helpers {
                     companyname: 'NITROFERT_PRD',
                     logoempresa: '',
                     bdmysql: '',
-                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    dbcompanysap: 'NITROFERT_PRD',
                     urlwssap: ''
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
@@ -2322,7 +2352,7 @@ class Helpers {
                 //const titulos = await helper.getTitulosLQ(infoLog.data.access_token);
                 let dataNewTitulo;
                 let dataUpdateTitulo;
-                let nextPage = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+                let nextPage = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
                 let titulos = [];
                 let titulosUpdate = [];
                 let titulosPage;
@@ -2338,44 +2368,46 @@ class Helpers {
                     console.log(titulosPage);
                     if (titulosPage.results) {
                         for (let titulo of titulosPage.results) {
-                            no_titulo = titulo.no_titulo;
-                            tituloSap = yield helper.getTituloById(no_titulo);
-                            //console.log(titulo);
-                            if (tituloSap.value.length == 0) {
-                                //Insertar factura en udo
-                                let nit_pagador_sap = yield helper.getNitProveedorByTitulo(no_titulo);
-                                dataNewTitulo = {
-                                    U_NIT: nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
-                                    U_FECHA_FACT: titulo.fecha_emision,
-                                    U_TOTAL: titulo.valor_titulo,
-                                    U_FACTURA: titulo.no_titulo,
-                                    U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
-                                    U_NF_CUFE_FV: titulo.cufe,
-                                    U_NF_FECHA_PAGO: titulo.fecha_pago,
-                                    U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                    U_NF_VALOR_GIRO: titulo.valor_giro
-                                };
-                                resultInsertTitulo = yield helper.InsertTituloSL(dataNewTitulo);
-                                titulos.push(titulo);
-                            }
-                            else {
-                                //Update estado cabecera titulo
-                                dataUpdateTitulo = {
-                                    U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
-                                    U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
-                                    U_NF_CUFE_FV: titulo.cufe,
-                                    U_NF_FECHA_PAGO: titulo.fecha_pago,
-                                    U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                    U_NF_VALOR_GIRO: titulo.valor_giro
-                                };
-                                resultUpdateTitulo = yield helper.UpdateTituloSL(dataUpdateTitulo, tituloSap.value[0].DocEntry);
-                                //console.log(resultUpdateTitulo);
-                                titulosUpdate.push(titulo);
+                            if (titulo.estado == 'aprobado' || titulo.estado == 'desembolsado' || titulo.estado == 'abonado' || titulo.estado == 'pagado') {
+                                no_titulo = titulo.no_titulo;
+                                tituloSap = yield helper.getTituloById(no_titulo);
+                                //console.log(titulo);
+                                if (tituloSap.value.length == 0) {
+                                    //Insertar factura en udo
+                                    let nit_pagador_sap = yield helper.getNitProveedorByTitulo(no_titulo);
+                                    dataNewTitulo = {
+                                        U_NIT: nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                        U_FECHA_FACT: titulo.fecha_emision,
+                                        U_TOTAL: titulo.valor_titulo,
+                                        U_FACTURA: titulo.no_titulo,
+                                        U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                        U_NF_CUFE_FV: titulo.cufe,
+                                        U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                        U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                        U_NF_VALOR_GIRO: titulo.valor_giro
+                                    };
+                                    resultInsertTitulo = yield helper.InsertTituloSL(dataNewTitulo);
+                                    titulos.push(titulo);
+                                }
+                                else {
+                                    //Update estado cabecera titulo
+                                    dataUpdateTitulo = {
+                                        U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                        U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                        U_NF_CUFE_FV: titulo.cufe,
+                                        U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                        U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                        U_NF_VALOR_GIRO: titulo.valor_giro
+                                    };
+                                    resultUpdateTitulo = yield helper.UpdateTituloSL(dataUpdateTitulo, tituloSap.value[0].DocEntry);
+                                    //console.log(resultUpdateTitulo);
+                                    titulosUpdate.push(titulo);
+                                }
                             }
                         }
                         nextPage = titulosPage.next;
@@ -2433,7 +2465,7 @@ class Helpers {
                 let fechaInicioPagoFormat = `${fechaInicioPago.getFullYear()}-${fechaInicioPago.getMonth() + 1}-${fechaInicioPago.getUTCDate()}`;
                 console.log(fechaFinPagoFormat, fechaInicioPagoFormat);
                 //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
-                let nextPage = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+                let nextPage = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
                 //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
                 console.log(nextPage);
                 let pagos = [];

@@ -37,6 +37,8 @@ class SolpedRoutes{
         this.router.post('/enviar-sap',solpedController.enviarSolpedSAP);
         this.router.put('/enviar-sap',solpedController.actualizarSolpedSAP);
         this.router.put('/enviar-sap-pedido',solpedController.actualizarPedidoSAP);
+       
+        
 
     }
 }

@@ -36,14 +36,14 @@ class AuthController {
                 WHERE (username = ? or email = ?) and id_company = ?`, [formLogin.username, formLogin.username, formLogin.company]);
             // Validamos si el usuario buscado por el username existe, si no existe retornamos error
             if (user.length == 0)
-                return res.status(401).json({ message: "Datos de inicio de sesión invalidos1", status: 401 });
+                return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
             //console.log(user);
             //Comparamos el pasword registrado en el formulario con el password obtenido del query x username
             const validPassword = yield helpers_1.default.matchPassword(req.body.password, (user[0].password || ''));
             //console.log(validPassword);
             // Si el passwornno coincide, retornamos error 
             if (!validPassword)
-                return res.status(401).json({ message: "Datos de inicio de sesión invalidos2", status: 401 });
+                return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
             //Obtener datos de usuario para ecriptar en token jwt
             const infoUsuario = yield database_1.db.query(`
         SELECT t0.id, fullname, email, username, codusersap, t0.status, 
@@ -101,6 +101,8 @@ class AuthController {
             //const token:string = await helper.generateToken(userConfig);
             const tokenid = yield helpers_1.default.generateToken({ userId, company });
             const token = tokenid;
+            //Regstrar log
+            yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${formLogin.username} ha accedido al portal`);
             //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
             return res.json({ message: `!Bienvenido ${infoUsuario[0].fullname}¡`, status: 200, infoUsuario, token, tokenid });
         });
@@ -114,6 +116,25 @@ class AuthController {
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
                 console.log(decodedToken);
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                return res.json(infoUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    logout(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                let result = yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} ha salido del portal`);
+                console.log(result);
                 return res.json(infoUsuario);
             }
             catch (error) {

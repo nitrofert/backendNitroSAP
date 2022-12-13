@@ -152,6 +152,25 @@ class Helpers {
 
     }
 
+    async logaccion(infoUsuario:InfoUsuario, detalleaccion:string): Promise<any> {
+       try{
+
+            let databasportal:string =infoUsuario.bdmysql;
+            let databasesap:string =infoUsuario.dbcompanysap;
+            let idUsuario:number = infoUsuario.id;
+    
+            let insertLog= `Insert INTO logs (fechalog,databasportal,databasesap,id_usuario,detalleaccion) values(NOW(),'${databasportal}','${databasesap}',${idUsuario},'${detalleaccion}')`;
+            let result = await db.query(insertLog);
+ 
+            return result;
+
+       }catch(error){
+        console.log(error);
+        return error;
+       }
+       
+    }
+
     async getInfoUsuario(userid: number, company:string): Promise<any> {
         
         const infoUsuario = await db.query(`
@@ -436,7 +455,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         return detalleAprobacionSolped;
     }
 
-    async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
+    async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean,verBotones?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
         const anexosSolped:any[] = solped.anexos
@@ -523,19 +542,19 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                             <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal.toLocaleString()}</span>
                                                         </td> 
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor.toLocaleString()}</span>
                                                         </td>
                                                         <td>
-                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal.toLocaleString()}</span>
                                                         </td>
                                                     </tr>
             `;
@@ -597,7 +616,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
 
         let bottonsAproved ="";
-        if(key!==''){
+        if(key!=='' && verBotones){
             bottonsAproved = `<table>
                                     <tr>
                                         <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
@@ -606,6 +625,9 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                     </tr>
                                 </table>`;
         }
+
+        let saludo  = "";
+        
 
         const html: string = `<!DOCTYPE html>
         <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -640,7 +662,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                             style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
                                             <tr>
                                                 <td style="border:2px solid #000000">
-                                                    <h1>Solicitud de aprobación Solped ${solped.solped.id}</h1>
+                                                    <h1>Solicitud De Aprobación Solped # ${solped.solped.id}</h1>
                                                     <p> Hola ${LineAprovedSolped.aprobador.fullname} el usuario ${LineAprovedSolped.autor.fullname}
                                                         ha solicitado la aprobación de la solped # ${solped.solped.id}
                                                     </p>
@@ -666,9 +688,9 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${await helper.format(solped.solped.docdate)} - ${ await helper.format(solped.solped.docduedate)}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.taxdate.toLocaleString()} - ${solped.solped.reqdate.toLocaleString()}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${await helper.format(solped.solped.taxdate)} - ${await helper.format(solped.solped.reqdate)}</span><br />
                                                             </td>
                                                         </tr>
                                                         
@@ -683,15 +705,15 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                         <table align="right">
                                                             <tr>
                                                                 <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal.toFixed()}</span></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto.toLocaleString()}</span></td>
                                                             </tr>
                                                             <tr>
                                                                 <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
-                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total.toLocaleString()}</span></td>
                                                             </tr>
                                                         </table>
                                                 </td>
@@ -1718,8 +1740,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 WarehouseCode:item.whscode!==''?item.whscode:'SM_N300',
                 BaseType:item.BaseType,
                 BaseEntry:item.BaseEntry,
-                BaseLine:item.BaseLine
-
+                BaseLine:item.linenum
                 
             };
 
@@ -1753,7 +1774,17 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 CardName:Entrada.entrada.nombreproveedor,
                 Comments:Entrada.entrada.comments,
                 U_AUTOR_PORTAL:Entrada.entrada.usersap,
+                U_NF_BIEN_OPORTUNIDAD:Entrada.entrada.U_NF_BIEN_OPORTUNIDAD,
+                U_NF_SERVICIO_CALIDAD:Entrada.entrada.U_NF_SERVICIO_CALIDAD,
+                U_NF_SERVICIO_TIEMPO:Entrada.entrada.U_NF_SERVICIO_TIEMPO,
+                U_NF_SERVICIO_SEGURIDAD:Entrada.entrada.U_NF_SERVICIO_SEGURIDAD,
+                U_NF_SERVICIO_AMBIENTE:Entrada.entrada.U_NF_SERVICIO_AMBIENTE,
+                U_NF_TIPO_HE:Entrada.entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
+                U_NF_PUNTAJE_HE:Entrada.entrada.U_NF_PUNTAJE,
+                U_NF_CALIFICACION:Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
+                Footer:Entrada.entrada.footer,
                 DocumentLines
+                
     
             };
 
@@ -1851,7 +1882,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
 
             if (bieSession != '') {
-                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,Footer,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
 
                 let configWs2 = {
                     method: "GET",
@@ -1954,7 +1985,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
-                
+                console.log(url2);
 
                 let configWs2 = {
                     method: "GET",
@@ -2088,7 +2119,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             const compania = infoUsuario.dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}`;
-
+            //console.log(url2);
 
         
                 const response2 = await fetch(url2);
@@ -2238,81 +2269,90 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
     async covertirResultadoSLArray(data:any):Promise<any>{
         console.log('Convertir SL to array');
         let dataArray:any[] =[];
-        let lineaArray:any ;
+    
         let lineaDetalleArray:any[] = [];
 
 
         for(let documento of data.value){
             
-            lineaArray ={
-                DocEntry:documento.DocEntry,
-                DocNum: documento.DocNum,
-                DocType:documento.DocType,
-                DocDate: documento.DocDate,
-                DocDueDate: documento.DocDueDate,
-                DocCurrency: documento.DocCurrency,
-                DocRate: documento.DocRate,
-                Reference1:documento.Reference1,
-                Comments: documento.Comments,
-                Series:documento.Series,
-                TaxDate: documento.TaxDate,
-                DocObjectCode: documento.DocObjectCode,
-                CreationDate: documento.CreationDate,
-                UpdateDate: documento.UpdateDate,
-                UserSign: documento.UserSign,
-                DocTotalFc: documento.DocTotalFc,
-                DocTotalSys: documento.DocTotalSys,
-                RequriedDate: documento.RequriedDate,
-                DocumentStatus: documento.DocumentStatus,
-                Requester: documento.Requester,
-                RequesterName: documento.RequesterName,
-                RequesterEmail: documento.RequesterEmail,
-                U_NF_AGENTE: documento.U_NF_AGENTE,
-                U_NF_DATEOFSHIPPING: documento.U_NF_DATEOFSHIPPING,
-                U_NF_LASTSHIPPPING: documento.U_NF_LASTSHIPPPING,
-                U_NF_MOTONAVE: documento.U_NF_MOTONAVE,
-                U_NF_PAGO: documento.U_NF_PAGO,
-                U_NF_PUERTOSALIDA: documento.U_NF_PUERTOSALIDA,
-                U_NF_STATUS: documento.U_NF_STATUS,
-                U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
-                U_NT_Incoterms: documento.U_NT_Incoterms,
-                CardCode: '',
-                CardName: '',
-                ItemCode: '',
-                ItemDescription: '',
-                LineNum: 0,
-                MeasureUnit: '',
-                Quantity: 0,
-                RemainingOpenQuantity: 0,
-                approved:'S',
-                id:documento.DocEntry,
-                key:0,
-                WarehouseCode:''
-
-            };
+          
             
             if(documento.DocumentLines.length > 0){
                 for(let lineaDetalle of documento.DocumentLines){
-                    console.log(lineaDetalle);        
-                    lineaArray.CardCode = lineaDetalle.LineVendor;
-                    lineaArray.ItemCode= lineaDetalle.ItemCode;
-                    lineaArray.ItemDescription= lineaDetalle.ItemDescription;
-                    lineaArray.LineNum = lineaDetalle.LineNum;
-                    lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
-                    lineaArray.Quantity= lineaDetalle.Quantity;
-                    lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
-                    lineaArray.key =documento.DocEntry+'-'+documento.DocNum+'-'+lineaDetalle.LineNum;
-                    lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
-                    console.log(lineaArray);
-                    dataArray.push(lineaArray);
+                    
+                    if(lineaDetalle.LineStatus==='bost_Open'){
+                        let  lineaArray ={
+                            DocEntry:documento.DocEntry,
+                            DocNum: documento.DocNum,
+                            DocType:documento.DocType,
+                            DocDate: documento.DocDate,
+                            DocDueDate: documento.DocDueDate,
+                            DocCurrency: documento.DocCurrency,
+                            DocRate: documento.DocRate,
+                            Reference1:documento.Reference1,
+                            Comments: documento.Comments,
+                            Series:documento.Series,
+                            TaxDate: documento.TaxDate,
+                            DocObjectCode: documento.DocObjectCode,
+                            CreationDate: documento.CreationDate,
+                            UpdateDate: documento.UpdateDate,
+                            UserSign: documento.UserSign,
+                            DocTotalFc: documento.DocTotalFc,
+                            DocTotalSys: documento.DocTotalSys,
+                            RequriedDate: documento.RequriedDate,
+                            DocumentStatus: documento.DocumentStatus,
+                            Requester: documento.Requester,
+                            RequesterName: documento.RequesterName,
+                            RequesterEmail: documento.RequesterEmail,
+                            U_NF_AGENTE: documento.U_NF_AGENTE,
+                            U_NF_DATEOFSHIPPING: documento.U_NF_DATEOFSHIPPING,
+                            U_NF_LASTSHIPPPING: documento.U_NF_LASTSHIPPPING,
+                            U_NF_MOTONAVE: documento.U_NF_MOTONAVE,
+                            U_NF_PAGO: documento.U_NF_PAGO,
+                            U_NF_PUERTOSALIDA: documento.U_NF_PUERTOSALIDA,
+                            U_NF_STATUS: documento.U_NF_STATUS,
+                            U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
+                            U_NT_Incoterms: documento.U_NT_Incoterms,
+                            CardCode: '',
+                            CardName: '',
+                            ItemCode: '',
+                            ItemDescription: '',
+                            LineNum: 0,
+                            MeasureUnit: '',
+                            Quantity: 0,
+                            RemainingOpenQuantity: 0,
+                            approved:'S',
+                            id:documento.DocEntry,
+                            key:'0',
+                            WarehouseCode:''
+            
+                        };
+    
+                        lineaArray.CardCode = lineaDetalle.LineVendor;
+                        lineaArray.ItemCode= lineaDetalle.ItemCode;
+                        lineaArray.ItemDescription= lineaDetalle.ItemDescription;
+                        lineaArray.LineNum = lineaDetalle.LineNum;
+                        lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
+                        lineaArray.Quantity= lineaDetalle.Quantity;
+                        lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
+                        lineaArray.key =documento.DocEntry+'-'+documento.DocNum+'-'+lineaDetalle.LineNum;
+                        lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
+                        //console.log(documento.DocNum,lineaDetalle.ItemCode);
+                       
+                        dataArray.push(lineaArray);
+                    }
 
-                }
+                    
+                    
+                }   
                 
             }
             
-            break;
+            //break;
         }
-        
+
+        //console.log(dataArray);
+        console.log(dataArray.length);
         return dataArray;
     }
 
@@ -2322,8 +2362,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
     async loginWsLQ(): Promise<any> {
 
-        const jsonLog = {"username": "nitrocredit", "password": "administrador"};
-        const url = `https://dev.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
+        const jsonLog = {"username": "NITROFERTSAS", "password": "Nitrocredit2022*"};
+        const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
 
         let configWs = {
             method: "POST",
@@ -2450,7 +2490,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 companyname:  'NITROFERT_PRD',
                 logoempresa:  '',
                 bdmysql:      '',
-                dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                dbcompanysap: 'NITROFERT_PRD',
                 urlwssap:''
             } ;
 
@@ -2505,7 +2545,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 companyname:  'NITROFERT_PRD',
                 logoempresa:  '',
                 bdmysql:      '',
-                dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                dbcompanysap: 'NITROFERT_PRD',
                 urlwssap:''
             } ;
 
@@ -2557,7 +2597,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 companyname:  'NITROFERT_PRD',
                 logoempresa:  '',
                 bdmysql:      '',
-                dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                dbcompanysap: 'NITROFERT_PRD',
                 urlwssap:''
             } ;
 
@@ -2607,7 +2647,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 companyname:  'NITROFERT_PRD',
                 logoempresa:  '',
                 bdmysql:      '',
-                dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                dbcompanysap: 'NITROFERT_PRD',
                 urlwssap:''
             } ;
 
@@ -2706,7 +2746,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             //const titulos = await helper.getTitulosLQ(infoLog.data.access_token);
         let dataNewTitulo!:any ;
         let dataUpdateTitulo!:any ;
-        let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
+        let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/`;
         let titulos:any[] = [];
         let titulosUpdate:any[] = [];
         let titulosPage:any;
@@ -2727,51 +2767,55 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
              if(titulosPage.results){
                 for(let titulo of titulosPage.results){
-                    no_titulo = titulo.no_titulo;
-                    tituloSap = await helper.getTituloById(no_titulo);
-                    //console.log(titulo);
-                    if(tituloSap.value.length==0){
-                        //Insertar factura en udo
-                       
-                        let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
+
+                    if(titulo.estado=='aprobado' || titulo.estado=='desembolsado' || titulo.estado=='abonado' || titulo.estado=='pagado'){
+                        no_titulo = titulo.no_titulo;
+                        tituloSap = await helper.getTituloById(no_titulo);
+                        //console.log(titulo);
+                        if(tituloSap.value.length==0){
+                            //Insertar factura en udo
                         
-                        dataNewTitulo = {
-                            U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
-                            U_FECHA_FACT: titulo.fecha_emision,
-                            U_TOTAL:titulo.valor_titulo,
-                            U_FACTURA:titulo.no_titulo,
-                            U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                            U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                            U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                            U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                            U_NF_CUFE_FV:titulo.cufe,
-                            U_NF_FECHA_PAGO:titulo.fecha_pago,
-                            U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                            U_NF_VALOR_GIRO:titulo.valor_giro
-                        }
-    
-                        resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);
-    
-                        titulos.push(titulo)
+                            let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
+                            
+                            dataNewTitulo = {
+                                U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                U_FECHA_FACT: titulo.fecha_emision,
+                                U_TOTAL:titulo.valor_titulo,
+                                U_FACTURA:titulo.no_titulo,
+                                U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                U_NF_CUFE_FV:titulo.cufe,
+                                U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                U_NF_VALOR_GIRO:titulo.valor_giro
+                            }
         
-                    }else{
-                        //Update estado cabecera titulo
-                        dataUpdateTitulo={
-                            U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                            U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                            U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                            U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                            U_NF_CUFE_FV:titulo.cufe,
-                            U_NF_FECHA_PAGO:titulo.fecha_pago,
-                            U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                            U_NF_VALOR_GIRO:titulo.valor_giro
-                        };
-    
-                        resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);
-                        //console.log(resultUpdateTitulo);
-    
-                        titulosUpdate.push(titulo);
+                            resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);
+        
+                            titulos.push(titulo)
+            
+                        }else{
+                            //Update estado cabecera titulo
+                            dataUpdateTitulo={
+                                U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                U_NF_CUFE_FV:titulo.cufe,
+                                U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                U_NF_VALOR_GIRO:titulo.valor_giro
+                            };
+        
+                            resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);
+                            //console.log(resultUpdateTitulo);
+        
+                            titulosUpdate.push(titulo);
+                        }
                     }
+                    
                  }
     
                  nextPage = titulosPage.next;
@@ -2849,7 +2893,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
     
             //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
     
-            let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+            let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
         
             //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
             console.log(nextPage); 

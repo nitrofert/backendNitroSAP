@@ -35,7 +35,7 @@ class Server{
         this.app.set('port', process.env.PORT || 3001);
         this.app.use(morgan('dev'));
         this.app.use(cors({ 
-            origin:['http://portal.nitrofert.com.co','http://nitroportal.nitrofert.com.co','http://localhost:4200'],
+            origin:['http://portal.nitrofert.com.co','http://portal.dev.nitrofert.com.co','http://localhost:4200'],
             methods:["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"],
             allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials','enctype'],
             //optionsSuccessStatus:200,

@@ -31,13 +31,13 @@ class AuthController{
             ,[formLogin.username,formLogin.username,formLogin.company]);
 
         // Validamos si el usuario buscado por el username existe, si no existe retornamos error
-        if(user.length==0) return res.status(401).json({message:"Datos de inicio de sesión invalidos1", status:401});
+        if(user.length==0) return res.status(401).json({message:"Datos de inicio de sesión invalidos", status:401});
         //console.log(user);
         //Comparamos el pasword registrado en el formulario con el password obtenido del query x username
         const validPassword = await helper.matchPassword(req.body.password, (user[0].password || ''));
         //console.log(validPassword);
         // Si el passwornno coincide, retornamos error 
-        if(!validPassword) return res.status(401).json({message:"Datos de inicio de sesión invalidos2", status:401});
+        if(!validPassword) return res.status(401).json({message:"Datos de inicio de sesión invalidos", status:401});
         
         //Obtener datos de usuario para ecriptar en token jwt
         
@@ -103,6 +103,9 @@ class AuthController{
 
         const tokenid:string = await helper.generateToken({userId, company});
         const token:string = tokenid;
+
+        //Regstrar log
+        await helper.logaccion(infoUsuario[0],`El usuario ${formLogin.username} ha accedido al portal`);
         //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
         return res.json({message:`!Bienvenido ${infoUsuario[0].fullname}¡`, status:200,infoUsuario,token,tokenid});
     } 
@@ -117,6 +120,26 @@ class AuthController{
 
             console.log(decodedToken);
             const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            return res.json(infoUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    public async logout(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            let result = await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ha salido del portal`);
+            console.log(result);
             return res.json(infoUsuario);
 
         }catch (error: any) {
@@ -350,6 +373,8 @@ class AuthController{
         }
         
     }
+
+  
 
 }
 
