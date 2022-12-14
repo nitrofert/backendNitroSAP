@@ -16,6 +16,7 @@ const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 const fs_1 = __importDefault(require("fs"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
+const moment_1 = __importDefault(require("moment"));
 class MrpController {
     zonas(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -192,7 +193,7 @@ class MrpController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 let queryList = `SELECT * FROM ${bdmysql}.presupuestoventa Order by fechasemana ASC`;
                 let presupuesto = yield database_1.db.query(queryList);
-                //console.log('Presupuesto',queryList,presupuesto);
+                console.log('Presupuesto', presupuesto);
                 res.json(presupuesto);
             }
             catch (error) {
@@ -214,6 +215,9 @@ class MrpController {
                 let { item, zona, fechainicio, fechafin } = req.body;
                 let fechaI = new Date(fechainicio);
                 let fechaF = new Date(fechafin);
+                let fechaIMoment = (0, moment_1.default)(fechainicio);
+                console.log(fechaIMoment.week());
+                console.log((0, moment_1.default)().isoWeek(fechaIMoment.week()).startOf('isoWeek'));
                 //console.log(fechaI.getFullYear()+"-"+(fechaI.getMonth()+1)+"-"+fechaI.getDate());
                 //console.log(fechaF.getFullYear()+"-"+(fechaF.getMonth()+1)+"-"+fechaF.getDate());
                 let queryList = `SELECT * FROM ${bdmysql}.presupuestoventa 
@@ -222,7 +226,7 @@ class MrpController {
                                              fechasemana BETWEEN '${fechaI.getFullYear() + "-" + (fechaI.getMonth() + 1) + "-" + fechaI.getDate()}' AND 
                                                                  '${fechaF.getFullYear() + "-" + (fechaF.getMonth() + 1) + "-" + fechaF.getDate()}'`;
                 let presupuesto = yield database_1.db.query(queryList);
-                //console.log('Presupuesto',queryList,presupuesto);
+                console.log('Presupuesto', queryList, presupuesto);
                 res.json(presupuesto);
             }
             catch (error) {

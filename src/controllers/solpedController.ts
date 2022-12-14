@@ -487,7 +487,7 @@ class SolpedController {
                     await helper.sendNotification(infoEmail);
                     html= await helper.loadBodyMailSolpedAp(LineAprovedSolped,infoUsuario[0].logoempresa,solpedNotificacion,aprobadorCrypt,urlbk,false,false);
                     infoEmail.html = html;
-                   //infoEmail.to = LineAprovedSolped.autor.email; //enviar copia al autor de la solped
+                    infoEmail.to = LineAprovedSolped.autor.email; //enviar copia al autor de la solped
                     await helper.sendNotification(infoEmail);
 
 
@@ -579,7 +579,7 @@ class SolpedController {
                         await helper.sendNotification(infoEmail);
                         html = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt,urlbk,true,false);
                         infoEmail.html = html;
-                        //infoEmail.to = LineAprovedSolped.autor.email;
+                        infoEmail.to = LineAprovedSolped.autor.email;
                         await helper.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);
@@ -773,7 +773,7 @@ class SolpedController {
                         await helper.sendNotification(infoEmail);
                         html = await helper.loadBodyMailSolpedAp(LineAprovedSolped,logo,Solped,aprobadorCrypt,urlbk,true,false);
                         infoEmail.html = html;
-                        //infoEmail.to = LineAprovedSolped.autor.email;
+                        infoEmail.to = LineAprovedSolped.autor.email;
                         await helper.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);

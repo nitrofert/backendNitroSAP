@@ -426,7 +426,7 @@ class SolpedController {
                             yield helpers_1.default.sendNotification(infoEmail);
                             html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, infoUsuario[0].logoempresa, solpedNotificacion, aprobadorCrypt, urlbk, false, false);
                             infoEmail.html = html;
-                            //infoEmail.to = LineAprovedSolped.autor.email; //enviar copia al autor de la solped
+                            infoEmail.to = LineAprovedSolped.autor.email; //enviar copia al autor de la solped
                             yield helpers_1.default.sendNotification(infoEmail);
                         }
                         else {
@@ -508,7 +508,7 @@ class SolpedController {
                             yield helpers_1.default.sendNotification(infoEmail);
                             html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true, false);
                             infoEmail.html = html;
-                            //infoEmail.to = LineAprovedSolped.autor.email;
+                            infoEmail.to = LineAprovedSolped.autor.email;
                             yield helpers_1.default.sendNotification(infoEmail);
                             messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                             console.log(messageSolped);
@@ -671,7 +671,7 @@ class SolpedController {
                         yield helpers_1.default.sendNotification(infoEmail);
                         html = yield helpers_1.default.loadBodyMailSolpedAp(LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true, false);
                         infoEmail.html = html;
-                        //infoEmail.to = LineAprovedSolped.autor.email;
+                        infoEmail.to = LineAprovedSolped.autor.email;
                         yield helpers_1.default.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);

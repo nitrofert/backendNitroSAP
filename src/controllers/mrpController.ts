@@ -8,6 +8,7 @@ import path from 'path';
 import { DocumentLine, PurchaseRequestsInterface } from "../interfaces/purchaseRequest.interface";
 import fs from 'fs';
 import csv from 'csv-parser';
+import moment from 'moment';
 
 
 class MrpController {
@@ -237,7 +238,7 @@ class MrpController {
 
             let presupuesto = await db.query(queryList);
 
-            //console.log('Presupuesto',queryList,presupuesto);
+            console.log('Presupuesto',presupuesto);
 
             res.json(presupuesto);
         
@@ -263,6 +264,10 @@ class MrpController {
            let fechaI = new Date(fechainicio);
            let fechaF = new Date(fechafin);
 
+           let fechaIMoment = moment(fechainicio);
+           console.log(fechaIMoment.week());
+           console.log(moment().isoWeek(fechaIMoment.week()).startOf('isoWeek'));
+
            //console.log(fechaI.getFullYear()+"-"+(fechaI.getMonth()+1)+"-"+fechaI.getDate());
            //console.log(fechaF.getFullYear()+"-"+(fechaF.getMonth()+1)+"-"+fechaF.getDate());
 
@@ -274,7 +279,7 @@ class MrpController {
 
             let presupuesto = await db.query(queryList);
 
-            //console.log('Presupuesto',queryList,presupuesto);
+            console.log('Presupuesto',queryList,presupuesto);
 
             res.json(presupuesto);
         
