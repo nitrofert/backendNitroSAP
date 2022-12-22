@@ -455,7 +455,7 @@ class SolpedController {
                     console.log(err);
                     // Roll back the transaction
                     connection.rollback();
-                    res.json([{ status: "error", message: err }]);
+                    return res.json([{ status: "error", message: err }]);
                 } 
 
 
@@ -478,7 +478,7 @@ class SolpedController {
                         
                         let infoEmail:any = {
                             //to: LineAprovedSolped.aprobador.email,
-                            to:'ralbor@nitrofert.com.co',
+                            to:'aballesteros@nitrofert.com.co',
                             //cc:LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -493,13 +493,14 @@ class SolpedController {
 
                     }else{
                         console.log(`No existe modelo de aprobación para la solped ${idSolped} `);
+                        return res.json([{ status: "error", message: `No existe modelo de aprobación para la solped ${idSolped} ` }]);
                     }
 
                 }
             }
 
             //console.log((solpedObject));
-            res.json(arrayResult);
+            return res.json(arrayResult);
             
         }catch (error: any) {
             console.error(error);
@@ -570,7 +571,7 @@ class SolpedController {
                         
                         let infoEmail:any = {
                             //to: LineAprovedSolped.aprobador.email,
-                            to:'ralbor@nitrofert.com.co',
+                            to:'aballesteros@nitrofert.com.co',
                             //cc:LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -764,7 +765,7 @@ class SolpedController {
                         
                         let infoEmail:any = {
                             //to: LineAprovedSolped.aprobador.email,
-                            to:'ralbor@nitrofert.com.co',
+                            to:'aballesteros@nitrofert.com.co',
                             //cc:LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -1390,7 +1391,7 @@ class SolpedController {
             let queryList = `SELECT 
             t0.id, 
             t0.approved, 
-            t0.sapdocnum AS "DocNum",
+            t0.id AS "DocNum",
             CONCAT(t0.id,'-',t0.sapdocnum,'-',t1.linenum) AS "key",
             t0.u_nf_status AS "U_NF_STATUS",
             t1.linenum AS "LineNum",
@@ -1409,21 +1410,23 @@ class SolpedController {
             t0.nf_motonave AS "U_NF_MOTONAVE",
             t0.comments AS "Comments",
             t1.unidad AS "MeasureUnit",
-            t1.linevendor as "CarCode"
+            t1.linevendor as "CardCode",
+            t0.nf_pedmp as "U_NF_PEDMP"
               FROM ${bdmysql}.solped t0
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             ${where}
            
             ORDER BY t0.id DESC`;
 
-            //console.log(queryList);
+            console.log(queryList);
 
             
 
             const solped = await db.query(queryList);
-            console.log(solped);
+            let solicitudesSAP = [];
+            //console.log(solped);
             for(let linea of array_solped_sap){
-                solped.push({
+                solicitudesSAP.push({
                     id: linea.id,
                     approved: linea.approved,
                     DocNum: linea.DocNum,
@@ -1445,13 +1448,22 @@ class SolpedController {
                     U_NF_MOTONAVE: linea.U_NF_MOTONAVE,
                     Comments: linea.Comments,
                     MeasureUnit: linea.MeasureUnit,
-                    CarCode: linea.CardCode,
-                    RemainingOpenQuantity:linea.RemainingOpenQuantity
+                    CardCode: linea.CardCode,
+                    RemainingOpenQuantity:linea.RemainingOpenQuantity,
+                    U_NF_PEDMP:linea.U_NF_PEDMP
                 });
             }
 
             await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} accidio al modulo de tracking de materia prima`);
-            res.json(solped);     
+            let proyeccionesSolicitudes = {
+                proyecciones:solped,
+                solicitudesSAP
+
+            } 
+
+            //console.log(proyeccionesSolicitudes);
+
+            res.json(proyeccionesSolicitudes);     
 
         }catch (error: any) {
             console.error(error);

@@ -190,6 +190,8 @@ class MrpController {
 
             //console.log('inventarioItenSolicitadoPreFecha',inventarioItenSolicitadoPreFecha);
 
+            
+
             //Obtener compras proyectadas de materia prima en Mysql Portal
             let comprasProyectadas = await helper.getInventariosProyectados(infoUsuario[0]);
             let comprasProyectadasMP = comprasProyectadas.filter((data: { TIPO: string; State_Code: any; ItemCode: any; FECHANECESIDAD: string | number | Date; })=>data.TIPO ==='Proyectado' && 

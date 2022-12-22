@@ -104,7 +104,7 @@ class AuthController {
             //Regstrar log
             yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${formLogin.username} ha accedido al portal`);
             //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
-            return res.json({ message: `!Bienvenido ${infoUsuario[0].fullname}¡`, status: 200, infoUsuario, token, tokenid });
+            return res.json({ message: `Bienvenid@ ${infoUsuario[0].fullname}`, status: 200, infoUsuario, token, tokenid });
         });
     }
     infoUsuario(req, res) {
@@ -187,6 +187,55 @@ class AuthController {
                 console.log(decodedToken);
                 const permisosUsuario = yield helpers_1.default.getPermisoUsuario(decodedToken.userId);
                 return res.json(permisosUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    empresasUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                console.log(decodedToken);
+                const empresasUsuario = yield helpers_1.default.getEmpresasUsuario(decodedToken.userId);
+                return res.json(empresasUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    actulizarInfoUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization;
+                if (jwt) {
+                    jwt = jwt.slice('bearer'.length).trim();
+                    const decodedToken = yield helpers_1.default.validateToken(jwt);
+                }
+                //******************************************************* */
+                const user = req.body;
+                console.log(user);
+                const idUser = user.id;
+                const newUser = {
+                    fullname: user.fullname,
+                    email: user.email,
+                };
+                if (user.password) {
+                    user.password = yield helpers_1.default.encryptPassword(user.password || '');
+                    newUser.password = user.password;
+                }
+                console.log(user);
+                const result = yield database_1.db.query('update users set ? where id = ?', [newUser, idUser]);
+                console.log(result);
+                res.json(result);
             }
             catch (error) {
                 console.error(error);

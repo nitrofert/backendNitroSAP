@@ -107,7 +107,7 @@ class AuthController{
         //Regstrar log
         await helper.logaccion(infoUsuario[0],`El usuario ${formLogin.username} ha accedido al portal`);
         //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
-        return res.json({message:`!Bienvenido ${infoUsuario[0].fullname}¡`, status:200,infoUsuario,token,tokenid});
+        return res.json({message:`Bienvenid@ ${infoUsuario[0].fullname}`, status:200,infoUsuario,token,tokenid});
     } 
 
     public async infoUsuario(req: Request, res: Response) {
@@ -200,6 +200,65 @@ class AuthController{
             console.error(error);
             return res.json(error);
         }
+    }
+
+    public async empresasUsuario(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            console.log(decodedToken);
+            const empresasUsuario = await helper.getEmpresasUsuario(decodedToken.userId);
+            return res.json(empresasUsuario);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+   
+
+    public async actulizarInfoUsuario(req: Request, res: Response){
+        try {
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization;
+        if(jwt){
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+        }   
+        //******************************************************* */
+        
+
+         
+            
+                const user = req.body;
+                console.log(user);
+                const idUser = user.id;
+                const newUser:any = {
+                    fullname: user.fullname,
+                    email: user.email,
+                }
+                if(user.password){
+                    user.password = await helper.encryptPassword(user.password ||'');
+                    newUser.password = user.password;
+                } 
+
+                console.log(user);
+
+                const result = await db.query('update users set ? where id = ?', [newUser,idUser]);
+                console.log(result);
+                res.json(result);
+           
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+
     }
  
 

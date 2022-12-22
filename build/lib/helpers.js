@@ -194,6 +194,17 @@ class Helpers {
             return infoUsuario;
         });
     }
+    getEmpresasUsuario(userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const empresasUsuario = yield database_1.db.query(`
+        SELECT t0.id, id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  ,nit, direccion, telefono
+        FROM users t0 
+        INNER JOIN company_users t1 ON t1.id_user = t0.id
+        INNER JOIN companies t2 ON t2.id = t1.id_company
+        WHERE t0.id = ?  AND t0.status ='A' AND t2.status ='A'`, [userid]);
+            return empresasUsuario;
+        });
+    }
     getPermisoUsuario(userid) {
         return __awaiter(this, void 0, void 0, function* () {
             const permisosUsuario = yield database_1.db.query(`SELECT * 
@@ -260,7 +271,7 @@ class Helpers {
         SELECT T0.*, T1.*, T2.email 
         FROM ${bdmysql}.solped T0 
         INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
-        INNER JOIN usuariosportal.users T2 ON T2.id = T0.id_user
+        INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idSolped]);
             //console.log((solpedResult));
             let solped = {
@@ -1467,8 +1478,8 @@ class Helpers {
         SELECT T0.*, T1.*, T2.email 
         FROM ${bdmysql}.entrada T0 
         INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
-        INNER JOIN usuariosportal.users T2 ON T2.id = T0.id_user
-        WHERE t0.id = ?`, [idEntrada]);
+        INNER JOIN users T2 ON T2.id = T0.id_user
+        WHERE T0.id = ?`, [idEntrada]);
             //console.log((solpedResult));
             let entrada = {
                 id: idEntrada,
@@ -1636,9 +1647,9 @@ class Helpers {
                 U_NF_SERVICIO_SEGURIDAD: Entrada.entrada.U_NF_SERVICIO_SEGURIDAD,
                 U_NF_SERVICIO_AMBIENTE: Entrada.entrada.U_NF_SERVICIO_AMBIENTE,
                 U_NF_TIPO_HE: Entrada.entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
-                U_NF_PUNTAJE_HE: Entrada.entrada.U_NF_PUNTAJE,
+                U_NF_PUNTAJE_HE: Entrada.entrada.U_NF_PUNTAJE_HE,
                 U_NF_CALIFICACION: Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
-                Footer: Entrada.entrada.footer,
+                ClosingRemarks: Entrada.entrada.footer,
                 DocumentLines
             };
             console.log(JSON.stringify(dataEntradaJSONSAP));
@@ -1704,7 +1715,7 @@ class Helpers {
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,Footer,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -1867,8 +1878,15 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}`;
-                //console.log(url2);
+                let serie = 0;
+                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '22');
+                for (let item in seriesDoc) {
+                    if (seriesDoc[item].name === 'OCM') {
+                        serie = seriesDoc[item].code;
+                    }
+                }
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}&serie=${serie}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -1940,10 +1958,17 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const bdmysql = infoUsuario.bdmysql;
+                let serie = 0;
+                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '1470000113');
+                for (let item in seriesDoc) {
+                    if (seriesDoc[item].name === 'SPMP') {
+                        serie = seriesDoc[item].code;
+                    }
+                }
                 const query = `SELECT 
             'Proyectado' AS "TIPO",
             '' AS "CardCode",
-            t0.sapdocnum AS "DocNum",
+            t0.id AS "DocNum",
             '' AS "DocCur",
             '' AS "BaseRef",
             t0.status AS "DocStatus",
@@ -1970,7 +1995,7 @@ class Helpers {
             
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            WHERE t0.serie = 189 AND 
+            WHERE t0.serie = ${serie} AND 
             t0.sapdocnum =0`;
                 const solpeds = yield database_1.db.query(query);
                 return (solpeds);
@@ -1999,7 +2024,7 @@ class Helpers {
                                 DocCurrency: documento.DocCurrency,
                                 DocRate: documento.DocRate,
                                 Reference1: documento.Reference1,
-                                Comments: documento.Comments,
+                                Comments: documento.Comments == null ? '' : documento.Comments,
                                 Series: documento.Series,
                                 TaxDate: documento.TaxDate,
                                 DocObjectCode: documento.DocObjectCode,
@@ -2022,6 +2047,7 @@ class Helpers {
                                 U_NF_STATUS: documento.U_NF_STATUS,
                                 U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
                                 U_NT_Incoterms: documento.U_NT_Incoterms,
+                                U_NF_PEDMP: documento.U_NF_PEDMP,
                                 CardCode: '',
                                 CardName: '',
                                 ItemCode: '',
@@ -2033,18 +2059,18 @@ class Helpers {
                                 approved: 'S',
                                 id: documento.DocEntry,
                                 key: '0',
-                                WarehouseCode: ''
+                                WarehouseCode: '',
                             };
-                            lineaArray.CardCode = lineaDetalle.LineVendor;
+                            lineaArray.CardCode = lineaDetalle.LineVendor == null ? '' : lineaDetalle.LineVendor;
                             lineaArray.ItemCode = lineaDetalle.ItemCode;
-                            lineaArray.ItemDescription = lineaDetalle.ItemDescription;
+                            lineaArray.ItemDescription = lineaDetalle.ItemDescription == null ? '' : lineaDetalle.ItemDescription;
                             lineaArray.LineNum = lineaDetalle.LineNum;
                             lineaArray.MeasureUnit = lineaDetalle.MeasureUnit;
                             lineaArray.Quantity = lineaDetalle.Quantity;
                             lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
                             lineaArray.key = documento.DocEntry + '-' + documento.DocNum + '-' + lineaDetalle.LineNum;
                             lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
-                            //console.log(documento.DocNum,lineaDetalle.ItemCode);
+                            console.log(lineaArray.LineNum);
                             dataArray.push(lineaArray);
                         }
                     }
@@ -2052,7 +2078,7 @@ class Helpers {
                 //break;
             }
             //console.log(dataArray);
-            console.log(dataArray.length);
+            //console.log(dataArray.length);
             return dataArray;
         });
     }

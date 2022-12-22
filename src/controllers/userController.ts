@@ -48,7 +48,7 @@ class UserController{
        
         
             const {id} = req.params;
-            const  user:UserInterface[] =  await db.query("SELECT * FROM usuariosportal.users where id= ?",[id]); 
+            const  user:UserInterface[] =  await db.query("SELECT * FROM users where id= ?",[id]); 
             res.json(user);
     
             }catch (error: any) {
