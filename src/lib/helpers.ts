@@ -184,6 +184,20 @@ class Helpers {
         return infoUsuario;
     }
 
+    async getLogo64(userid: number, company:string): Promise<any> {
+        
+        const infoUsuario = await db.query(`
+        SELECT t2.logobase64
+        FROM users t0 
+        INNER JOIN company_users t1 ON t1.id_user = t0.id
+        INNER JOIN companies t2 ON t2.id = t1.id_company
+        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`,[userid,company]);
+
+        //console.log(infoUsuario);
+
+        return infoUsuario;
+    }
+
     
 
     async getEmpresasUsuario(userid: number): Promise<any> {
@@ -2050,10 +2064,18 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
         try {
 
+            let serie =0;
+            let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
+            for(let item in seriesDoc) {
+                if(seriesDoc[item].name ==='OCM'){
+                    serie = seriesDoc[item].code;
+                }
+            }
+
             const bieSession = await helper.loginWsSAP(infoUsuario);
 
             if (bieSession != '') {
-                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq 92 and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
                 console.log(url2);
                 let configWs2 = {
                     method: "GET",
@@ -2237,6 +2259,25 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             } 
     }
 
+    async getProveedoresXE(infoUsuario: InfoUsuario): Promise<any>{
+        try {
+
+            const compania = infoUsuario.dbcompanysap;
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+
+           
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                return (data2);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
+
     async getInventariosProyectados(infoUsuario: InfoUsuario): Promise<any>{
         try {
 
@@ -2249,10 +2290,13 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                     serie = seriesDoc[item].code;
                 }
             }
+
+            let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
         
             const query = `SELECT 
             'Proyectado' AS "TIPO",
             '' AS "CardCode",
+            '' AS "CardName",
             t0.id AS "DocNum",
             '' AS "DocCur",
             '' AS "BaseRef",
@@ -2284,6 +2328,12 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             t0.sapdocnum =0`;
 
             const solpeds = await db.query(query);
+
+            for(let solped of solpeds) {
+                if(solped.LineVendor!=''){
+                    solped.CardName = proveedores.filter((data: { CardCode: any; }) =>data.CardCode === solped.LineVendor)[0].CardName;
+                }
+            }
         
                   
                 return (solpeds);   
@@ -2354,6 +2404,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                             id:documento.DocEntry,
                             key:'0',
                             WarehouseCode:'',
+                            ProveedorDS:'',
             
                         };
     
@@ -2383,6 +2434,16 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         //console.log(dataArray);
         //console.log(dataArray.length);
         return dataArray;
+    }
+
+    async objectToArray(data:any):Promise<any>{
+        let NewArray:any[] = [];
+
+        for(let linea in data){
+            NewArray.push(data[linea]);
+        }
+
+        return NewArray;
     }
 
 

@@ -126,8 +126,14 @@ class MrpController {
             const decodedToken = await helper.validateToken(jwt);
             //******************************************************* */
 
+           
+
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
+
+            let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario[0]));
+
+            //console.log(proveedores);
             
             //Obtener invetarios de Materia prima en transito que esten en una solped/OC en SAP
             let inventarios = await helper.getInventariosTrackingMPXE(infoUsuario[0]);
@@ -139,15 +145,17 @@ class MrpController {
             let {item, zona, fechainicio, fechafin } = req.body;
 
   
-            console.log(req.body);
+            //console.log(req.body);
     
             //Inventario de materia prima en transito que esta en una orden de compra que su estatus es diferente a descargado
-            let inventarioItemTransito = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
+            let inventarioItemTransito = await array_inventarios.filter(data=>data.TIPO ==='Compra' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.ETA) >= new Date(fechainicio) && 
             new Date(data.ETA) <= new Date(fechafin) &&
             data.U_NF_STATUS != 'Descargado');
+
+            //console.log('TRANSITO',inventarioItemTransito);
 
             //Inventario de materia prima en transito abierta con fecha anterior a la fecha de inicio calculadora
             let inventarioItemTransitoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
@@ -155,6 +163,8 @@ class MrpController {
             data.ItemCode === item  &&
             new Date(data.ETA) < new Date(fechainicio) &&
             data.U_NF_STATUS != 'Descargado');
+
+            //console.log('TRANSITOPRE',inventarioItemTransitoPreFecha);
 
             //console.log('inventarioItemTransitoPreFecha',inventarioItemTransitoPreFecha);
             
@@ -200,7 +210,7 @@ class MrpController {
             new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
             new Date(data.FECHANECESIDAD) <= new Date(fechafin));
 
-            console.log('comprasProyectadasMP',comprasProyectadasMP);
+            //console.log('comprasProyectadasMP',comprasProyectadasMP);
 
             let consolidadoInventarios = {
                 inventarioItemTransito,

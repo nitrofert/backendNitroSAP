@@ -292,13 +292,13 @@ class WssapController {
             
         //console.log(id);
         let proveedor ='';
+
+        let proveedores = await helper.getProveedoresXE(infoUsuario[0]);
     
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
-        
-        
-            const response2 = await fetch(url2);
-            const data2 = await response2.json();   
-            return res.json(data2);   
+        /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
+        const response2 = await fetch(url2);
+        const data2 = await response2.json();*/   
+        return res.json(proveedores);   
 
         }catch (error: any) {
             console.error(error);

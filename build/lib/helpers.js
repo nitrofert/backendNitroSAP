@@ -194,6 +194,18 @@ class Helpers {
             return infoUsuario;
         });
     }
+    getLogo64(userid, company) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const infoUsuario = yield database_1.db.query(`
+        SELECT t2.logobase64
+        FROM users t0 
+        INNER JOIN company_users t1 ON t1.id_user = t0.id
+        INNER JOIN companies t2 ON t2.id = t1.id_company
+        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [userid, company]);
+            //console.log(infoUsuario);
+            return infoUsuario;
+        });
+    }
     getEmpresasUsuario(userid) {
         return __awaiter(this, void 0, void 0, function* () {
             const empresasUsuario = yield database_1.db.query(`
@@ -1823,9 +1835,16 @@ class Helpers {
     getOcMPByStatusSL(infoUsuario, status) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                let serie = 0;
+                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '22');
+                for (let item in seriesDoc) {
+                    if (seriesDoc[item].name === 'OCM') {
+                        serie = seriesDoc[item].code;
+                    }
+                }
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq 92 and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
                     console.log(url2);
                     let configWs2 = {
                         method: "GET",
@@ -1954,6 +1973,21 @@ class Helpers {
             }
         });
     }
+    getProveedoresXE(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
     getInventariosProyectados(infoUsuario) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -1965,9 +1999,11 @@ class Helpers {
                         serie = seriesDoc[item].code;
                     }
                 }
+                let proveedores = yield helper.objectToArray(yield helper.getProveedoresXE(infoUsuario));
                 const query = `SELECT 
             'Proyectado' AS "TIPO",
             '' AS "CardCode",
+            '' AS "CardName",
             t0.id AS "DocNum",
             '' AS "DocCur",
             '' AS "BaseRef",
@@ -1998,6 +2034,11 @@ class Helpers {
             WHERE t0.serie = ${serie} AND 
             t0.sapdocnum =0`;
                 const solpeds = yield database_1.db.query(query);
+                for (let solped of solpeds) {
+                    if (solped.LineVendor != '') {
+                        solped.CardName = proveedores.filter((data) => data.CardCode === solped.LineVendor)[0].CardName;
+                    }
+                }
                 return (solpeds);
             }
             catch (error) {
@@ -2060,6 +2101,7 @@ class Helpers {
                                 id: documento.DocEntry,
                                 key: '0',
                                 WarehouseCode: '',
+                                ProveedorDS: '',
                             };
                             lineaArray.CardCode = lineaDetalle.LineVendor == null ? '' : lineaDetalle.LineVendor;
                             lineaArray.ItemCode = lineaDetalle.ItemCode;
@@ -2080,6 +2122,15 @@ class Helpers {
             //console.log(dataArray);
             //console.log(dataArray.length);
             return dataArray;
+        });
+    }
+    objectToArray(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let NewArray = [];
+            for (let linea in data) {
+                NewArray.push(data[linea]);
+            }
+            return NewArray;
         });
     }
     /************** Seccion Liquitech *****************/

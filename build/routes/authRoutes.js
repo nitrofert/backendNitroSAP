@@ -26,6 +26,7 @@ class AuthRoutes {
         this.router.get('/logout', authController_1.default.logout);
         this.router.get('/empresasUsuario', authController_1.default.empresasUsuario);
         this.router.post('/actulizarInfoUsuario', authController_1.default.actulizarInfoUsuario);
+        this.router.get('/logo64', authController_1.default.logo64);
     }
 }
 const authRoutes = new AuthRoutes();

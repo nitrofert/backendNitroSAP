@@ -108,6 +108,8 @@ class MrpController {
                 //******************************************************* */
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const bdmysql = infoUsuario[0].bdmysql;
+                let proveedores = yield helpers_1.default.objectToArray(yield helpers_1.default.getProveedoresXE(infoUsuario[0]));
+                //console.log(proveedores);
                 //Obtener invetarios de Materia prima en transito que esten en una solped/OC en SAP
                 let inventarios = yield helpers_1.default.getInventariosTrackingMPXE(infoUsuario[0]);
                 let array_inventarios = [];
@@ -115,20 +117,22 @@ class MrpController {
                     array_inventarios.push(inventarios[item]);
                 }
                 let { item, zona, fechainicio, fechafin } = req.body;
-                console.log(req.body);
+                //console.log(req.body);
                 //Inventario de materia prima en transito que esta en una orden de compra que su estatus es diferente a descargado
-                let inventarioItemTransito = array_inventarios.filter(data => data.TIPO === 'Compra' &&
+                let inventarioItemTransito = yield array_inventarios.filter(data => data.TIPO === 'Compra' &&
                     data.State_Code === zona &&
                     data.ItemCode === item &&
                     new Date(data.ETA) >= new Date(fechainicio) &&
                     new Date(data.ETA) <= new Date(fechafin) &&
                     data.U_NF_STATUS != 'Descargado');
+                //console.log('TRANSITO',inventarioItemTransito);
                 //Inventario de materia prima en transito abierta con fecha anterior a la fecha de inicio calculadora
                 let inventarioItemTransitoPreFecha = array_inventarios.filter(data => data.TIPO === 'Compra' &&
                     data.State_Code === zona &&
                     data.ItemCode === item &&
                     new Date(data.ETA) < new Date(fechainicio) &&
                     data.U_NF_STATUS != 'Descargado');
+                //console.log('TRANSITOPRE',inventarioItemTransitoPreFecha);
                 //console.log('inventarioItemTransitoPreFecha',inventarioItemTransitoPreFecha);
                 //Inventario de materia prima en transito que esta en una OC que su estatus es descargado en ZF
                 let inventarioItemZF = array_inventarios.filter(data => data.TIPO === 'Compra' &&
@@ -162,7 +166,7 @@ class MrpController {
                     data.ItemCode === item &&
                     new Date(data.FECHANECESIDAD) >= new Date(fechainicio) &&
                     new Date(data.FECHANECESIDAD) <= new Date(fechafin));
-                console.log('comprasProyectadasMP', comprasProyectadasMP);
+                //console.log('comprasProyectadasMP',comprasProyectadasMP);
                 let consolidadoInventarios = {
                     inventarioItemTransito,
                     inventarioItemTransitoPreFecha,

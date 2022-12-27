@@ -128,6 +128,29 @@ class AuthController{
         }
     }
 
+    
+
+    public async logo64(req: Request, res: Response) {
+        try { 
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+
+            //console.log(decodedToken);
+            const logo64 = await helper.getLogo64(decodedToken.userId, decodedToken.company);
+            //console.log(logo64[0].logobase64);
+            const buffer = Buffer.from(logo64[0].logobase64);
+            //console.log(buffer.toString())
+            return res.json(buffer.toString());
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
     public async logout(req: Request, res: Response) {
         try { 
 

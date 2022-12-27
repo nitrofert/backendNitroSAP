@@ -25,6 +25,8 @@ class AuthRoutes{
         this.router.get('/logout', authController.logout);
         this.router.get('/empresasUsuario', authController.empresasUsuario);
         this.router.post('/actulizarInfoUsuario', authController.actulizarInfoUsuario);
+        this.router.get('/logo64', authController.logo64);
+        
         
         
         

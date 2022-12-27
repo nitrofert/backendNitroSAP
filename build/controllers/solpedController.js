@@ -1164,6 +1164,7 @@ class SolpedController {
                 }else{
                     where = where+ ` and  t0.sapdocnum in ${JSON.stringify(array_solped_sap).replace('[','(').replace(']',')')} `;
                 }*/
+                let proveedores = yield helpers_1.default.objectToArray(yield helpers_1.default.getProveedoresXE(infoUsuario[0]));
                 let solped_open_sap = yield helpers_1.default.getAllSolpedMPopenSL(infoUsuario[0], serie);
                 let array_solped_sap = yield helpers_1.default.covertirResultadoSLArray(solped_open_sap);
                 //console.log(solped_open_sap);
@@ -1176,6 +1177,7 @@ class SolpedController {
             t1.linenum AS "LineNum",
             t1.itemcode AS "ItemCode",
             t1.dscription AS "ItemDescription",
+            CONCAT(t1.itemcode,' - ',t1.dscription) AS "Description",
             t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
             t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
             t0.reqdate AS "RequriedDate",
@@ -1190,6 +1192,8 @@ class SolpedController {
             t0.comments AS "Comments",
             t1.unidad AS "MeasureUnit",
             t1.linevendor as "CardCode",
+            '' AS "CardName",
+            '' AS "ProveedorDS",
             t0.nf_pedmp as "U_NF_PEDMP"
               FROM ${bdmysql}.solped t0
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
@@ -1197,10 +1201,20 @@ class SolpedController {
            
             ORDER BY t0.id DESC`;
                 console.log(queryList);
-                const solped = yield database_1.db.query(queryList);
+                const solpeds = yield database_1.db.query(queryList);
+                for (let solped of solpeds) {
+                    if (solped.CardCode != '') {
+                        solped.CardName = proveedores.filter((data) => data.CardCode === solped.CardCode)[0].CardName;
+                        solped.ProveedorDS = `${solped.CardCode} - ${solped.CardName}`;
+                    }
+                }
                 let solicitudesSAP = [];
                 //console.log(solped);
                 for (let linea of array_solped_sap) {
+                    if (linea.CardCode != '') {
+                        linea.CardName = proveedores.filter((data) => data.CardCode === linea.CardCode)[0].CardName;
+                        linea.ProveedorDS = `${linea.CardCode} - ${linea.CardName}`;
+                    }
                     solicitudesSAP.push({
                         id: linea.id,
                         approved: linea.approved,
@@ -1210,6 +1224,7 @@ class SolpedController {
                         LineNum: linea.lineNum,
                         ItemCode: linea.ItemCode,
                         ItemDescription: linea.ItemDescription,
+                        Description: `${linea.ItemCode} - ${linea.ItemDescription}`,
                         U_NF_LASTSHIPPPING: linea.U_NF_LASTSHIPPPING,
                         U_NF_DATEOFSHIPPING: linea.U_NF_DATEOFSHIPPING,
                         RequriedDate: linea.RequriedDate,
@@ -1225,12 +1240,14 @@ class SolpedController {
                         MeasureUnit: linea.MeasureUnit,
                         CardCode: linea.CardCode,
                         RemainingOpenQuantity: linea.RemainingOpenQuantity,
-                        U_NF_PEDMP: linea.U_NF_PEDMP
+                        U_NF_PEDMP: linea.U_NF_PEDMP,
+                        CardName: linea.CardName != '' ? proveedores.filter((data) => data.CardCode === linea.CardCode)[0].CardName : '',
+                        ProveedorDS: linea.ProveedorDS
                     });
                 }
                 yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} accidio al modulo de tracking de materia prima`);
                 let proyeccionesSolicitudes = {
-                    proyecciones: solped,
+                    proyecciones: solpeds,
                     solicitudesSAP
                 };
                 //console.log(proyeccionesSolicitudes);
@@ -1261,8 +1278,8 @@ class SolpedController {
                 newSolped.solped.docduedate = yield helpers_1.default.format(newSolped.solped.docduedate);
                 newSolped.solped.taxdate = yield helpers_1.default.format(newSolped.solped.taxdate);
                 newSolped.solped.reqdate = yield helpers_1.default.format(newSolped.solped.reqdate);
-                newSolped.solped.nf_lastshippping = yield helpers_1.default.format(newSolped.solped.nf_lastshippping);
-                newSolped.solped.nf_dateofshipping = yield helpers_1.default.format(newSolped.solped.nf_dateofshipping);
+                //newSolped.solped.nf_lastshippping = await helper.format(newSolped.solped.nf_lastshippping);
+                //newSolped.solped.nf_dateofshipping = await helper.format(newSolped.solped.nf_dateofshipping);
                 let resultInsertSolped = yield connection.query(querySolped, [newSolped.solped]);
                 //console.log(resultInsertSolped);
                 let solpedId = resultInsertSolped.insertId;
