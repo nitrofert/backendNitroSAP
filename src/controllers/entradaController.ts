@@ -48,7 +48,7 @@ class EntradaController {
             //console.log(queryList);
 
             const entrada = await db.query(queryList);
-            //console.log(solped);
+            //console.log(entrada);
             res.json(entrada);     
 
         }catch (error: any) {

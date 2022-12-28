@@ -46,7 +46,7 @@ class EntradaController {
             ORDER BY t0.id DESC`;
                 //console.log(queryList);
                 const entrada = yield database_1.db.query(queryList);
-                //console.log(solped);
+                //console.log(entrada);
                 res.json(entrada);
             }
             catch (error) {
