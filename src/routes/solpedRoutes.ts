@@ -15,6 +15,7 @@ class SolpedRoutes{
 
     config():void{
         this.router.get('/list', solpedController.list);
+        this.router.get('/list/aprobadas', solpedController.listAprobadores);
         this.router.post('/', solpedController.create);
         this.router.put('/', solpedController.update);
         this.router.get('/:id',solpedController.getSolpedById); 
@@ -34,9 +35,14 @@ class SolpedRoutes{
         this.router.get('/list/inmp', solpedController.listInMP);
         this.router.post('/mp', solpedController.createMP);
         this.router.put('/mp', solpedController.updateMP);
+        this.router.put('/cantidadmp', solpedController.updateCantidadMP);
         this.router.post('/enviar-sap',solpedController.enviarSolpedSAP);
         this.router.put('/enviar-sap',solpedController.actualizarSolpedSAP);
         this.router.put('/enviar-sap-pedido',solpedController.actualizarPedidoSAP);
+
+        this.router.post('/aprobar',solpedController.aprovedMail2);  
+        this.router.post('/rechazar',solpedController.rejectMail);
+        this.router.get('/anexo/:id/:id2',solpedController.getAnexoSolpedById); 
        
         
 

@@ -57,10 +57,7 @@ class PermisoController{
          const permiso = req.body;
          console.log(permiso);
 
-         
-
-
-         
+                
             
             //Validar si el permiso esta registrado
             const existePermiso = await db.query(`

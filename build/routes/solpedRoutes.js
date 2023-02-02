@@ -13,6 +13,7 @@ class SolpedRoutes {
     }
     config() {
         this.router.get('/list', solpedController_1.default.list);
+        this.router.get('/list/aprobadas', solpedController_1.default.listAprobadores);
         this.router.post('/', solpedController_1.default.create);
         this.router.put('/', solpedController_1.default.update);
         this.router.get('/:id', solpedController_1.default.getSolpedById);
@@ -32,9 +33,13 @@ class SolpedRoutes {
         this.router.get('/list/inmp', solpedController_1.default.listInMP);
         this.router.post('/mp', solpedController_1.default.createMP);
         this.router.put('/mp', solpedController_1.default.updateMP);
+        this.router.put('/cantidadmp', solpedController_1.default.updateCantidadMP);
         this.router.post('/enviar-sap', solpedController_1.default.enviarSolpedSAP);
         this.router.put('/enviar-sap', solpedController_1.default.actualizarSolpedSAP);
         this.router.put('/enviar-sap-pedido', solpedController_1.default.actualizarPedidoSAP);
+        this.router.post('/aprobar', solpedController_1.default.aprovedMail2);
+        this.router.post('/rechazar', solpedController_1.default.rejectMail);
+        this.router.get('/anexo/:id/:id2', solpedController_1.default.getAnexoSolpedById);
     }
 }
 const solpedRoutes = new SolpedRoutes();

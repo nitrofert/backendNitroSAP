@@ -17,7 +17,7 @@ class Nitromail {
     constructor() {
         this.hostname = "outlook.office365.com";
         this.emailsend = "notificacionapp@nitrofert.com.co";
-        this.password = "Nitrofert2022*";
+        this.password = "Nitrofert2023*";
     }
     getTransporter() {
         return __awaiter(this, void 0, void 0, function* () {

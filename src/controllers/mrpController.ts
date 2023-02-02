@@ -361,6 +361,145 @@ class MrpController {
         }
     }
 
+    public async grabarSimulaciones(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            let data = req.body;
+
+           //console.log(data);
+           let itemcode = data.simulacionConProyeciones[0].itemcode;
+           let codigozona = data.simulacionConProyeciones[0].codigozona;
+           let zona = data.simulacionConProyeciones[0].zona;
+
+           //Borrar datos de la tabla de simulaciones para el item, zona
+
+           let queryDeleteSimulaciones = `DELETE FROM ${bdmysql}.simulaciones_item_zona WHERE itemcode = ? and codigozona = ?`;
+           let resultDelete = await db.query(queryDeleteSimulaciones,[itemcode,codigozona]);
+            
+           let lineaSimulacion:any[] = [];
+           let simulacionDet:any[]= [];
+
+           for(let item in data.simulacionConProyeciones){
+                lineaSimulacion.push(data.simulacionConProyeciones[item].itemcode);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].codigozona);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].itemname);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].zona);
+                lineaSimulacion.push(new Date(data.simulacionConProyeciones[item].fecha));
+                lineaSimulacion.push(data.simulacionConProyeciones[item].semana);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].semanames);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioMP);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioMPPT);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioMPZF);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioTransito);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioSolped);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioProyecciones);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].presupuestoConsumo);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioFinal);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].necesidadCompra);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].cantidadSugerida);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].inventarioFinalSugerido);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].tipo);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].tolerancia);
+                lineaSimulacion.push(data.simulacionConProyeciones[item].bodega);
+                simulacionDet.push(lineaSimulacion);
+                lineaSimulacion = [];
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].itemcode);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].codigozona);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].itemname);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].zona);
+                lineaSimulacion.push(new Date(data.simulacionSinProyeciones[item].fecha));
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].semana);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].semanames);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioMP);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioMPPT);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioMPZF);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioTransito);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioSolped);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioProyecciones);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].presupuestoConsumo);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioFinal);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].necesidadCompra);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].cantidadSugerida);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].inventarioFinalSugerido);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].tipo);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].tolerancia);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].bodega);
+                simulacionDet.push(lineaSimulacion);
+                lineaSimulacion = [];
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].itemcode);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].codigozona);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].itemname);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].zona);
+                lineaSimulacion.push(new Date(data.simulacionSinTransitoMP[item].fecha));
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].semana);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].semanames);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioMP);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioMPPT);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioMPZF);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioTransito);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioSolped);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioProyecciones);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].presupuestoConsumo);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioFinal);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].necesidadCompra);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].cantidadSugerida);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].inventarioFinalSugerido);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].tipo);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].tolerancia);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].bodega);
+                simulacionDet.push(lineaSimulacion);
+                lineaSimulacion = [];
+
+           }
+
+           console.log(simulacionDet);
+
+
+           let queryInsertSimulaciones = `INSERT INTO ${bdmysql}.simulaciones_item_zona (itemcode,
+                                                                                         codigozona,
+                                                                                         itemname,
+                                                                                         zona,
+                                                                                         fecha,
+                                                                                         semana,
+                                                                                         semanames,
+                                                                                         inventarioMP,
+                                                                                         inventarioMPPT,
+                                                                                         inventarioMPZF,
+                                                                                         inventarioTransito,
+                                                                                         inventarioSolped,
+                                                                                         inventarioProyecciones,
+                                                                                         presupuestoConsumo,
+                                                                                         inventarioFinal,
+                                                                                         necesidadCompra,
+                                                                                         cantidadSugerida,
+                                                                                         inventarioFinalSugerido,
+                                                                                         tipo,
+                                                                                         tolerancia,
+                                                                                         bodega) values ?`;
+                                                                                         
+            let resultInsert = await db.query(queryInsertSimulaciones,[simulacionDet]);
+            
+            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} realizo correctamnente el registro de las simulaciones del item. ${itemcode} para la ${zona}`);
+            res.json({ message: `Se realizo correctamnente el registro de las simulaciones del item. ${itemcode} para la ${zona}`});
+
+            
+
+            //res.json(msgResult);
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
     
 
     public async cargarPresupuesto(req: Request, res: Response) {

@@ -65,6 +65,7 @@ class Helpers {
         console.log(url);
         const routesAllowWithoutToken: string[] = [
             '/api/auth/login',
+            '/api/auth/recaptcha',
             '/api/auth/recovery',
             '/api/atuh/restore',
             '/',
@@ -75,7 +76,8 @@ class Helpers {
             '/api/compras/solped/upload/',
             '/api/compras/solped/borrar-anexo/',
             '/api/nitroLQ/titulos',
-            '/api/nitroLQ/titulos/pagos'
+            '/api/nitroLQ/titulos/pagos',
+            '/uploads/solped/'
         ];
         let result = false;
         for (let item of routesAllowWithoutToken) {
@@ -89,7 +91,7 @@ class Helpers {
 
     async loginWsSAP(infoUsuario: InfoUsuario): Promise<any> {
 
-        const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "ABALLESTEROS", "Password": "1234" };
+        const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "USERAPLICACIONES", "Password": "Nitro123" };
         const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Login`;
         const configWs = {
             method: "POST",
@@ -99,16 +101,21 @@ class Helpers {
             body: JSON.stringify(jsonLog)
         }
 
+        //console.log(configWs);
+
         try {
 
             const response = await fetch(url, configWs);
+
             const data = await response.json();
 
+            //console.log(response,data);
+
             if (response.ok) {
-                //console.log('successfully logged SAP');
+                console.log('successfully logged SAP');
                 return response.headers.get('set-cookie');
             } else {
-
+                console.log('error logged SAP');
                 return '';
 
             }
@@ -235,22 +242,21 @@ class Helpers {
 
     async getMenuUsuario(userid: number): Promise<any> {
         
-        const opcionesMenu = await db.query(`SELECT t0.* 
+        const opcionesMenu = await db.query(`SELECT DISTINCT t0.* 
         FROM menu t0 
         INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
         WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
             t0.hierarchy ='P' AND
             t1.read_accion = true
-        ORDER BY t0.ordernum ASC;`,[userid]);
+        ORDER BY CAST((REPLACE(t0.ordernum, '.', '')) AS SIGNED) ASC;`,[userid]);
 
-const opcionesSubMenu = await db.query(`SELECT t0.* 
+const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.* 
             FROM menu t0 
             INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
             WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
                 t0.hierarchy ='H' AND
-                t1.read_accion = true AND
-                t0.visible =1
-            ORDER BY t0.ordernum ASC;`,[userid]);
+                t1.read_accion = true 
+            ORDER BY CAST((REPLACE(t0.ordernum, '.', '')) AS SIGNED) ASC;`,[userid]);
 
 
             let menuUsuario =  {
@@ -365,7 +371,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         return solpedObject;
     }
 
-    async getNextLineAprovedSolped(idSolped: number, bdmysql: string, companysap: string, logo: string,origin:string='http://localhost:4200',idLinea?:number): Promise<any> {
+    async getNextLineAprovedSolped(idSolped: number, bdmysql: string, companysap: string, logo: string,origin:string='http://localhost:4200',urlbk:string,idLinea?:number): Promise<any> {
         
         let condicionLinea = "";
         if(idLinea) condicionLinea = ` and t0.id!=${idLinea}`;
@@ -376,11 +382,14 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         WHERE t0.id_solped = ${idSolped} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
         ORDER BY nivel ASC`;
 
-        console.log(queryNextApprovedLine);
+        //console.log(queryNextApprovedLine);
+
+        const queryCompania =`SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
+        const compania:any[] = await db.query(queryCompania);
 
         const nextLineAprovedSolped: any[] = await db.query(queryNextApprovedLine);
-        console.log(nextLineAprovedSolped);
-        console.log(nextLineAprovedSolped.length);
+        //console.log(nextLineAprovedSolped);
+        //console.log(nextLineAprovedSolped.length);
         //console.log(nextLineAprovedSolped[0].id);
 
 
@@ -404,7 +413,10 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                     bdmysql,
                     companysap,
                     logo,
-                    origin
+                    origin,
+                    documento:'solped',
+                    idCompania:compania[0].id,
+                    urlbk
                 }
             }
         } else {
@@ -414,7 +426,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
 
 
-        console.log(lineAprovedSolped);
+       // console.log(lineAprovedSolped);
         return lineAprovedSolped;
     }
 
@@ -483,7 +495,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         return detalleAprobacionSolped;
     }
 
-    async loadBodyMailSolpedAp(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean,verBotones?:boolean): Promise<string> {
+    async loadBodyMailSolpedAp(infoUsuario:any, LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean,verBotones?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
         const anexosSolped:any[] = solped.anexos
@@ -493,6 +505,15 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         const detalleAprobacionSolped = await helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
         let htmlDetalleAprobacion = '';
         let lineaDetalleAprobacion = '';
+        let serieNombre = "";
+        let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'1470000113');
+        for(let item in seriesDoc) {
+            if(seriesDoc[item].code == solped.solped.serie){
+                serieNombre = seriesDoc[item].name;
+            }
+        }
+        console.log(infoUsuario,seriesDoc);
+        
 
         
         //if (detalleAprobacionSolped.length > 0) {
@@ -599,7 +620,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                     <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
                                 </td>
                                 <td>
-                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                    <!--<span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>-->
                                 </td>
                               </tr>`;
         }
@@ -647,9 +668,11 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         if(key!=='' && verBotones){
             bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+                                        <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUI</a></b></td>
                                         
-                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+                                        <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
                                     </tr>
                                 </table>`;
         }
@@ -714,7 +737,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                             </td>
                                                             <td style="width:50%;">
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${await helper.format(solped.solped.docdate)} - ${ await helper.format(solped.solped.docduedate)}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
@@ -770,10 +793,12 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                         <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
                                             <tr>
                                                 <td style="padding:0;width:50%;" align="left">
-                                                    <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                                                    
+                                                    ${bottonsAproved}
                                                 </td>
                                                 <td style="padding:0;width:50%;" align="right">
-                                                    ${bottonsAproved}
+                                                <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+
                                                 </td>
                                             </tr>
                                         </table>
@@ -794,7 +819,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         return html;
     }
 
-    async loadBodyMailApprovedSolped(LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
+    async loadBodyMailApprovedSolped(infoUsuario:any,LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
         const anexosSolped:any[] = solped.anexos
@@ -804,6 +829,14 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
         const detalleAprobacionSolped = await helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
         let htmlDetalleAprobacion = '';
         let lineaDetalleAprobacion = '';
+        let serieNombre =  "";
+        let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'1470000113');
+        for(let item in seriesDoc) {
+            if(seriesDoc[item].code == solped.solped.serie){
+                serieNombre = seriesDoc[item].name;
+            }
+        }
+        console.log(infoUsuario,seriesDoc);
         
         //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
@@ -907,7 +940,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                     <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
                                 </td>
                                 <td>
-                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                    <!--<span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>-->
                                 </td>
                               </tr>`;
         }
@@ -953,11 +986,13 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
         let bottonsAproved ="";
         if(key!==''){
-            bottonsAproved = `<table>
+           bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+                                        <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUÍ</a></b></td>
                                         
-                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+                                        <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
                                     </tr>
                                 </table>`;
         }
@@ -1019,7 +1054,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                                                             </td>
                                                             <td style="width:50%;">
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
@@ -1459,7 +1494,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
 
-        console.log(JSON.stringify(dataSolopedJSONSAP));
+        //console.log(JSON.stringify(dataSolopedJSONSAP));
 
         return dataSolopedJSONSAP;
     }
@@ -1488,6 +1523,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 }
 
                 const response2 = await fetch(url2, configWs2);
+                //console.log(response2);
                 const data2 = await response2.json();
 
                 
@@ -1900,6 +1936,85 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
     }
 
+    async anularSolpedByIdSL(infoUsuario: InfoUsuario, DocEntry: any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
+
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                //console.log(response2);
+                const data2 = await response2.json();
+
+                
+                //console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async getPresupuesto(infoUsuario: InfoUsuario, idSolped:number,bdmysql:string){
+        const dimensionesSolped :any[] = await db.query(`
+      
+        SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
+        FROM ${bdmysql}.solped_det t1 
+        INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id 
+        WHERE id = ${idSolped} 
+        GROUP BY acctcode, ocrcode2, t1.ocrcode3, YEAR(t0.docdate)`, [idSolped]);
+        let errorPresupuesto = false;
+        let messageError = "";
+        for(let lineaDimension of dimensionesSolped){
+            console.log(lineaDimension);
+            const presupuestoLineaDimension = await helper.getPresupuestoXE('',lineaDimension);
+            console.log(presupuestoLineaDimension);
+        }
+    }
+
+    async getPresupuestoXE(compania:string,lineaPresupuesto:any): Promise<any>{
+        try {
+
+            const {anio, acctcode, ocrcode2, ocrcode, subtotal, total} = lineaPresupuesto
+            
+
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNFPPTO.xsjs?pCompania=COPIA_PRESUPUESTO&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                //console.log(data2);
+                return (data2);  
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+    }
+
+
     async getEntradaByIdSL(infoUsuario: InfoUsuario, DocNum: any ): Promise<any> {
 
         console.log(DocNum);
@@ -1941,6 +2056,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
     }
 
+    
+
     async getSeriesXE(compania:string,objtype?:string): Promise<any>{
         try {
 
@@ -1961,6 +2078,46 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             return '';
         }
     }
+
+
+    async getUsuariosComprasAreaSL(infoUsuario: InfoUsuario,area:string): Promise<any>{
+        try {
+
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            //https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq 'TECNOLOG' and Users/InternalKey eq USU/Code
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq '${area}' and Users/InternalKey eq USU/Code`;
+
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+                
+                const response2 = await fetch(url2, configWs2);
+                const data2 = await response2.json();
+
+                
+               // console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+    }
+
+
 
     async getSolpedMPopenSL(infoUsuario: InfoUsuario, serie:any): Promise<any> {
 
@@ -2011,6 +2168,46 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
+                console.log(url2);
+
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                const data2 = await response2.json();
+
+                
+                //console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async getAllSolpedNoMPopenSL(infoUsuario: InfoUsuario,serie:any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
                 console.log(url2);
 
                 let configWs2 = {
@@ -2278,6 +2475,19 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             } 
     }
 
+    async getCodigoSerie(dbcompanysap:any, tipoDoc:any, sirieStr:string){
+
+        console.log(dbcompanysap,tipoDoc,sirieStr);
+        let serie =0;
+            let seriesDoc = await helper.getSeriesXE(dbcompanysap,tipoDoc);
+            for(let item in seriesDoc) {
+                if(seriesDoc[item].name ===sirieStr){
+                    serie = seriesDoc[item].code;
+                }
+            }
+        return serie;
+    }
+
     async getInventariosProyectados(infoUsuario: InfoUsuario): Promise<any>{
         try {
 
@@ -2290,6 +2500,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                     serie = seriesDoc[item].code;
                 }
             }
+
+           
 
             let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
         
@@ -2325,7 +2537,7 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             WHERE t0.serie = ${serie} AND 
-            t0.sapdocnum =0`;
+            t0.sapdocnum =0 and t0.approved='N'`;
 
             const solpeds = await db.query(query);
 
@@ -2573,8 +2785,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 id:           0,
                 fullname:     '',
                 email:        '',
-                username:     'ABALLESTEROS',
-                codusersap:   'ABALLESTEROS',
+                username:     'USERAPLICACIONES',
+                codusersap:   'USERAPLICACIONES',
                 status:       '',
                 id_company:   0,
                 companyname:  'NITROFERT_PRD',
@@ -2628,8 +2840,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 id:           0,
                 fullname:     '',
                 email:        '',
-                username:     'ABALLESTEROS',
-                codusersap:   'ABALLESTEROS',
+                username:     'USERAPLICACIONES',
+                codusersap:   'USERAPLICACIONES',
                 status:       '',
                 id_company:   0,
                 companyname:  'NITROFERT_PRD',
@@ -2680,8 +2892,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 id:           0,
                 fullname:     '',
                 email:        '',
-                username:     'ABALLESTEROS',
-                codusersap:   'ABALLESTEROS',
+                username:     'USERAPLICACIONES',
+                codusersap:   'USERAPLICACIONES',
                 status:       '',
                 id_company:   0,
                 companyname:  'NITROFERT_PRD',
@@ -2730,8 +2942,8 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 id:           0,
                 fullname:     '',
                 email:        '',
-                username:     'ABALLESTEROS',
-                codusersap:   'ABALLESTEROS',
+                username:     'USERAPLICACIONES',
+                codusersap:   'USERAPLICACIONES',
                 status:       '',
                 id_company:   0,
                 companyname:  'NITROFERT_PRD',
@@ -2782,14 +2994,14 @@ const opcionesSubMenu = await db.query(`SELECT t0.*
                 id:           0,
                 fullname:     '',
                 email:        '',
-                username:     'ABALLESTEROS',
-                codusersap:   'ABALLESTEROS',
+                username:     'USERAPLICACIONES',
+                codusersap:   'USERAPLICACIONES',
                 status:       '',
                 id_company:   0,
                 companyname:  'NITROFERT_PRD',
                 logoempresa:  '',
                 bdmysql:      '',
-                dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                dbcompanysap: 'NITROFERT_PRD',
                 urlwssap:''
             } ;
 

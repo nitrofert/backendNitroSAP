@@ -91,6 +91,7 @@ class Helpers {
             console.log(url);
             const routesAllowWithoutToken = [
                 '/api/auth/login',
+                '/api/auth/recaptcha',
                 '/api/auth/recovery',
                 '/api/atuh/restore',
                 '/',
@@ -101,7 +102,8 @@ class Helpers {
                 '/api/compras/solped/upload/',
                 '/api/compras/solped/borrar-anexo/',
                 '/api/nitroLQ/titulos',
-                '/api/nitroLQ/titulos/pagos'
+                '/api/nitroLQ/titulos/pagos',
+                '/uploads/solped/'
             ];
             let result = false;
             for (let item of routesAllowWithoutToken) {
@@ -114,7 +116,7 @@ class Helpers {
     }
     loginWsSAP(infoUsuario) {
         return __awaiter(this, void 0, void 0, function* () {
-            const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "ABALLESTEROS", "Password": "1234" };
+            const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "USERAPLICACIONES", "Password": "Nitro123" };
             const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Login`;
             const configWs = {
                 method: "POST",
@@ -123,14 +125,17 @@ class Helpers {
                 },
                 body: JSON.stringify(jsonLog)
             };
+            //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
+                //console.log(response,data);
                 if (response.ok) {
-                    //console.log('successfully logged SAP');
+                    console.log('successfully logged SAP');
                     return response.headers.get('set-cookie');
                 }
                 else {
+                    console.log('error logged SAP');
                     return '';
                 }
             }
@@ -238,21 +243,20 @@ class Helpers {
     }
     getMenuUsuario(userid) {
         return __awaiter(this, void 0, void 0, function* () {
-            const opcionesMenu = yield database_1.db.query(`SELECT t0.* 
+            const opcionesMenu = yield database_1.db.query(`SELECT DISTINCT t0.* 
         FROM menu t0 
         INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
         WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
             t0.hierarchy ='P' AND
             t1.read_accion = true
-        ORDER BY t0.ordernum ASC;`, [userid]);
-            const opcionesSubMenu = yield database_1.db.query(`SELECT t0.* 
+        ORDER BY CAST((REPLACE(t0.ordernum, '.', '')) AS SIGNED) ASC;`, [userid]);
+            const opcionesSubMenu = yield database_1.db.query(`SELECT DISTINCT t0.* 
             FROM menu t0 
             INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id 
             WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
                 t0.hierarchy ='H' AND
-                t1.read_accion = true AND
-                t0.visible =1
-            ORDER BY t0.ordernum ASC;`, [userid]);
+                t1.read_accion = true 
+            ORDER BY CAST((REPLACE(t0.ordernum, '.', '')) AS SIGNED) ASC;`, [userid]);
             let menuUsuario = {
                 opcionesMenu,
                 opcionesSubMenu
@@ -351,7 +355,7 @@ class Helpers {
             return solpedObject;
         });
     }
-    getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo, origin = 'http://localhost:4200', idLinea) {
+    getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo, origin = 'http://localhost:4200', urlbk, idLinea) {
         return __awaiter(this, void 0, void 0, function* () {
             let condicionLinea = "";
             if (idLinea)
@@ -361,10 +365,12 @@ class Helpers {
         FROM ${bdmysql}.aprobacionsolped t0
         WHERE t0.id_solped = ${idSolped} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
         ORDER BY nivel ASC`;
-            console.log(queryNextApprovedLine);
+            //console.log(queryNextApprovedLine);
+            const queryCompania = `SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
+            const compania = yield database_1.db.query(queryCompania);
             const nextLineAprovedSolped = yield database_1.db.query(queryNextApprovedLine);
-            console.log(nextLineAprovedSolped);
-            console.log(nextLineAprovedSolped.length);
+            //console.log(nextLineAprovedSolped);
+            //console.log(nextLineAprovedSolped.length);
             //console.log(nextLineAprovedSolped[0].id);
             let lineAprovedSolped;
             if (nextLineAprovedSolped.length > 0) {
@@ -384,14 +390,17 @@ class Helpers {
                         bdmysql,
                         companysap,
                         logo,
-                        origin
+                        origin,
+                        documento: 'solped',
+                        idCompania: compania[0].id,
+                        urlbk
                     }
                 };
             }
             else {
                 lineAprovedSolped = '';
             }
-            console.log(lineAprovedSolped);
+            // console.log(lineAprovedSolped);
             return lineAprovedSolped;
         });
     }
@@ -460,7 +469,7 @@ class Helpers {
             return detalleAprobacionSolped;
         });
     }
-    loadBodyMailSolpedAp(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion, verBotones) {
+    loadBodyMailSolpedAp(infoUsuario, LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion, verBotones) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
             const anexosSolped = solped.anexos;
@@ -470,6 +479,14 @@ class Helpers {
             const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
             let htmlDetalleAprobacion = '';
             let lineaDetalleAprobacion = '';
+            let serieNombre = "";
+            let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '1470000113');
+            for (let item in seriesDoc) {
+                if (seriesDoc[item].code == solped.solped.serie) {
+                    serieNombre = seriesDoc[item].name;
+                }
+            }
+            console.log(infoUsuario, seriesDoc);
             //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
                 lineaDetalleAprobacion = lineaDetalleAprobacion + `
@@ -565,7 +582,7 @@ class Helpers {
                                     <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
                                 </td>
                                 <td>
-                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                    <!--<span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>-->
                                 </td>
                               </tr>`;
             }
@@ -610,9 +627,11 @@ class Helpers {
             if (key !== '' && verBotones) {
                 bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+                                        <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUI</a></b></td>
                                         
-                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+                                        <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
                                     </tr>
                                 </table>`;
             }
@@ -674,7 +693,7 @@ class Helpers {
                                                             </td>
                                                             <td style="width:50%;">
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${yield helper.format(solped.solped.docdate)} - ${yield helper.format(solped.solped.docduedate)}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
@@ -730,10 +749,12 @@ class Helpers {
                                         <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
                                             <tr>
                                                 <td style="padding:0;width:50%;" align="left">
-                                                    <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                                                    
+                                                    ${bottonsAproved}
                                                 </td>
                                                 <td style="padding:0;width:50%;" align="right">
-                                                    ${bottonsAproved}
+                                                <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+
                                                 </td>
                                             </tr>
                                         </table>
@@ -753,7 +774,7 @@ class Helpers {
             return html;
         });
     }
-    loadBodyMailApprovedSolped(LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
+    loadBodyMailApprovedSolped(infoUsuario, LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
             const anexosSolped = solped.anexos;
@@ -763,6 +784,14 @@ class Helpers {
             const detalleAprobacionSolped = yield helper.DetalleAprobacionSolped(solped.solped.id, LineAprovedSolped.infoSolped.bdmysql);
             let htmlDetalleAprobacion = '';
             let lineaDetalleAprobacion = '';
+            let serieNombre = "";
+            let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '1470000113');
+            for (let item in seriesDoc) {
+                if (seriesDoc[item].code == solped.solped.serie) {
+                    serieNombre = seriesDoc[item].name;
+                }
+            }
+            console.log(infoUsuario, seriesDoc);
             //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
                 lineaDetalleAprobacion = lineaDetalleAprobacion + `
@@ -858,7 +887,7 @@ class Helpers {
                                     <span style="font-size:smaller;padding-left: 3px;">${anexo.nombre}</span>
                                 </td>
                                 <td>
-                                    <span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>
+                                    <!--<span style="font-size:smaller;padding-left: 3px;"><a href="${urlbk}/${anexo.ruta}" target="blank">Descargar anexo</a></span>-->
                                 </td>
                               </tr>`;
             }
@@ -903,9 +932,11 @@ class Helpers {
             if (key !== '') {
                 bottonsAproved = `<table>
                                     <tr>
-                                        <td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: darkblue;">Aprobar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+                                        <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUÍ</a></b></td>
                                         
-                                        <td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 5px; color: #ffffff;">Rechazar</a></td>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+                                        <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
                                     </tr>
                                 </table>`;
             }
@@ -966,7 +997,7 @@ class Helpers {
                                                             </td>
                                                             <td style="width:50%;">
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
-                                                                <span style="font-size:smaller;padding-left: 3px;">${solped.solped.serie}</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
                                                                 <span style="font-size:smaller;padding-left: 3px;">${solped.solped.docdate.toLocaleString()} - ${solped.solped.docduedate.toLocaleString()}</span><br />
                                                                 <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
@@ -1378,7 +1409,7 @@ class Helpers {
             if (Solped.solped.nf_Incoterms != null) {
                 dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
-            console.log(JSON.stringify(dataSolopedJSONSAP));
+            //console.log(JSON.stringify(dataSolopedJSONSAP));
             return dataSolopedJSONSAP;
         });
     }
@@ -1398,6 +1429,7 @@ class Helpers {
                         body: JSON.stringify(data)
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    //console.log(response2);
                     const data2 = yield response2.json();
                     //console.log(data2);
                     helper.logoutWsSAP(bieSession);
@@ -1721,6 +1753,68 @@ class Helpers {
             }
         });
     }
+    anularSolpedByIdSL(infoUsuario, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    //console.log(response2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getPresupuesto(infoUsuario, idSolped, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const dimensionesSolped = yield database_1.db.query(`
+      
+        SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
+        FROM ${bdmysql}.solped_det t1 
+        INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id 
+        WHERE id = ${idSolped} 
+        GROUP BY acctcode, ocrcode2, t1.ocrcode3, YEAR(t0.docdate)`, [idSolped]);
+            let errorPresupuesto = false;
+            let messageError = "";
+            for (let lineaDimension of dimensionesSolped) {
+                console.log(lineaDimension);
+                const presupuestoLineaDimension = yield helper.getPresupuestoXE('', lineaDimension);
+                console.log(presupuestoLineaDimension);
+            }
+        });
+    }
+    getPresupuestoXE(compania, lineaPresupuesto) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNFPPTO.xsjs?pCompania=COPIA_PRESUPUESTO&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                //console.log(data2);
+                return (data2);
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
     getEntradaByIdSL(infoUsuario, DocNum) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(DocNum);
@@ -1767,6 +1861,33 @@ class Helpers {
             }
         });
     }
+    getUsuariosComprasAreaSL(infoUsuario, area) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                //https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq 'TECNOLOG' and Users/InternalKey eq USU/Code
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq '${area}' and Users/InternalKey eq USU/Code`;
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    // console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
     getSolpedMPopenSL(infoUsuario, serie) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -1799,6 +1920,33 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
+                    console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    //console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                console.log(error);
+                return '';
+            }
+        });
+    }
+    getAllSolpedNoMPopenSL(infoUsuario, serie) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
                     console.log(url2);
                     let configWs2 = {
                         method: "GET",
@@ -1988,6 +2136,19 @@ class Helpers {
             }
         });
     }
+    getCodigoSerie(dbcompanysap, tipoDoc, sirieStr) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(dbcompanysap, tipoDoc, sirieStr);
+            let serie = 0;
+            let seriesDoc = yield helper.getSeriesXE(dbcompanysap, tipoDoc);
+            for (let item in seriesDoc) {
+                if (seriesDoc[item].name === sirieStr) {
+                    serie = seriesDoc[item].code;
+                }
+            }
+            return serie;
+        });
+    }
     getInventariosProyectados(infoUsuario) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -2032,7 +2193,7 @@ class Helpers {
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             WHERE t0.serie = ${serie} AND 
-            t0.sapdocnum =0`;
+            t0.sapdocnum =0 and t0.approved='N'`;
                 const solpeds = yield database_1.db.query(query);
                 for (let solped of solpeds) {
                     if (solped.LineVendor != '') {
@@ -2227,8 +2388,8 @@ class Helpers {
                     id: 0,
                     fullname: '',
                     email: '',
-                    username: 'ABALLESTEROS',
-                    codusersap: 'ABALLESTEROS',
+                    username: 'USERAPLICACIONES',
+                    codusersap: 'USERAPLICACIONES',
                     status: '',
                     id_company: 0,
                     companyname: 'NITROFERT_PRD',
@@ -2268,8 +2429,8 @@ class Helpers {
                     id: 0,
                     fullname: '',
                     email: '',
-                    username: 'ABALLESTEROS',
-                    codusersap: 'ABALLESTEROS',
+                    username: 'USERAPLICACIONES',
+                    codusersap: 'USERAPLICACIONES',
                     status: '',
                     id_company: 0,
                     companyname: 'NITROFERT_PRD',
@@ -2308,8 +2469,8 @@ class Helpers {
                     id: 0,
                     fullname: '',
                     email: '',
-                    username: 'ABALLESTEROS',
-                    codusersap: 'ABALLESTEROS',
+                    username: 'USERAPLICACIONES',
+                    codusersap: 'USERAPLICACIONES',
                     status: '',
                     id_company: 0,
                     companyname: 'NITROFERT_PRD',
@@ -2349,8 +2510,8 @@ class Helpers {
                     id: 0,
                     fullname: '',
                     email: '',
-                    username: 'ABALLESTEROS',
-                    codusersap: 'ABALLESTEROS',
+                    username: 'USERAPLICACIONES',
+                    codusersap: 'USERAPLICACIONES',
                     status: '',
                     id_company: 0,
                     companyname: 'NITROFERT_PRD',
@@ -2390,14 +2551,14 @@ class Helpers {
                     id: 0,
                     fullname: '',
                     email: '',
-                    username: 'ABALLESTEROS',
-                    codusersap: 'ABALLESTEROS',
+                    username: 'USERAPLICACIONES',
+                    codusersap: 'USERAPLICACIONES',
                     status: '',
                     id_company: 0,
                     companyname: 'NITROFERT_PRD',
                     logoempresa: '',
                     bdmysql: '',
-                    dbcompanysap: 'PRUEBAS_NITROFERT_PRD',
+                    dbcompanysap: 'NITROFERT_PRD',
                     urlwssap: ''
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);

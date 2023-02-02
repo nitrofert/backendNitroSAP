@@ -2,6 +2,8 @@ import express, { Application } from 'express';
 import morgan  from 'morgan';
 import cors from 'cors';
 import path from 'path'
+import https from 'https';
+import fs from 'fs';
 
 import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/userRoutes';
@@ -19,6 +21,7 @@ import sharedFunctionsRoutes from './routes/sharedFunctionsRoutes';
 import entradaRoutes from './routes/entradaRoutes';
 import authRoutesLQ from './routes/authRoutesLQ';
 import mrpRoutes from './routes/mrpRoutes';
+import reportesRoutes from './routes/reportesRoutes';
 
 
 class Server{
@@ -32,10 +35,12 @@ class Server{
     }
 
     config():void{
+        
         this.app.set('port', process.env.PORT || 3001);
         this.app.use(morgan('dev'));
         this.app.use(cors({ 
-            origin:['http://portal.nitrofert.com.co','http://portal.dev.nitrofert.com.co','http://localhost:4200'],
+            origin:['http://portal2.nitrofert.com.co','https://portal2.nitrofert.com.co','http://portal.nitrofert.com.co','http://portal.dev.nitrofert.com.co','http://localhost:4200','http://localhost:56367','http://aprobaciones.nitrofert.com.co','https://aprobaciones.nitrofert.com.co'],
+            //origin:['*'],
             methods:["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"],
             allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials','enctype'],
             //optionsSuccessStatus:200,
@@ -70,6 +75,7 @@ class Server{
         this.app.use('/api/compras/solped',solpedRoutes);
         this.app.use('/api/compras/mrp',mrpRoutes);
         this.app.use('/api/compras/entrada',entradaRoutes);
+        this.app.use('/api/compras/rpt',reportesRoutes);
         this.app.use('/api/wssap',wssapRoutes);
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
         this.app.use('/api/nitroLQ',authRoutesLQ);
@@ -80,9 +86,18 @@ class Server{
     }
 
     start():void{
+        
         this.app.listen(this.app.get('port'),()=>{
             console.log("Server run on port ",this.app.get('port'));
         });
+        
+      /* https.createServer({
+            cert: fs.readFileSync('/home/ralbor/conf/web/backend2.nitrofert.com.co/ssl/backend2.nitrofert.com.co.pem'),
+            key: fs.readFileSync( '/home/ralbor/conf/web/backend2.nitrofert.com.co/ssl/backend2.nitrofert.com.co.key')
+          },this.app).listen(8448, function(){
+             console.log('Servidor https correindo en el puerto 8448');
+         });*/
+         
     }
 }
 

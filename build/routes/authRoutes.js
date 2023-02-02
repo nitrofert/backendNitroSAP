@@ -12,6 +12,7 @@ class AuthRoutes {
     }
     config() {
         this.router.post('/login', authController_1.default.login);
+        this.router.post('/validarusuario', authController_1.default.validarusuario);
         this.router.get('/infoUsuario', authController_1.default.infoUsuario);
         this.router.get('/menuUsuario', authController_1.default.menuUsuario);
         this.router.get('/perfilesUsuario', authController_1.default.perfilesUsuario);
@@ -27,6 +28,7 @@ class AuthRoutes {
         this.router.get('/empresasUsuario', authController_1.default.empresasUsuario);
         this.router.post('/actulizarInfoUsuario', authController_1.default.actulizarInfoUsuario);
         this.router.get('/logo64', authController_1.default.logo64);
+        this.router.post('/recaptcha', authController_1.default.recaptcha);
     }
 }
 const authRoutes = new AuthRoutes();

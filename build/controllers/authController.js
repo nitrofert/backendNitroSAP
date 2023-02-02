@@ -16,6 +16,47 @@ const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 class AuthController {
+    recaptcha(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { token, tipoCaptcha } = req.body;
+            let urlVerify = "https://www.google.com/recaptcha/api/siteverify";
+            let secret_key_captcha = "6LdIhRQkAAAAAEWdBMeXnTb33rO-WSM2H_Q23_YF";
+            let secret_key_captchaV2 = "6Ldo6BMkAAAAAKj_uhvmhIJ9XplesVLcbFaiXNWM";
+            //let token = "6Ldo6BMkAAAAABUAduK9ZiDox7o8tE7RjWoRaMtQ"; 
+            /*
+            console.log('recaptcha');
+            let payload = {
+                'secret': secret_key_captcha,
+                'response':token,
+                //'headers': { "Content-Type": "application/x-www-form-urlencoded" },
+                //'remoteop': req.headers['x-forwarded-for'] || req.socket.remoteAddress
+            }
+            console.log(payload);
+            let result = await fetch(urlVerify, {method: 'POST', body:new URLSearchParams(Object.entries(payload)).toString()});
+            let data = await result.json();
+            console.log(data);
+           */
+            const VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
+            let secret = "";
+            if (tipoCaptcha == 'v2') {
+                secret = secret_key_captchaV2;
+            }
+            if (tipoCaptcha == 'v3') {
+                secret = secret_key_captcha;
+            }
+            return (0, node_fetch_1.default)(VERIFY_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `secret=${secret}&response=${token}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                console.log(data);
+                //res.locals.recaptcha = data;
+                return res.json(data);
+            });
+        });
+    }
     login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             //console.log(req.body);
@@ -51,7 +92,7 @@ class AuthController {
         FROM users t0 
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
-        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [user[0].id, user[0].companyid]);
+        WHERE t0.id = ? AND t2.id = ?  AND t2.status ='A'`, [user[0].id, user[0].companyid]);
             /*const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil
                                                     FROM perfiles t0
                                                     INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id
@@ -96,6 +137,55 @@ class AuthController {
             */
             //Retorno de respuesta exitosa y datos del usuario logueado o token
             //console.log(JSON.stringify(userConfig));
+            if (infoUsuario[0].status == 'I')
+                return res.status(401).json({ message: "Usuario inactivo", status: 401 });
+            const userId = infoUsuario[0].id;
+            const company = infoUsuario[0].id_company;
+            //const token:string = await helper.generateToken(userConfig);
+            const tokenid = yield helpers_1.default.generateToken({ userId, company });
+            const token = tokenid;
+            //Regstrar log
+            yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${formLogin.username} ha accedido al portal`);
+            //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
+            return res.json({ message: `Bienvenid@ ${infoUsuario[0].fullname}`, status: 200, infoUsuario, token, tokenid });
+        });
+    }
+    validarusuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //console.log(req.body);
+            //Recibe los campos del formulario Login y lo alamacenamos en una constante formLogin
+            const formLogin = {
+                username: req.body.username,
+                password: yield helpers_1.default.encryptPassword(req.body.password),
+                company: req.body.company
+            };
+            //console.log(formLogin);
+            //Consultamos la tabla de usuarios con el nombre de usuario proporcionado en el formulario
+            const user = yield database_1.db.query(`
+        
+            SELECT t0.id, t0.username,t0.password, t2.id as companyid 
+                FROM users t0 
+                INNER JOIN company_users t1 ON t1.id_user = t0.id
+                INNER JOIN companies t2 ON t1.id_company = t2.id
+                WHERE (username = ? or email = ?) and id_company = ?`, [formLogin.username, formLogin.username, formLogin.company]);
+            // Validamos si el usuario buscado por el username existe, si no existe retornamos error
+            if (user.length == 0)
+                return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
+            //console.log(user);
+            //Comparamos el pasword registrado en el formulario con el password obtenido del query x username
+            const validPassword = yield helpers_1.default.matchPassword(req.body.password, (user[0].password || ''));
+            //console.log(validPassword);
+            // Si el passwornno coincide, retornamos error 
+            if (!validPassword)
+                return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
+            //Obtener datos de usuario para ecriptar en token jwt
+            const infoUsuario = yield database_1.db.query(`
+        SELECT t0.id, fullname, email, username, codusersap, t0.status, 
+               id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap ,nit,direccion,telefono 
+        FROM users t0 
+        INNER JOIN company_users t1 ON t1.id_user = t0.id
+        INNER JOIN companies t2 ON t2.id = t1.id_company
+        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [user[0].id, user[0].companyid]);
             const userId = infoUsuario[0].id;
             const company = infoUsuario[0].id_company;
             //const token:string = await helper.generateToken(userConfig);

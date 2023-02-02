@@ -25,6 +25,7 @@ class MrpRoutes{
         this.router.post('/carguepresupuesto', mrpController.cargarPresupuesto);
         this.router.post('/carguemaxmin', mrpController.cargarMaxMin);
         this.router.post('/carguepresupuesto2', multer.single('myFile'), mrpController.cargarPresupuesto2);
+        this.router.post('/grabarSimulaciones', mrpController.grabarSimulaciones);
         
     }
 }

@@ -6,7 +6,7 @@ class Nitromail {
 
         private hostname = "outlook.office365.com";
         public emailsend= "notificacionapp@nitrofert.com.co";
-        private password = "Nitrofert2022*";
+        private password = "Nitrofert2023*";
 
         async getTransporter():Promise<Transporter>{
             const  transporter = await nodemailer.createTransport({

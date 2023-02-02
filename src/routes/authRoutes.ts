@@ -11,6 +11,7 @@ class AuthRoutes{
 
     config():void{
         this.router.post('/login', authController.login);
+        this.router.post('/validarusuario', authController.validarusuario);
         this.router.get('/infoUsuario', authController.infoUsuario);
         this.router.get('/menuUsuario', authController.menuUsuario);
         this.router.get('/perfilesUsuario', authController.perfilesUsuario);
@@ -26,6 +27,8 @@ class AuthRoutes{
         this.router.get('/empresasUsuario', authController.empresasUsuario);
         this.router.post('/actulizarInfoUsuario', authController.actulizarInfoUsuario);
         this.router.get('/logo64', authController.logo64);
+        this.router.post('/recaptcha', authController.recaptcha);
+        
         
         
         

@@ -56,6 +56,7 @@ class MenuController {
             FROM menu t0
             where hierarchy ='P'
             ORDER BY t0.ordernum ASC`);
+                console.log(menu);
                 res.json(menu);
             }
             catch (error) {
@@ -80,7 +81,8 @@ class MenuController {
                     result = yield database_1.db.query("Select IFNULL(MAX(ordernum),0)+1 as ordernum from menu where hierarchy= ?", [hierarchy]);
                 }
                 else {
-                    result = yield database_1.db.query("SELECT IFNULL(MAX(ordernum),0) AS ordernum, (SELECT t0.ordernum FROM menu t0 WHERE t0.id = ?) AS ordernumdad FROM menu WHERE hierarchy= 'H' AND iddad = ? ", [iddad, iddad]);
+                    result = yield database_1.db.query("SELECT  ordernum, cast((REPLACE(ordernum, '.', '')) as signed) as numOrder, (SELECT t0.ordernum FROM menu t0 WHERE t0.id = ?) AS ordernumdad FROM menu WHERE hierarchy= 'H' AND iddad = ? order by CAST((REPLACE(ordernum, '.', '')) AS SIGNED) DESC LIMIT 1", [iddad, iddad]);
+                    console.log(result);
                     let ordernum = iddad + '.';
                     if (result[0].ordernum != '0') {
                         let ordernumMax = result[0].ordernum;
