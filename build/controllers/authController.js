@@ -20,8 +20,8 @@ class AuthController {
         return __awaiter(this, void 0, void 0, function* () {
             const { token, tipoCaptcha } = req.body;
             let urlVerify = "https://www.google.com/recaptcha/api/siteverify";
-            let secret_key_captcha = "6LdIhRQkAAAAAEWdBMeXnTb33rO-WSM2H_Q23_YF";
-            let secret_key_captchaV2 = "6Ldo6BMkAAAAAKj_uhvmhIJ9XplesVLcbFaiXNWM";
+            let secret_key_captcha = "";
+            let secret_key_captchaV2 = "";
             //let token = "6Ldo6BMkAAAAABUAduK9ZiDox7o8tE7RjWoRaMtQ"; 
             /*
             console.log('recaptcha');
