@@ -452,6 +452,7 @@ class SolpedController {
                 let modelosAprobacion;
                 let arrayResult = [];
                 let errorInsertAprobacion = false;
+                let arrayErrorPresupuesto = [];
                 for (let id of arraySolpedId) {
                     //Obtener la info de la solped segun el id
                     Solped = yield helpers_1.default.getSolpedById(id, bdmysql);
@@ -462,6 +463,17 @@ class SolpedController {
                     try {
                         // Validar presupuesto de la solped 
                         let presupuesto = yield helpers_1.default.getPresupuesto(infoUsuario[0], id, bdmysql);
+                        if (presupuesto.length > 0) {
+                            connection.rollback();
+                            let message = "";
+                            if (presupuesto.length > 1) {
+                                message = `Las siguientes combinaciones de cuentas y dimensiones, ${JSON.stringify(presupuesto)}, no poseen presupuesto `;
+                            }
+                            else {
+                                message = `La siguiente combinación de cuenta y dimensiones, ${JSON.stringify(presupuesto)}, no posee presupuesto `;
+                            }
+                            return res.json([{ status: "error", message }]);
+                        }
                         //let newAprobacion:any[] = [];
                         let newAprobacionLine = [];
                         for (let modelo of modelos) {
@@ -537,7 +549,7 @@ class SolpedController {
                         let LineAprovedSolped = yield helpers_1.default.getNextLineAprovedSolped(idSolped, bdmysql, compania, infoUsuario[0].logoempresa, origin, urlbk);
                         if (LineAprovedSolped != '') {
                             let aprobadorCrypt = yield helpers_1.default.generateToken(LineAprovedSolped, '24h');
-                            console.log(aprobadorCrypt);
+                            //console.log(aprobadorCrypt);
                             let html = yield helpers_1.default.loadBodyMailSolpedAp(infoUsuario[0], LineAprovedSolped, infoUsuario[0].logoempresa, solpedNotificacion, aprobadorCrypt, urlbk, false, true);
                             //console.log(html);
                             //Obtener datos de la solped a aprobar

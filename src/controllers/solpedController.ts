@@ -524,8 +524,8 @@ class SolpedController {
             let modelosAprobacion: any[];
             let arrayResult: any[] = [];
             let errorInsertAprobacion: boolean = false;
-
             
+            let arrayErrorPresupuesto:any[] = [];
 
             for (let id of arraySolpedId) {
                 //Obtener la info de la solped segun el id
@@ -542,6 +542,17 @@ class SolpedController {
                    
                     // Validar presupuesto de la solped 
                     let presupuesto = await helper.getPresupuesto(infoUsuario[0],id,bdmysql);
+                    if(presupuesto.length>0){
+                        connection.rollback();
+                        let message = "";
+                        if(presupuesto.length>1){
+                            message = `Las siguientes combinaciones de cuentas y dimensiones, ${JSON.stringify(presupuesto)}, no poseen presupuesto `;
+                        }else{
+                            message = `La siguiente combinación de cuenta y dimensiones, ${JSON.stringify(presupuesto)}, no posee presupuesto `;
+                        }
+
+                        return res.json([{ status: "error", message }]);
+                    }
 
                     //let newAprobacion:any[] = [];
                     let newAprobacionLine: any[] = [];
@@ -631,7 +642,7 @@ class SolpedController {
                     let LineAprovedSolped:any = await helper.getNextLineAprovedSolped(idSolped, bdmysql,compania,infoUsuario[0].logoempresa,origin,urlbk);
                     if(LineAprovedSolped!=''){
                         let aprobadorCrypt = await helper.generateToken(LineAprovedSolped,'24h');
-                        console.log(aprobadorCrypt);
+                        //console.log(aprobadorCrypt);
                         let html:string = await helper.loadBodyMailSolpedAp(infoUsuario[0],LineAprovedSolped,infoUsuario[0].logoempresa,solpedNotificacion,aprobadorCrypt,urlbk,false,true);
                         //console.log(html);
                         //Obtener datos de la solped a aprobar
