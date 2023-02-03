@@ -1991,7 +1991,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         for(let lineaDimension of dimensionesSolped){
             //console.log(lineaDimension);
             const presupuestoLineaDimensionSAP = await helper.getPresupuestoXE(infoUsuario.companyname.substring(0,8),lineaDimension);
-            const comprometidoAprobacionMysql = await helper.getPresupuestoSolpedEnAprobacion(lineaDimension,bdmysql);
+            const comprometidoAprobacionMysql = await helper.getPresupuestoSolpedEnAprobacion(lineaDimension,bdmysql,idSolped);
             console.log(presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
             if(lineaDimension.subtotal > (presupuestoLineaDimensionSAP-comprometidoAprobacionMysql)){
                 arrayErrorPresupuesto.push(`Cuenta: ${lineaDimension.acctcode} Dependencia: ${lineaDimension.ocrcode2} Localidad: ${lineaDimension.ocrcode}`);
@@ -2002,13 +2002,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     }
 
-    async getPresupuestoSolpedEnAprobacion(lineaPresupuesto:any,bdmysql:string){
+    async getPresupuestoSolpedEnAprobacion(lineaPresupuesto:any,bdmysql:string,idSolped:number){
         const {anio, acctcode, ocrcode2, ocrcode, subtotal, total} = lineaPresupuesto;
         let comprometidoAprobacion = 0;
         const queryComprometidoAprobacion :any[] = await db.query(`
       
         SELECT
-
+            t0.id,
             YEAR(t0.docdate) AS anio, 
             t1.acctcode, 
             t1.ocrcode2, 
@@ -2021,8 +2021,9 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             t1.ocrcode = ? AND
             t1.ocrcode2= ? AND
             YEAR(t0.docdate) = ? AND
-            t0.approved ='P'
-            GROUP BY acctcode, ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode,ocrcode,ocrcode2,anio]);
+            t0.approved ='P' AND
+            t0.id <> ?
+            GROUP BY t0.id, t1.acctcode, t1.ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode,ocrcode,ocrcode2,anio,idSolped]);
 
             if(queryComprometidoAprobacion.length > 0) {
                 comprometidoAprobacion = queryComprometidoAprobacion[0].subtotal;
