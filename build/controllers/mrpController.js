@@ -377,7 +377,7 @@ class MrpController {
                     simulacionDet.push(lineaSimulacion);
                     lineaSimulacion = [];
                 }
-                console.log(simulacionDet);
+                //console.log(simulacionDet);
                 let queryInsertSimulaciones = `INSERT INTO ${bdmysql}.simulaciones_item_zona (itemcode,
                                                                                          codigozona,
                                                                                          itemname,
