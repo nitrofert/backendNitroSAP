@@ -420,7 +420,7 @@ class SolpedController {
             //Obtener array de id de solped seleccionadas
             const arraySolpedId = req.body;
             let urlbk = req.protocol + '://' + req.get('host');
-            console.log(urlbk, urlbk.includes('localhost'), urlbk.includes('.dev.'));
+            console.log(urlbk, urlbk.includes('localhost'), urlbk.includes('-dev.'));
             //Obtener aray de modelos de autorización para la aprobacion de la solped SAP
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
             //console.log(url2);
@@ -543,7 +543,7 @@ class SolpedController {
                             //Obtener datos de la solped a aprobar
                             let infoEmail = {
                                 //to: LineAprovedSolped.aprobador.email,
-                                to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
+                                to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
                                 //cc:LineAprovedSolped.autor.email,
                                 subject: `Solicitud de aprobación Solped ${idSolped}`,
                                 html
@@ -552,7 +552,7 @@ class SolpedController {
                             yield helpers_1.default.sendNotification(infoEmail);
                             html = yield helpers_1.default.loadBodyMailSolpedAp(infoUsuario[0], LineAprovedSolped, infoUsuario[0].logoempresa, solpedNotificacion, aprobadorCrypt, urlbk, false, false);
                             infoEmail.html = html;
-                            infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email; //enviar copia al autor de la solped
+                            infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email; //enviar copia al autor de la solped
                             yield helpers_1.default.sendNotification(infoEmail);
                         }
                         else {
@@ -626,7 +626,7 @@ class SolpedController {
                             //Obtener datos de la solped a aprobar para notificación
                             let infoEmail = {
                                 //to: LineAprovedSolped.aprobador.email,
-                                to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
+                                to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
                                 //cc:LineAprovedSolped.autor.email,
                                 subject: `Solicitud de aprobación Solped ${idSolped}`,
                                 html
@@ -635,7 +635,7 @@ class SolpedController {
                             yield helpers_1.default.sendNotification(infoEmail);
                             html = yield helpers_1.default.loadBodyMailSolpedAp(infoUsuario[0], LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true, false);
                             infoEmail.html = html;
-                            infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
+                            infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
                             yield helpers_1.default.sendNotification(infoEmail);
                             messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                             console.log(messageSolped);
@@ -707,9 +707,9 @@ class SolpedController {
                                 }
                                 console.log(emailCompradores);
                                 let infoEmail = {
-                                    to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
+                                    to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
                                     //cc:emailCompradores+LineAprovedSolped.aprobador.email,
-                                    cc: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
+                                    cc: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
                                     subject: `Aprobación Solped ${idSolped}`,
                                     html
                                 };
@@ -812,7 +812,7 @@ class SolpedController {
                         //Obtener datos de la solped a aprobar para notificación
                         let infoEmail = {
                             //to: LineAprovedSolped.aprobador.email,
-                            to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
+                            to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
                             //cc:LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -821,7 +821,7 @@ class SolpedController {
                         yield helpers_1.default.sendNotification(infoEmail);
                         html = yield helpers_1.default.loadBodyMailSolpedAp(infoUsuario, LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true, false);
                         infoEmail.html = html;
-                        infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
+                        infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
                         yield helpers_1.default.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);
@@ -874,9 +874,9 @@ class SolpedController {
                             //Obtener datos de la solped a aprobar para notificación
                             const html = yield helpers_1.default.loadBodyMailApprovedSolped(infoUsuario, LineAprovedSolped, logo, Solped, '', urlbk, true);
                             let infoEmail = {
-                                to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
+                                to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
                                 //cc:LineAprovedSolped.aprobador.email,
-                                cc: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
+                                cc: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
                                 subject: `Aprobación Solped ${idSolped}`,
                                 html
                             };
@@ -967,7 +967,7 @@ class SolpedController {
                         //Obtener datos de la solped a aprobar para notificación
                         let infoEmail = {
                             //to: LineAprovedSolped.aprobador.email,
-                            to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
+                            to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.aprobador.email,
                             //cc:LineAprovedSolped.autor.email,
                             subject: `Solicitud de aprobación Solped ${idSolped}`,
                             html
@@ -976,7 +976,7 @@ class SolpedController {
                         yield helpers_1.default.sendNotification(infoEmail);
                         html = yield helpers_1.default.loadBodyMailSolpedAp(infoUsuario[0], LineAprovedSolped, logo, Solped, aprobadorCrypt, urlbk, true, false);
                         infoEmail.html = html;
-                        infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
+                        infoEmail.to = (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email;
                         yield helpers_1.default.sendNotification(infoEmail);
                         messageSolped = `La solped ${idSolped} fue aprobada y fue notificado a siguiente aprobador del proceso`;
                         console.log(messageSolped);
@@ -1046,9 +1046,9 @@ class SolpedController {
                             //Obtener datos de la solped a aprobar para notificación
                             const html = yield helpers_1.default.loadBodyMailApprovedSolped(infoUsuario[0], LineAprovedSolped, logo, Solped, '', urlbk, true);
                             let infoEmail = {
-                                to: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
+                                to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedSolped.autor.email,
                                 //to: LineAprovedSolped.autor.email,
-                                cc: (urlbk.includes('localhost') == true || urlbk.includes('.dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
+                                cc: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : emailCompradores,
                                 //cc:'aballesteros@nitrofert.com.co',
                                 subject: `Aprobación Solped ${idSolped}`,
                                 html
