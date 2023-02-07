@@ -2170,10 +2170,14 @@ class SolpedController {
         try {
             await connection.beginTransaction();
             
-            let { idProyeccion, cantidadProyectada , item } = newSolped;
+            let { idProyeccion, cantidadProyectada , item, fechaEditar, linenum } = newSolped;
 
-            let querySolped = `Update ${bdmysql}.solped_det set quantity = ${cantidadProyectada} where id_solped = ? and itemcode = ?`;
-            let resultUpdateSolped = await connection.query(querySolped, [idProyeccion,item]);
+            //let querySolped = `Update ${bdmysql}.solped_det set quantity = ${cantidadProyectada}  where id_solped = ? and itemcode = ?`;
+            let querySolped  = `UPDATE  ${bdmysql}.solped_det t1 
+              INNER JOIN ${bdmysql}.solped t0 ON t0.id = t1.id_solped 
+              SET t1.quantity =${cantidadProyectada}, t0.reqdate = '${await helper.format(fechaEditar)}' 
+              WHERE t0.id =? AND t1.itemcode = ? AND t1.linenum = ?`;
+            let resultUpdateSolped = await connection.query(querySolped, [idProyeccion,item,linenum]);
             //console.log(resultUpdateSolped);
 
             

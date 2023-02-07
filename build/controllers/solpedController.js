@@ -1829,9 +1829,13 @@ class SolpedController {
             let connection = yield database_1.db.getConnection();
             try {
                 yield connection.beginTransaction();
-                let { idProyeccion, cantidadProyectada, item } = newSolped;
-                let querySolped = `Update ${bdmysql}.solped_det set quantity = ${cantidadProyectada} where id_solped = ? and itemcode = ?`;
-                let resultUpdateSolped = yield connection.query(querySolped, [idProyeccion, item]);
+                let { idProyeccion, cantidadProyectada, item, fechaEditar, linenum } = newSolped;
+                //let querySolped = `Update ${bdmysql}.solped_det set quantity = ${cantidadProyectada}  where id_solped = ? and itemcode = ?`;
+                let querySolped = `UPDATE  ${bdmysql}.solped_det t1 
+              INNER JOIN ${bdmysql}.solped t0 ON t0.id = t1.id_solped 
+              SET t1.quantity =${cantidadProyectada}, t0.reqdate = '${yield helpers_1.default.format(fechaEditar)}' 
+              WHERE t0.id =? AND t1.itemcode = ? AND t1.linenum = ?`;
+                let resultUpdateSolped = yield connection.query(querySolped, [idProyeccion, item, linenum]);
                 //console.log(resultUpdateSolped);
                 connection.commit();
                 yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} realizo correctamnente la actualización de la solped de materia prima No. ${idProyeccion}`);

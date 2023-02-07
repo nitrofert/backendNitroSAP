@@ -2532,7 +2532,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             t1.quantity AS "Quantity",
             t1.price AS "Price",
             t1.trm AS "Rate",
-            '' AS "OpenCreQty"
+            '' AS "OpenCreQty",
+            t1.linenum
             
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
