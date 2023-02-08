@@ -577,31 +577,41 @@ class SolpedController {
 
                             //console.log(newAprobacionLine);
 
-                            let queryInsertnewAprobacion = `
-                            Insert into ${bdmysql}.aprobacionsolped (id_solped,
-                                                                    iduserautor,
-                                                                    usersapautor, 
-                                                                    emailautor,
-                                                                    nombreautor,
-                                                                    area,
-                                                                    condicion,
-                                                                    usersapaprobador,
-                                                                    emailaprobador,
-                                                                    nombreaprobador,
-                                                                    nivel) values (?)`;
+                            let existeNivel = `Select COUNT(*) AS filas from ${bdmysql}.aprobacionsolped where id_solped = ${id} and nivel = ${modelo.nivel} and estadoap='P' and estadoseccion='A'`;
+                            let resultExisteNivel = await db.query(existeNivel);
+                            console.log(resultExisteNivel);
+                            if(resultExisteNivel[0].filas ==0){
 
-                            const resultInsertnewAprobacion = await connection.query(queryInsertnewAprobacion, [newAprobacionLine]);
-                            //console.log(resultInsertnewAprobacion);
-                            if (resultInsertnewAprobacion.affectedRows > 0) {
-                                arrayResult.push({ solpedid: id, status: "success" });
-                                newAprobacionLine = [];
-                                //Actualizar el estado de la solped a Pendiente
-                                let queryUpdateSolped = `UPDATE ${bdmysql}.solped t0 set t0.approved = 'P' where t0.id in (?)`;
-                                const result = await connection.query(queryUpdateSolped, [id]);
-                            } else {
-                                arrayResult.push({ solpedid: id, status: "error" });
-                                errorInsertAprobacion = true;
+                                let queryInsertnewAprobacion = `
+                                Insert into ${bdmysql}.aprobacionsolped (id_solped,
+                                                                        iduserautor,
+                                                                        usersapautor, 
+                                                                        emailautor,
+                                                                        nombreautor,
+                                                                        area,
+                                                                        condicion,
+                                                                        usersapaprobador,
+                                                                        emailaprobador,
+                                                                        nombreaprobador,
+                                                                        nivel) values (?)`;
+    
+                                const resultInsertnewAprobacion = await connection.query(queryInsertnewAprobacion, [newAprobacionLine]);
+                                //console.log(resultInsertnewAprobacion);
+                                if (resultInsertnewAprobacion.affectedRows > 0) {
+                                    arrayResult.push({ solpedid: id, status: "success" });
+                                    newAprobacionLine = [];
+                                    //Actualizar el estado de la solped a Pendiente
+                                    let queryUpdateSolped = `UPDATE ${bdmysql}.solped t0 set t0.approved = 'P' where t0.id in (?)`;
+                                    const result = await connection.query(queryUpdateSolped, [id]);
+                                } else {
+                                    arrayResult.push({ solpedid: id, status: "error" });
+                                    errorInsertAprobacion = true;
+                                }
+                                
                             }
+
+
+                            
                             
                             //res.json({message:`Se realizo correctamnente el registro de la solped`});
 
