@@ -125,7 +125,7 @@ export interface PurchaseRequestsInterface {
     PayToBankCode?:                             null;
     PayToBankAccountNo?:                        null;
     PayToBankBranch?:                           null;
-    BPL_IDAssignedToInvoice?:                   null;
+    BPL_IDAssignedToInvoice?:                   number;
     DownPayment?:                               number;
     ReserveInvoice?:                            string;
     LanguageCode?:                              null;
@@ -424,7 +424,7 @@ export interface AddressExtension {
 
 export interface DocumentLine {
     LineNum:                              number;
-    ItemCode?:                             null;
+    ItemCode?:                             string;
     ItemDescription?:                      string;
     Quantity?:                             number;
     ShipDate?:                             null;
