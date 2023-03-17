@@ -74,7 +74,7 @@ class SharedFunctionsController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 const compania = infoUsuario[0].dbcompanysap;
                 let dependencia = req.params.dependencia;
-                console.log(dependencia);
+                //console.log(dependencia);
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();

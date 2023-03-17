@@ -1495,6 +1495,7 @@ class Helpers {
                             "U_NF_COM_AROB": item.comments,
                             "U_NF_NUM_SOLPED_WEB": item.id,
                             "U_NF_NUM_SOLPED_SAP": docNumSAP };
+                        //console.log(data);
                         let configWs2 = {
                             method: "POST",
                             headers: {
@@ -1635,6 +1636,19 @@ class Helpers {
             };
             ////console.log(entradaObject,infoEntrada);
             return infoEntrada;
+        });
+    }
+    getEntradaByDocNum(idEntrada, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const entradaResult = yield database_1.db.query(`
+      
+        SELECT T0.*, T1.*, T2.email 
+        FROM ${bdmysql}.entrada T0 
+        INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
+        INNER JOIN users T2 ON T2.id = T0.id_user
+        WHERE T0.sapdocnum = ?`, [idEntrada]);
+            console.log(entradaResult);
+            return entradaResult;
         });
     }
     loadInfoEntradaToJSONSAP(Entrada) {
@@ -1784,35 +1798,95 @@ class Helpers {
             }
         });
     }
-    getPresupuesto(infoUsuario, idSolped, bdmysql) {
+    itemsSolpedXengine(compania) {
         return __awaiter(this, void 0, void 0, function* () {
-            ////console.log(infoUsuario.companyname.substring(0,8));
+            try {
+                //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return data2;
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getPresupuesto(infoUsuario, idSolped, bdmysql, bdPresupuesto) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //console.log(infoUsuario.companyname.substring(0,8));
             let arrayErrorPresupuesto = [];
+            let compania = infoUsuario.dbcompanysap;
+            /*const dimensionesSolped :any[] = await db.query(`
+          
+            SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
+            FROM ${bdmysql}.solped_det t1
+            INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id
+            WHERE id = ${idSolped}
+            GROUP BY acctcode, ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [idSolped]);*/
             const dimensionesSolped = yield database_1.db.query(`
       
-        SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
+        SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
         FROM ${bdmysql}.solped_det t1 
         INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id 
-        WHERE id = ${idSolped} 
-        GROUP BY acctcode, ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [idSolped]);
+        WHERE t0.id = ${idSolped} 
+        GROUP BY acctcode, ocrcode2, YEAR(t0.docdate)`, [idSolped]);
             let errorPresupuesto = false;
             let messageError = "";
             for (let lineaDimension of dimensionesSolped) {
                 ////console.log(lineaDimension);
-                const presupuestoLineaDimensionSAP = yield helper.getPresupuestoXE(infoUsuario.companyname.substring(0, 8), lineaDimension);
+                const cuentaValidaPresupuesto = yield helper.validaPresupuestoCuenta(compania, lineaDimension.acctcode);
+                const presupuestoLineaDimensionSAP = yield helper.getPresupuestoXE(infoUsuario.companyname.substring(0, 8), lineaDimension, bdPresupuesto);
                 const comprometidoAprobacionMysql = yield helper.getPresupuestoSolpedEnAprobacion(lineaDimension, bdmysql, idSolped);
-                //console.log(presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
-                if (lineaDimension.subtotal > (presupuestoLineaDimensionSAP - comprometidoAprobacionMysql)) {
-                    arrayErrorPresupuesto.push(`Cuenta: ${lineaDimension.acctcode} Dependencia: ${lineaDimension.ocrcode2} Localidad: ${lineaDimension.ocrcode}`);
+                //console.log(cuentaValidaPresupuesto,presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
+                if (lineaDimension.subtotal > (presupuestoLineaDimensionSAP - comprometidoAprobacionMysql) && cuentaValidaPresupuesto == 'Y') {
+                    arrayErrorPresupuesto.push(`Cuenta: ${lineaDimension.acctcode} Dependencia: ${lineaDimension.ocrcode2} }`);
                 }
             }
             return arrayErrorPresupuesto;
+        });
+    }
+    validaPresupuestoCuenta(compania, cuenta) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                //////console.log(data2);
+                return (data2[0].Budget);
+            }
+            catch (error) {
+                ////console.log(error);
+                return '';
+            }
         });
     }
     getPresupuestoSolpedEnAprobacion(lineaPresupuesto, bdmysql, idSolped) {
         return __awaiter(this, void 0, void 0, function* () {
             const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
             let comprometidoAprobacion = 0;
+            /*const queryComprometidoAprobacion :any[] = await db.query(`
+          
+            SELECT
+                t0.id,
+                YEAR(t0.docdate) AS anio,
+                t1.acctcode,
+                t1.ocrcode2,
+                t1.ocrcode,
+                SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
+                FROM ${bdmysql}.solped t0
+                INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+                WHERE
+                t1.acctcode = ? AND
+                t1.ocrcode = ? AND
+                t1.ocrcode2= ? AND
+                YEAR(t0.docdate) = ? AND
+                t0.approved ='P' AND
+                t0.id <> ?
+                GROUP BY t0.id, t1.acctcode, t1.ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode,ocrcode,ocrcode2,anio,idSolped]);*/
             const queryComprometidoAprobacion = yield database_1.db.query(`
       
         SELECT
@@ -1820,30 +1894,30 @@ class Helpers {
             YEAR(t0.docdate) AS anio, 
             t1.acctcode, 
             t1.ocrcode2, 
-            t1.ocrcode, 
+
             SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             WHERE 
             t1.acctcode = ? AND
-            t1.ocrcode = ? AND
+
             t1.ocrcode2= ? AND
             YEAR(t0.docdate) = ? AND
             t0.approved ='P' AND
             t0.id <> ?
-            GROUP BY t0.id, t1.acctcode, t1.ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode, ocrcode, ocrcode2, anio, idSolped]);
+            GROUP BY t0.id, t1.acctcode, t1.ocrcode2, YEAR(t0.docdate)`, [acctcode, ocrcode2, anio, idSolped]);
             if (queryComprometidoAprobacion.length > 0) {
                 comprometidoAprobacion = queryComprometidoAprobacion[0].subtotal;
             }
             return comprometidoAprobacion;
         });
     }
-    getPresupuestoXE(compania, lineaPresupuesto) {
+    getPresupuestoXE(compania, lineaPresupuesto, bdPresupuesto) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNFPPTO.xsjs?pCompania=COPIA_PRESUPUESTO&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
-                ////console.log(url2);
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNFPPTO.xsjs?pCompania=${bdPresupuesto}&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 //////console.log(data2);
@@ -1862,6 +1936,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    //console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2333,6 +2408,16 @@ class Helpers {
                 NewArray.push(data[linea]);
             }
             return NewArray;
+        });
+    }
+    permisoValidacionPresupuesto(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const query = `SELECT *
+            
+            FROM companies
+            WHERE dbcompanysap = '${compania}' `;
+            const empresa = yield database_1.db.query(query);
+            return empresa[0].validapresupuesto;
         });
     }
     /************** Seccion Liquitech *****************/

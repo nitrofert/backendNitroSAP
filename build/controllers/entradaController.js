@@ -107,7 +107,7 @@ class EntradaController {
                     newEntradaDet.push(newEntradaLine);
                     newEntradaLine = [];
                 }
-                //console.log(newEntradaDet);
+                console.log(newEntradaDet);
                 let queryInsertDetSolped = `
                 Insert into ${bdmysql}.entrada_det (id_entrada,linenum,itemcode,dscription,acctcode,
                                                     quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,
@@ -188,8 +188,14 @@ class EntradaController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 const { id } = req.params;
                 console.log(id);
+                let entradaMysql = yield helpers_1.default.getEntradaByDocNum(id, bdmysql);
                 let entradaObject = yield helpers_1.default.getEntradaByIdSL(infoUsuario[0], id);
-                console.log('resultSL', entradaObject);
+                let fullname = "";
+                if (entradaMysql.length > 0) {
+                    fullname = entradaMysql[0].fullname;
+                }
+                entradaObject.value[0].Users.fullname = fullname;
+                console.log('resultSL', entradaObject.value[0].Users);
                 res.json(entradaObject);
             }
             catch (error) {

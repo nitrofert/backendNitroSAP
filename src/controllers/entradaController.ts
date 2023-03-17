@@ -113,7 +113,7 @@ class EntradaController {
                 newEntradaLine = [];
             }
 
-            //console.log(newEntradaDet);
+            console.log(newEntradaDet);
             let queryInsertDetSolped = `
                 Insert into ${bdmysql}.entrada_det (id_entrada,linenum,itemcode,dscription,acctcode,
                                                     quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,
@@ -202,9 +202,16 @@ class EntradaController {
             const { id } = req.params;
             
             console.log(id );
+            let entradaMysql = await helper.getEntradaByDocNum(id,bdmysql)
             let entradaObject = await helper.getEntradaByIdSL(infoUsuario[0],id);
+            let fullname ="";
+            if(entradaMysql.length > 0) {
+                fullname = entradaMysql[0].fullname;
+            }
 
-            console.log('resultSL',entradaObject);
+            entradaObject.value[0].Users.fullname = fullname;
+
+            console.log('resultSL',entradaObject.value[0].Users);
             res.json(entradaObject);
 
 

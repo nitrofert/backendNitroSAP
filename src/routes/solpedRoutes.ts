@@ -17,13 +17,14 @@ class SolpedRoutes{
         this.router.get('/list', solpedController.list);
         this.router.get('/list/aprobadas', solpedController.listAprobadores);
         this.router.post('/', solpedController.create);
+        this.router.post('/detail', solpedController.createDetail);
         this.router.put('/', solpedController.update);
         this.router.get('/:id',solpedController.getSolpedById); 
         this.router.post('/envio-aprobacion',solpedController.envioAprobacionSolped);
         this.router.get('/aprobar/:idcrypt',solpedController.aprovedMail);  
         this.router.get('/rechazar/:idcrypt',solpedController.reject);
         this.router.put('/rechazar',solpedController.rejectSolped);
-        this.router.post('/aprobacion',solpedController.aproved_portal);
+        this.router.post('/aprobacion',solpedController.aproved_portal2);
         this.router.get('/aprobaciones/:id',solpedController.listAprobaciones);  
         this.router.post('/cancelacion',solpedController.cancelacionSolped);
         this.router.post('/upload', multer.single('myFile'), solpedController.uploadAnexoSolped);

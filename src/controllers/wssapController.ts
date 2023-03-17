@@ -177,6 +177,38 @@ class WssapController {
             } 
     }
 
+    public async itemsSolpedXengine(req: Request, res: Response) {
+        
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+    
+        //******************************************************* */
+
+        try {
+
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+
+            //const data = await helper.itemsSolpedXengine(compania);
+            
+            //return res.json(data);  
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+            console.log(url2);
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();   
+            return res.json(data2);   
+            
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        } 
+    
+}
+
     public async itemsXengine(req: Request, res: Response) {
         
 
@@ -193,7 +225,11 @@ class WssapController {
             const compania = infoUsuario[0].dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+            
 
+
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);

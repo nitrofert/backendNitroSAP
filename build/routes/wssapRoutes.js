@@ -16,6 +16,7 @@ class WsSAPRoutes {
         this.router.get('/Items', wssapController_1.default.Items);
         this.router.get('/Cuentas', wssapController_1.default.Cuentas);
         this.router.get('/Xengine/items', wssapController_1.default.itemsXengine);
+        this.router.get('/Xengine/itemsSolped', wssapController_1.default.itemsSolpedXengine);
         this.router.get('/Xengine/monedas/:fechaTrm', wssapController_1.default.monedasXengine);
         this.router.get('/Xengine/aprobaciones', wssapController_1.default.AprobacionesXE);
         this.router.get('/Xengine/cuentas', wssapController_1.default.CuentasXE);

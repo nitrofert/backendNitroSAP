@@ -43,8 +43,8 @@ class Server {
             maxAge: 3600,
             preflightContinue: true
         }));
-        this.app.use(express_1.default.json());
-        this.app.use(express_1.default.urlencoded({ 'extended': false }));
+        this.app.use(express_1.default.json({ limit: '1000mb' }));
+        this.app.use(express_1.default.urlencoded({ limit: '1000mb', 'extended': false }));
         //this.app.use('/uploads', express.static(path.resolve('uploads')));
         this.app.use('/uploads', express_1.default.static(path_1.default.resolve('uploads')));
         //console.log(path.join(__dirname,'../uploads'));

@@ -83,7 +83,7 @@ class SharedFunctionsController {
         const compania = infoUsuario[0].dbcompanysap;
        
         let dependencia = req.params.dependencia;
-        console.log(dependencia);
+        //console.log(dependencia);
         
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
         

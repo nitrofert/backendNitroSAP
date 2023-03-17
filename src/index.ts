@@ -48,8 +48,8 @@ class Server{
             maxAge:3600,
             preflightContinue:true
             }));
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({'extended':false}));
+        this.app.use(express.json({ limit:'1000mb'}));
+        this.app.use(express.urlencoded({limit:'1000mb', 'extended':false}));
         //this.app.use('/uploads', express.static(path.resolve('uploads')));
         this.app.use('/uploads', express.static(path.resolve('uploads')));
         //console.log(path.join(__dirname,'../uploads'));
@@ -101,7 +101,7 @@ class Server{
     }
 }
 
-const server = new Server();
+const server = new Server(); 
 server.start();
 
 function perfilesRoutes(arg0: string, perfilesRoutes: any) {
