@@ -10,6 +10,8 @@ class WsSAPRoutes{
     }
 
     config():void{
+        
+        this.router.get('/socios-negocio', wssapController.sociosDeNegocio);
         this.router.get('/BusinessPartners', wssapController.BusinessPartners);
         this.router.get('/BusinessPartnersXE/:id?', wssapController.BusinessPartnersXE);
         this.router.get('/Items', wssapController.Items);
@@ -21,6 +23,7 @@ class WsSAPRoutes{
         this.router.get('/Xengine/aprobaciones', wssapController.AprobacionesXE);
         this.router.get('/Xengine/cuentas', wssapController.CuentasXE);
         this.router.get('/Xengine/series/:objtype?', wssapController.SeriesXE);
+        this.router.get('/Xengine/series2/:objtype?', wssapController.Series);
         this.router.get('/Xengine/ordenes-open-usuario', wssapController.OrdenesUsuarioXE);
         this.router.get('/Xengine/ordenes-open-usuario-sl', wssapController.OrdenesUsuarioSL);
         this.router.get('/Xengine/pedido/:pedido', wssapController.PedidoByIdSL);

@@ -411,7 +411,16 @@ class AuthController{
         //******************************************************* */
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
         const bdmysql = infoUsuario[0].bdmysql;
-        const dependenciasUsuario = await db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
+        const query = `SELECT * 
+        FROM dependencies_user t0
+        INNER JOIN companies t1 ON t1.id = t0.companyid 
+        WHERE t0.codusersap = '${infoUsuario[0].codusersap}' and 
+              t1.urlwsmysql = '${bdmysql}' and
+              t1.status = 'A'`;
+
+        //console.log(query);      
+        const dependenciasUsuario = await db.query(query);
+        //console.log(dependenciasUsuario);
         res.json(dependenciasUsuario);
 
         }catch (error: any) {
@@ -485,7 +494,7 @@ class AuthController{
        
         
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
-        
+        console.log(url2);
 
             const response2 = await fetch(url2);
             const data2 = await response2.json();  
@@ -545,7 +554,7 @@ class AuthController{
 
 
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
-        //console.log(url2);
+        console.log(url2);
         
 
             const response2 = await fetch(url2);
@@ -559,6 +568,41 @@ class AuthController{
         
     }
 
+    public async areasUser(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+        
+            //******************************************************* */
+
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+            const bdmysql = infoUsuario[0].bdmysql;
+
+
+            /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+            console.log(url2);
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();  
+            return res.json(data2);*/ 
+
+            const areas = await db.query(`Select * 
+                                          From areas_user t0 
+                                          INNER JOIN companies t1 ON t0.companyid = t1.id
+                                          where t1.status ='A' and
+                                                t1.urlwsmysql = '${bdmysql}' and
+                                                T0.codusersap = '${infoUsuario[0].codusersap}'`);
+
+            return res.json(areas);
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+        
+    }
    
 
 

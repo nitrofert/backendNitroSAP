@@ -164,7 +164,7 @@ class WssapController {
             const compania = infoUsuario[0].dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
-
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);
@@ -227,11 +227,11 @@ class WssapController {
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
             //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
             
-
+ 
 
             console.log(url2);
             
-        
+         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
                 return res.json(data2);   
@@ -311,6 +311,46 @@ class WssapController {
         
     }
 
+    public async Series(req: Request, res: Response) {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+        try{
+            
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const compania = infoUsuario[0].dbcompanysap;
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            let { objtype } = req.params;
+
+            let filtroObjtype = "";
+            if(objtype) filtroObjtype = `&tipodoc=${objtype}`;
+            
+            //console.log(await helper.format(fechaTrm));
+            /*
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+            console.log(url2);
+            
+        
+            const response2 = await fetch(url2);
+            const data2 = await response2.json();   
+            return res.json(data2);*/
+            
+            const series = await db.query(`Select * from ${bdmysql}.series t0 where t0.objtype ='${objtype}'`);
+            //console.log(series);
+            return res.json(series);
+    
+        }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+        } 
+        
+    }
+
     public async BusinessPartnersXE(req: Request, res: Response) {
 
         //Obtener datos del usurio logueado que realizo la petición
@@ -334,6 +374,33 @@ class WssapController {
         /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
         const response2 = await fetch(url2);
         const data2 = await response2.json();*/   
+        return res.json(proveedores);   
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }  
+        
+    }
+
+    public async sociosDeNegocio(req: Request, res: Response) {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        const compania = infoUsuario[0].dbcompanysap;
+        const bdmysql = infoUsuario[0].bdmysql;
+        
+        const proveedores = await db.query(`Select * From ${bdmysql}.socios_negocio t0`);
+        
+        
         return res.json(proveedores);   
 
         }catch (error: any) {
@@ -521,11 +588,11 @@ class WssapController {
             }
     
             const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${pedido})`;
-    
+            console.log(url2);
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
     
-            console.log(data2);
+            //console.log(data2);
     
             helper.logoutWsSAP(bieSession); 
             
@@ -616,7 +683,7 @@ class WssapController {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
                 }    
-            }
+            } 
     
             
             const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Items?$filter=ItemCode eq '${ItemCode}'&$select=PurchaseUnit`;

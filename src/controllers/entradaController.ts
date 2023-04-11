@@ -30,7 +30,7 @@ class EntradaController {
 
         
 
-            //console.log(decodedToken);
+            ////console.log(decodedToken);
             let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
             t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
             t0.reqdate,t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap,
@@ -45,10 +45,10 @@ class EntradaController {
             t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap
             ORDER BY t0.id DESC`;
 
-            //console.log(queryList);
+            ////console.log(queryList);
 
             const entrada = await db.query(queryList);
-            //console.log(entrada);
+            ////console.log(entrada);
             res.json(entrada);     
 
         }catch (error: any) {
@@ -67,7 +67,7 @@ class EntradaController {
         const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
         const bdmysql = infoUsuario[0].bdmysql
         const newEntrada = req.body;
-        console.log(newEntrada);
+        //console.log(newEntrada);
         let connection = await db.getConnection();
 
         try {
@@ -79,7 +79,7 @@ class EntradaController {
             newEntrada.entrada.reqdate = await helper.format(newEntrada.entrada.reqdate);
 
             let resultInsertEntrada = await connection.query(querySolped, [newEntrada.entrada]);
-            //console.log(resultInsertSolped);
+            ////console.log(resultInsertSolped);
 
             let entradaId = resultInsertEntrada.insertId;
             let newEntradaDet = [];
@@ -113,7 +113,7 @@ class EntradaController {
                 newEntradaLine = [];
             }
 
-            console.log(newEntradaDet);
+            //console.log(newEntradaDet);
             let queryInsertDetSolped = `
                 Insert into ${bdmysql}.entrada_det (id_entrada,linenum,itemcode,dscription,acctcode,
                                                     quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,
@@ -122,27 +122,27 @@ class EntradaController {
             `;
             const resultInsertSolpedDet = await connection.query(queryInsertDetSolped, [newEntradaDet]);
 
-            console.log(resultInsertSolpedDet);
+            //console.log(resultInsertSolpedDet);
 
             if(resultInsertSolpedDet.affectedRows){
                 //Registrar entrada en SAP
                 let dataForSAP:any = await helper.loadInfoEntradaToJSONSAP(newEntrada);
-                console.log(dataForSAP);
+                //console.log(dataForSAP);
                 //registrar Entrada en SAP
                 const resultResgisterSAP = await helper.registerEntradaSAP(infoUsuario[0],dataForSAP);
 
                 if (resultResgisterSAP.error) {
-                    console.log(resultResgisterSAP.error.message.value);
+                    //console.log(resultResgisterSAP.error.message.value);
                     connection.rollback();
                     res.json({status: 501, err: `Ocurrio un error en el registro de la entrada ${entradaId} ${resultResgisterSAP.error.message.value}` });
                 }else{
 
-                    console.log(resultResgisterSAP.DocNum);
+                    //console.log(resultResgisterSAP.DocNum);
                     //Actualizar  sapdocnum, entrada
                     let queryUpdateEntrada = `Update ${bdmysql}.entrada t0 Set t0.sapdocnum ='${resultResgisterSAP.DocNum}'  where t0.id = ?`;
                     let resultUpdateEntrada = await connection.query(queryUpdateEntrada,[entradaId]);
 
-                    console.log(resultUpdateEntrada);
+                    //console.log(resultUpdateEntrada);
 
                     connection.commit();
                     res.json({ status: 200, message: `Se realizo correctamente el registro de la entrada ${entradaId} generando el documento SAP numero ${resultResgisterSAP.DocNum}` });
@@ -157,7 +157,7 @@ class EntradaController {
 
         } catch (err) {
             // Print errors
-            console.log(err);
+            //console.log(err);
             // Roll back the transaction
             connection.rollback();
             res.json({ err, status: 501 });
@@ -181,7 +181,7 @@ class EntradaController {
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql
             const { id } = req.params;
-            console.log(infoUsuario[0], bdmysql,id );
+            //console.log(infoUsuario[0], bdmysql,id );
             let entradaObject = await helper.getEntradaById(id, bdmysql);
             res.json(entradaObject);
         }catch (error: any) {
@@ -201,7 +201,7 @@ class EntradaController {
             const bdmysql = infoUsuario[0].bdmysql
             const { id } = req.params;
             
-            console.log(id );
+            ////console.log(id );
             let entradaMysql = await helper.getEntradaByDocNum(id,bdmysql)
             let entradaObject = await helper.getEntradaByIdSL(infoUsuario[0],id);
             let fullname ="";
@@ -211,7 +211,7 @@ class EntradaController {
 
             entradaObject.value[0].Users.fullname = fullname;
 
-            console.log('resultSL',entradaObject.value[0].Users);
+            ////console.log('resultSL',entradaObject.value[0].Users);
             res.json(entradaObject);
 
 
@@ -220,6 +220,89 @@ class EntradaController {
             return res.json(error);
         }
     }
+
+    public async cancel(req: Request, res: Response): Promise<void> {
+         //Obtener datos del usurio logueado que realizo la petición
+         let jwt = req.headers.authorization || '';
+         jwt = jwt.slice('bearer'.length).trim();
+         const decodedToken = await helper.validateToken(jwt);
+         //******************************************************* */
+         const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+         const bdmysql = infoUsuario[0].bdmysql
+         const {id} = req.params;
+         const  data  = req.body;
+         //console.log(data);
+         
+ 
+         try {
+
+                //const entrada = await helper.getEntradaById(id, bdmysql);
+                
+                const EntradaSap = await helper.getEntradaByIdSL(infoUsuario[0],data.sapdocnum);
+                
+                
+                const DocEntry = EntradaSap.value[0].PurchaseDeliveryNotes.DocEntry;
+                //console.log(DocEntry);
+
+                const dataCancel:any = {
+                    "Document": {
+                        "Comments": data.comment,
+                        "DocEntry": DocEntry
+                    }
+                }
+                const resultCancelEntradaSAP = await helper.cancelarEntrada(infoUsuario[0],dataCancel);
+                //console.log(dataForSAP);
+
+                
+                console.log(resultCancelEntradaSAP);
+
+                if (resultCancelEntradaSAP.error) {
+                    console.log(resultCancelEntradaSAP.error);
+                    res.json({status: 501, err: `Ocurrio un error en la cancelación de la entrada ${data.sapdocnum}: ${resultCancelEntradaSAP.error.message.value}` });
+                }else{
+
+                    //console.log(resultResgisterSAP.DocNum);
+                    //Actualizar  sapdocnum, entrada
+
+                    const entradaCancel = await helper.getEntradasByBaseDoc(infoUsuario[0],DocEntry,20);
+                    console.log(entradaCancel);
+
+                    let queryUpdateEntrada = `Update ${bdmysql}.entrada t0 Set t0.status='C', t0.cancelDocNumSAP ='${entradaCancel.value[0].PurchaseDeliveryNotes.DocNum}'  where t0.id = ?`;
+                    let resultUpdateEntrada = await db.query(queryUpdateEntrada,[id]);
+
+                    //console.log(resultUpdateEntrada);
+
+                    res.json({ status: 200, message: `Se realizo correctamente la anulación de la entrada ${data.sapdocnum} generando el documento de cancelación SAP numero ${entradaCancel.value[0].PurchaseDeliveryNotes.DocNum}` });
+                }
+
+
+            } catch (err) {
+                // Print errors
+                console.log(err);
+                
+                res.json({ err, status: 501 });
+            }   
+    }
+
+    public async entradasByPedido(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql
+            const { id } = req.params;
+            //console.log(infoUsuario[0], bdmysql,id );
+            let entradasObject = await helper.getEntradasByPedido(infoUsuario[0],id);
+            res.json(entradasObject);
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
 
     
 

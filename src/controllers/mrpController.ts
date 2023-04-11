@@ -37,14 +37,14 @@ class MrpController {
             }
             let linea:any;
             for(let item of lineas){
-                //console.log(item);
+                ////console.logitem);
                 if(zonas.filter(item2=>item2.State == item.State).length===0){
                     linea = {State:item.State,'PENTRADA':item.PENTRADA };
                     zonas.push(linea);
                 }
             }
 
-            //console.log(inventarios,zonas);
+            console.log(zonas);
 
             res.json(zonas);
         
@@ -65,20 +65,36 @@ class MrpController {
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const {item , zona} = req.body;
-            console.log(req.body);
+            //console.logreq.body);
             //Obtener inventarios de SAP  de Materia prima a granel y en producto terminado Simple
-            let inventarios = await helper.getInventariosMPXE(infoUsuario[0]);
+            //let inventarios = await helper.getInventariosMPXE(infoUsuario[0]);
+            let inventarios = await helper.getInventariosItemMPXE(infoUsuario[0],item,zona);
+            /*
+            let inventariosItem = await helper.getInventariosItemMPXE(infoUsuario[0],item,zona);
+            let array_inventariosItem :any[] =  [];
+            for(let item in inventariosItem) {  
+                array_inventariosItem.push(inventariosItem[item]);
+            }
+            console.log(array_inventariosItem.length);
+            */
+
             let array_inventarios :any[] =  [];
             for(let item in inventarios) {  
                 array_inventarios.push(inventarios[item]);
             }
 
+            console.log(array_inventarios.length);
+
             //Inventario de Materia prima  a granel
-            let inventarioMP:any = array_inventarios.filter( (infoItem: {
+            /*let inventarioMP:any = array_inventarios.filter( (infoItem: {
                                                                 State: any;  ItemCode: any; 
                                                                 INVENTARIO: string; 
-                                                              })=>infoItem.INVENTARIO ==='MP' && infoItem.ItemCode === item  && infoItem.State === zona);
-            console.log(inventarioMP);
+                                                              })=>infoItem.INVENTARIO ==='MP' && infoItem.ItemCode === item  && infoItem.State === zona);*/
+
+            let inventarioMP:any = array_inventarios.filter( (infoItem: { 
+                                                                INVENTARIO: string; 
+                                                              })=>infoItem.INVENTARIO ==='MP' );
+            //console.loginventarioMP);
                                                               
             let totalInvMP:number = 0;
             for(let item of inventarioMP){
@@ -86,21 +102,22 @@ class MrpController {
             }                                
             
             //Inventario de Materia prima en producto terminado simple            
-            let inventarioPT:any = array_inventarios.filter( (infoItem: {
+            /*let inventarioPT:any = array_inventarios.filter( (infoItem: {
                                                                 State: any;  ItemCode: any; 
                                                                 INVENTARIO: string; 
-                                                              })=>infoItem.INVENTARIO ==='PT' && infoItem.ItemCode === item  && infoItem.State === zona);
+                                                              })=>infoItem.INVENTARIO ==='PT' && infoItem.ItemCode === item  && infoItem.State === zona);*/
 
-            console.log(inventarioPT);
+            let inventarioPT:any = array_inventarios.filter( (infoItem: {
+                                                                INVENTARIO: string; 
+                                                              })=>infoItem.INVENTARIO ==='PT' );
+
+            //console.loginventarioPT);
 
             let totalInvPT:number = 0;
             for(let item of inventarioPT){
                 totalInvPT = totalInvPT+eval(item.OnHand);
             }                                
                                                               
-            
-
-
             let totalInventario = {
                 inventarioMP: totalInvMP,
                 ubicacionInvetarioMP:inventarioMP,
@@ -108,7 +125,7 @@ class MrpController {
                 ubicacionInvetarioPT:inventarioPT
             }
 
-            console.log(totalInventario);
+            //console.logtotalInventario);
 
             res.json(totalInventario);
         
@@ -130,52 +147,57 @@ class MrpController {
 
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
+            let {item, zona, fechainicio, fechafin } = req.body;
+            //let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario[0]));
 
-            let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario[0]));
-
-            //console.log(proveedores);
+            ////console.logproveedores);
             
             //Obtener invetarios de Materia prima en transito que esten en una solped/OC en SAP
-            let inventarios = await helper.getInventariosTrackingMPXE(infoUsuario[0]);
+            //let inventarios = await helper.getInventariosTrackingMPXE(infoUsuario[0]);
+            let inventarios = await helper.getInventariosTrackingItemMPXE(infoUsuario[0],item,zona);
+
             let array_inventarios :any[] =  [];
-            for(let item in inventarios) {  
-                array_inventarios.push(inventarios[item]);
+            for(let linea in inventarios) {  
+                array_inventarios.push(inventarios[linea]);
             }
-
-            let {item, zona, fechainicio, fechafin } = req.body;
-
   
-            //console.log(req.body);
+            ////console.logreq.body);
     
             //Inventario de materia prima en transito que esta en una orden de compra que su estatus es diferente a descargado
-            let inventarioItemTransito = await array_inventarios.filter(data=>data.TIPO ==='Compra' && 
+            /*let inventarioItemTransito = await array_inventarios.filter(data=>data.TIPO ==='Compra' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.ETA) >= new Date(fechainicio) && 
             new Date(data.ETA) <= new Date(fechafin) &&
-            data.U_NF_STATUS != 'Descargado');
+            data.U_NF_STATUS != 'Descargado');*/
 
-            //console.log('TRANSITO',inventarioItemTransito);
+            let inventarioItemTransito = await array_inventarios.filter(data=>data.TIPO ==='Compra' && new Date(data.ETA) >= new Date(fechainicio) && new Date(data.ETA) <= new Date(fechafin) && data.U_NF_STATUS != 'Descargado');
+
+            ////console.log'TRANSITO',inventarioItemTransito);
 
             //Inventario de materia prima en transito abierta con fecha anterior a la fecha de inicio calculadora
-            let inventarioItemTransitoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
+            /*let inventarioItemTransitoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.ETA) < new Date(fechainicio) &&
-            data.U_NF_STATUS != 'Descargado');
+            data.U_NF_STATUS != 'Descargado');*/
 
-            //console.log('TRANSITOPRE',inventarioItemTransitoPreFecha);
+            let inventarioItemTransitoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Compra' && new Date(data.ETA) < new Date(fechainicio) && data.U_NF_STATUS != 'Descargado');
 
-            //console.log('inventarioItemTransitoPreFecha',inventarioItemTransitoPreFecha);
+            ////console.log'TRANSITOPRE',inventarioItemTransitoPreFecha);
+
+            ////console.log'inventarioItemTransitoPreFecha',inventarioItemTransitoPreFecha);
             
 
             //Inventario de materia prima en transito que esta en una OC que su estatus es descargado en ZF
-            let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
+            /*let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             //new Date(data.ETA) >= new Date(fechainicio) && 
             //new Date(data.ETA) <= new Date(fechafin) &&
-            data.U_NF_STATUS == 'Descargado');
+            data.U_NF_STATUS == 'Descargado');*/
+
+            let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && data.U_NF_STATUS == 'Descargado');
 
             let totalInventarioItemZF =0;
 
@@ -186,31 +208,41 @@ class MrpController {
             }
 
             //Inventario de materia prima que esta en una solped
-            let inventarioItenSolicitado = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
+            /*let inventarioItenSolicitado = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
-            new Date(data.FECHANECESIDAD) <= new Date(fechafin));
+            new Date(data.FECHANECESIDAD) <= new Date(fechafin));*/
+
+            let inventarioItenSolicitado = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
+                                                                    new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
+                                                                    new Date(data.FECHANECESIDAD) <= new Date(fechafin));
 
             //Inventario de materia prima  que esta en una solped abierta con fecha anterior a la fecha de inicio calculadora
-            let inventarioItenSolicitadoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
+            /*let inventarioItenSolicitadoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
-            new Date(data.FECHANECESIDAD) < new Date(fechainicio));
+            new Date(data.FECHANECESIDAD) < new Date(fechainicio));*/
 
-            //console.log('inventarioItenSolicitadoPreFecha',inventarioItenSolicitadoPreFecha);
+            let inventarioItenSolicitadoPreFecha = array_inventarios.filter(data=>data.TIPO ==='Necesidad' && new Date(data.FECHANECESIDAD) < new Date(fechainicio));
+            
+
+            ////console.log'inventarioItenSolicitadoPreFecha',inventarioItenSolicitadoPreFecha);
 
             
 
             //Obtener compras proyectadas de materia prima en Mysql Portal
+            
+
             let comprasProyectadas = await helper.getInventariosProyectados(infoUsuario[0]);
+            //console.log(zona,item,fechainicio,fechafin,comprasProyectadas);
             let comprasProyectadasMP = comprasProyectadas.filter((data: { TIPO: string; State_Code: any; ItemCode: any; FECHANECESIDAD: string | number | Date; })=>data.TIPO ==='Proyectado' && 
             data.State_Code === zona && 
             data.ItemCode === item  &&
             new Date(data.FECHANECESIDAD) >= new Date(fechainicio) && 
             new Date(data.FECHANECESIDAD) <= new Date(fechafin));
 
-            //console.log('comprasProyectadasMP',comprasProyectadasMP);
+            ////console.log'comprasProyectadasMP',comprasProyectadasMP);
 
             let consolidadoInventarios = {
                 inventarioItemTransito,
@@ -222,7 +254,7 @@ class MrpController {
                 comprasProyectadasMP
             }
 
-            //console.log(consolidadoInventarios);
+            ////console.logconsolidadoInventarios);
 
             res.json(consolidadoInventarios);
         
@@ -250,7 +282,7 @@ class MrpController {
 
             let presupuesto = await db.query(queryList);
 
-            console.log('Presupuesto',presupuesto);
+            //console.log'Presupuesto',presupuesto);
 
             res.json(presupuesto);
         
@@ -277,11 +309,11 @@ class MrpController {
            let fechaF = new Date(fechafin);
 
            let fechaIMoment = moment(fechainicio);
-           console.log(fechaIMoment.week());
-           console.log(moment().isoWeek(fechaIMoment.week()).startOf('isoWeek'));
+           //console.logfechaIMoment.week());
+           //console.logmoment().isoWeek(fechaIMoment.week()).startOf('isoWeek'));
 
-           //console.log(fechaI.getFullYear()+"-"+(fechaI.getMonth()+1)+"-"+fechaI.getDate());
-           //console.log(fechaF.getFullYear()+"-"+(fechaF.getMonth()+1)+"-"+fechaF.getDate());
+           ////console.logfechaI.getFullYear()+"-"+(fechaI.getMonth()+1)+"-"+fechaI.getDate());
+           ////console.logfechaF.getFullYear()+"-"+(fechaF.getMonth()+1)+"-"+fechaF.getDate());
 
             let queryList = `SELECT * FROM ${bdmysql}.presupuestoventa 
                                       WHERE  itemcode = '${item}' AND 
@@ -291,7 +323,7 @@ class MrpController {
 
             let presupuesto = await db.query(queryList);
 
-            console.log('Presupuesto',queryList,presupuesto);
+            //console.log'Presupuesto',queryList,presupuesto);
 
             res.json(presupuesto);
         
@@ -314,14 +346,14 @@ class MrpController {
 
             let {item, zona} = req.body;
 
-            console.log(req.body);
+            //console.logreq.body);
 
             let queryList = `SELECT * FROM  ${bdmysql}.maxminitems WHERE itemcode = '${item}' AND zona = '${zona}'`;
-            console.log(queryList);
+            //console.logqueryList);
 
             let maxminresult = await db.query(queryList);
 
-            //console.log(inventarios);
+            ////console.loginventarios);
 
             res.json(maxminresult);
         
@@ -344,14 +376,14 @@ class MrpController {
 
             
 
-            //console.log(req.body);
+            ////console.logreq.body);
 
             let queryList = `SELECT * FROM  ${bdmysql}.maxminitems`;
-            console.log(queryList);
+            //console.logqueryList);
 
             let maxminresult = await db.query(queryList);
 
-            //console.log(inventarios);
+            ////console.loginventarios);
 
             res.json(maxminresult);
         
@@ -374,7 +406,7 @@ class MrpController {
 
             let data = req.body;
 
-           //console.log(data);
+           ////console.logdata);
            let itemcode = data.simulacionConProyeciones[0].itemcode;
            let codigozona = data.simulacionConProyeciones[0].codigozona;
            let zona = data.simulacionConProyeciones[0].zona;
@@ -460,7 +492,7 @@ class MrpController {
 
            }
 
-           //console.log(simulacionDet);
+           ////console.logsimulacionDet);
 
 
            let queryInsertSimulaciones = `INSERT INTO ${bdmysql}.simulaciones_item_zona (itemcode,
@@ -515,13 +547,13 @@ class MrpController {
 
             let infoFilePresupuesto = req.body;
 
-            //console.log(infoFilePresupuesto);
+            ////console.loginfoFilePresupuesto);
             let queryList = "";
             let queryRegistro = "";
             let lineasActualizadas = 0;
             let lineasRegistradas = 0;
             for(let linea of infoFilePresupuesto){
-                console.log(new Date(linea.fechasemana));
+                //console.lognew Date(linea.fechasemana));
                 let fechasemana = new Date(linea.fechasemana);
                 queryList = `SELECT * 
                              FROM ${bdmysql}.presupuestoventa 
@@ -530,7 +562,7 @@ class MrpController {
                                    itemcode = '${linea.itemcode}' AND 
                                    codigozona = '${linea.codigozona}'`;
 
-                //console.log(queryList);
+                ////console.logqueryList);
                 let result = await db.query(queryList);
 
                 if(result.length>0){
@@ -550,10 +582,10 @@ class MrpController {
                     lineasRegistradas++;
                 }
 
-                //console.log(queryRegistro);
+                ////console.logqueryRegistro);
 
                 let resultRegistro = await db.query(queryRegistro);
-                console.log(resultRegistro);
+                //console.logresultRegistro);
 
             }
 
@@ -591,8 +623,8 @@ class MrpController {
                 ruta:req.file?.path
             }
 
-            console.log(anexo);
-            console.log(fs.existsSync(anexo.ruta));
+            //console.loganexo);
+            //console.logfs.existsSync(anexo.ruta));
             let msgResult :any;
 
            
@@ -605,7 +637,7 @@ class MrpController {
                 .pipe(csv({separator: infoFilePresupuesto.separador}))
                 .on('data', (data) => results.push(data))
                 .on('end', async () => {
-                    //console.log(results);
+                    ////console.logresults);
                     // [
                     //   { NAME: 'Daffy Duck', AGE: '24' },
                     //   { NAME: 'Bugs Bunny', AGE: '22' }
@@ -616,7 +648,7 @@ class MrpController {
                     let lineasActualizadas = 0;
                     let lineasRegistradas = 0;
                     for(let linea of results){
-                        console.log(new Date(linea.FECHASEMANA));
+                        //console.lognew Date(linea.FECHASEMANA));
                         let fechasemana = new Date(linea.FECHASEMANA);
                         queryList = `SELECT * 
                                     FROM ${bdmysql}.presupuestoventa 
@@ -625,7 +657,7 @@ class MrpController {
                                         itemcode = '${linea.ITEM}' AND 
                                         codigozona = '${linea.CODIGOZONA}'`;
 
-                        //console.log(queryList);
+                        ////console.logqueryList);
                         let result = await db.query(queryList);
 
                         if(result.length>0){
@@ -645,10 +677,10 @@ class MrpController {
                             lineasRegistradas++;
                         }
 
-                        //console.log(queryRegistro);
+                        ////console.logqueryRegistro);
 
                         let resultRegistro = await db.query(queryRegistro);
-                        //console.log(resultRegistro);
+                        ////console.logresultRegistro);
 
                     }
 
@@ -692,20 +724,20 @@ class MrpController {
 
             let infoFileaxMin = req.body;
 
-            //console.log(infoFilePresupuesto);
+            ////console.loginfoFilePresupuesto);
             let queryList = "";
             let queryRegistro = "";
             let lineasActualizadas = 0;
             let lineasRegistradas = 0;
             for(let linea of infoFileaxMin){
-                console.log(new Date(linea.fechasemana));
+                //console.lognew Date(linea.fechasemana));
                 let fechasemana = new Date(linea.fechasemana);
                 queryList = `SELECT * 
                              FROM ${bdmysql}.maxminitems 
                              WHERE itemcode = '${linea.itemcode}' AND 
                                    zona = '${linea.codigozona}'`;
 
-                //console.log(queryList);
+                ////console.logqueryList);
                 let result = await db.query(queryList);
 
                 if(result.length>0){
@@ -723,10 +755,10 @@ class MrpController {
                     lineasRegistradas++;
                 }
 
-                //console.log(queryRegistro);
+                ////console.logqueryRegistro);
 
                 let resultRegistro = await db.query(queryRegistro);
-                console.log(resultRegistro);
+                //console.logresultRegistro);
 
             }
 

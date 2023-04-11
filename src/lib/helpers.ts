@@ -21,7 +21,7 @@ class Helpers {
             return await bcrypt.compare(password, savePassword);
         } catch (error) {
             let now = new Date();
-            ////console.log(error, " ", now);
+            //////console.log(error, " ", now);
         }
     }
 
@@ -62,7 +62,7 @@ class Helpers {
     }
 
     async validateRoute(url: string): Promise<any> {
-        ////console.log(url);
+        //////console.log(url);
         const routesAllowWithoutToken: string[] = [
             '/api/auth/login',
             '/api/auth/recaptcha',
@@ -77,7 +77,9 @@ class Helpers {
             '/api/compras/solped/borrar-anexo/',
             '/api/nitroLQ/titulos',
             '/api/nitroLQ/titulos/pagos',
-            '/uploads/solped/'
+            '/uploads/solped/',
+            '/api/config/'
+
         ];
         let result = false;
         for (let item of routesAllowWithoutToken) {
@@ -91,8 +93,11 @@ class Helpers {
 
     async loginWsSAP(infoUsuario: InfoUsuario): Promise<any> {
 
-        const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "USERAPLICACIONES", "Password": "Nitro123" };
-        console.log(jsonLog);
+        const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, 
+                          "UserName": "USERAPLICACIONES", 
+                          "Password": "Nitro123",
+                          "Language": "25" };
+        //console.log(jsonLog);
         const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Login`;
         const configWs = {
             method: "POST",
@@ -102,7 +107,7 @@ class Helpers {
             body: JSON.stringify(jsonLog)
         }
 
-        //////console.log(configWs);
+        //console.log(configWs);
 
         try {
 
@@ -110,10 +115,10 @@ class Helpers {
 
             const data = await response.json();
 
-            //////console.log(response,data);
+            //console.log(response);
 
             if (response.ok) {
-                ////console.log('successfully logged SAP');
+                //////console.log('successfully logged SAP');
                 return response.headers.get('set-cookie');
             } else {
                 console.error('error logged SAP');
@@ -152,7 +157,7 @@ class Helpers {
                 return '';
             }
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -173,7 +178,7 @@ class Helpers {
             return result;
 
        }catch(error){
-        ////console.log(error);
+        //////console.log(error);
         return error;
        }
        
@@ -201,7 +206,7 @@ class Helpers {
         INNER JOIN companies t2 ON t2.id = t1.id_company
         WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`,[userid,company]);
 
-        //////console.log(infoUsuario);
+        ////////console.log(infoUsuario);
 
         return infoUsuario;
     }
@@ -298,7 +303,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idSolped]);
 
-        //////console.log((solpedResult));
+        ////////console.log((solpedResult));
 
         let solped = {
             id: idSolped,
@@ -362,8 +367,6 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
         const anexosSolpedResult: any[] = await db.query(`SELECT * FROM ${bdmysql}.anexos t0 WHERE t0.id_solped =  ?`, [idSolped]);
 
-       
-
         let solpedObject = {
             solped,
             solpedDet,
@@ -373,8 +376,15 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         return solpedObject;
     }
 
-    async getNextLineAprovedSolped(idSolped: number, bdmysql: string, companysap: string, logo: string,origin:string='http://localhost:4200',urlbk:string,idLinea?:number): Promise<any> {
+    async getNextLineAprovedSolped(idSolped: number, 
+                                   bdmysql: string, 
+                                   companysap: string, 
+                                   logo: string,
+                                   origin:string='http://localhost:4200',
+                                   urlbk:string,
+                                   idLinea?:number): Promise<any> {
         
+        let lineAprovedSolped: any="";
         let condicionLinea = "";
         if(idLinea) condicionLinea = ` and t0.id!=${idLinea}`;
 
@@ -384,20 +394,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         WHERE t0.id_solped = ${idSolped} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
         ORDER BY nivel ASC`;
 
-        //////console.log(queryNextApprovedLine);
-
-        const queryCompania =`SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
-        const compania:any[] = await db.query(queryCompania);
-
         const nextLineAprovedSolped: any[] = await db.query(queryNextApprovedLine);
-        //////console.log(nextLineAprovedSolped);
-        //////console.log(nextLineAprovedSolped.length);
-        //////console.log(nextLineAprovedSolped[0].id);
-
-
-        let lineAprovedSolped: any;
 
         if (nextLineAprovedSolped.length>0 ) {
+
+            const queryCompania =`SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
+            const compania:any[] = await db.query(queryCompania);
+
             lineAprovedSolped = {
                 autor: {
                     fullname: nextLineAprovedSolped[0].nombreautor,
@@ -421,20 +424,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                     urlbk
                 }
             }
-        } else {
-            lineAprovedSolped = '';
         }
-
-
-
-
-       // ////console.log(lineAprovedSolped);
         return lineAprovedSolped;
     }
 
     async sendNotification(infoEmail: any): Promise<void> {
 
-        //////console.log(infoEmail);
+        ////////console.log(infoEmail);
 
         let mailer = nitromail.getTransporter();
 
@@ -449,9 +445,9 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             headers: { 'x-myheader': 'test header' }
         }, async function (error, info) {
             if (error) {
-                ////console.log(error);
+                //////console.log(error);
             } else {
-                ////console.log("Email Send");
+                //////console.log("Email Send");
             }
         });
 
@@ -492,7 +488,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         WHERE id_solped = ? AND estadoseccion = 'A' and estadoap !='P'
         ORDER BY nivel ASC`, [idSolped]);
 
-        ////console.log((detalleAprobacionSolped));
+        //////console.log((detalleAprobacionSolped));
 
         return detalleAprobacionSolped;
     }
@@ -514,7 +510,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 serieNombre = seriesDoc[item].name;
             }
         }
-        ////console.log(infoUsuario,seriesDoc);
+        //////console.log(infoUsuario,seriesDoc);
         
 
         
@@ -821,7 +817,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         return html;
     }
 
-    async loadBodyMailApprovedSolped(infoUsuario:any,LineAprovedSolped: any, logo: string, solped: any, key: string, urlbk:string,accionAprobacion?:boolean): Promise<string> {
+    async loadBodyMailApprovedSolped(infoUsuario:any,
+                                     LineAprovedSolped: any, 
+                                     logo: string, 
+                                     solped: any, 
+                                     key: string, 
+                                     urlbk:string,
+                                     accionAprobacion?:boolean): Promise<string> {
 
         const solpedDet: any[] = solped.solpedDet;
         const anexosSolped:any[] = solped.anexos
@@ -838,7 +840,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 serieNombre = seriesDoc[item].name;
             }
         }
-        ////console.log(infoUsuario,seriesDoc);
+        //////console.log(infoUsuario,seriesDoc);
         
         //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
@@ -1496,7 +1498,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
 
-        //////console.log(JSON.stringify(dataSolopedJSONSAP));
+        ////////console.log(JSON.stringify(dataSolopedJSONSAP));
 
         return dataSolopedJSONSAP;
     }
@@ -1509,11 +1511,11 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             const bieSession = await helper.loginWsSAP(infoUsuario);
 
-            ////console.log(JSON.stringify(data));
+            //////console.log(JSON.stringify(data));
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests`;
-                //console.log(url2,JSON.stringify(data));
+                ////console.log(url2,JSON.stringify(data));
                 let configWs2 = {
                     method: "POST",
                     headers: {
@@ -1523,13 +1525,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                     body: JSON.stringify(data)
 
                 }
+                //console.log(configWs2);
 
                 const response2 = await fetch(url2, configWs2);
-                //////console.log(response2);
-                const data2 = await response2.json();
-
                 
-                //////console.log(data2);
+                const data2 = await response2.json();
+                ////console.log('registerSolpedSAP',data2);
+                
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -1537,7 +1540,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -1545,7 +1548,45 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     }
 
-    
+    async CancelSolpedSAP(infoUsuario: InfoUsuario,  docEntry:any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${docEntry})/Cancel`;
+
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    },
+                }
+
+                const response2 = await fetch(url2, configWs2);
+
+                helper.logoutWsSAP(bieSession);
+
+                if(response2.status!=204){
+                    const data2 = await response2.json();
+                    return data2;  
+                }
+
+                return response2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }    
 
     async updateSolpedSAP(infoUsuario: InfoUsuario, data: any, docEntry:any): Promise<any> {
 
@@ -1572,7 +1613,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
                 
 
-                ////console.log(response2);
+                //////console.log(response2);
                 helper.logoutWsSAP(bieSession);
 
                 return response2;
@@ -1580,7 +1621,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -1590,71 +1631,264 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
 
     async registerProcApSolpedSAP(infoUsuario: InfoUsuario, bdmysql:string,idSolped:any,docNumSAP:any): Promise<any> {
-
-
+        
         try {
-
-            let queryListAprobacionesSolped =`
+            const Solped:any = await helper.getSolpedById(idSolped,infoUsuario.bdmysql);
+            let queryListAprobacionesSolpedMysql =`
                 SELECT t0.id AS "key",t1.sapdocnum,t1.id, t0.updated_at,t0.nombreaprobador,t0.estadoap,t0.comments
                 FROM ${bdmysql}.aprobacionsolped t0 
                 INNER JOIN ${bdmysql}.solped t1 ON t1.id = t0.id_solped 
                 WHERE t0.id_solped =${idSolped} and t0.estadoseccion='A'`;
 
-            let resultListAprobacionesSolped = await db.query(queryListAprobacionesSolped);
+            let resultListAprobacionesSolpedMysql:any[] = await db.query(queryListAprobacionesSolpedMysql);
+            //console.log('resultListAprobacionesSolpedMysql', resultListAprobacionesSolpedMysql);
 
             const bieSession = await helper.loginWsSAP(infoUsuario);
+            let arrayError: any[] = [];
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/U_NF_APRO_SOLPED_WEB`;
 
-                let arrayResult = [];
-                let data ;
-                                
-                for(let item of resultListAprobacionesSolped){
+                
+                //let data ;
+
+                //Buscar id solped del portal en tabla de aprobaciones de SAP
+                let configWs2:any = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+                }
+
+                const consultaAprobacionesSolpedSAP = await fetch(`${url2}?$filter=U_NF_NUM_SOLPED_WEB eq '${idSolped}'`,configWs2);
+                const aprobacionesSolpedSAP = await consultaAprobacionesSolpedSAP.json();
+                //console.log('aprobacionesSolpedSAP LENGTH',aprobacionesSolpedSAP.value.length);
+                if(aprobacionesSolpedSAP.value.length > 0){
+                    //Existe proceso de aprobación para la solped
+                    //Obtener SapDocNum del proceso de aprobacion y cancelar solped
+                    let oldSapDocNum = aprobacionesSolpedSAP.value[0].U_NF_NUM_SOLPED_SAP;
+                    let oldDocEntry:any = await helper.getSolpedByIdSL(infoUsuario,oldSapDocNum,Solped.solped.serie);
+                    //console.log('oldDocEntry',oldDocEntry.value[0].DocEntry);
+                    const cancelOldSolpedSap = await helper.CancelSolpedSAP(infoUsuario,oldDocEntry.value[0].DocEntry);
+                    if(cancelOldSolpedSap.error){
+                        arrayError.push({
+                            message:`Error en cancelación de solpe antigua ${oldSapDocNum}: ${cancelOldSolpedSap.error.message.value}`
+                        });
+                    }
+                    //Recorrer array del proceso de aprobacion de SAP y actualizar fecha y codigo  de solped nueva en linea del processo de aprobacion SAP
+                   
+                    configWs2.method = 'PATCH';
+
+                    for(let lineaPA of aprobacionesSolpedSAP.value){
+                        let data:any = {
+                            "U_NF_NUM_SOLPED_SAP":docNumSAP
+                        }
+                        if(resultListAprobacionesSolpedMysql.find(lineaPAMysql => lineaPAMysql.key == lineaPA.Code && lineaPAMysql.estadoap=='A')){
+                            data.U_NF_FECHA_APRO = new Date(resultListAprobacionesSolpedMysql.find(lineaPAMysql => lineaPAMysql.key == lineaPA.Code && lineaPAMysql.estadoap=='A').updated_at)
+                        }else{
+                            data.U_NF_FECHA_APRO = new Date();
+                            data.U_NF_ESTADO_APRO = 'A';
+                        }
+
+                        configWs2.body =  JSON.stringify(data);
+                        console.log('PATCH',`${url2}('${lineaPA.Code}')`, data);
+                        const updateLineaApSAP = await fetch(`${url2}('${lineaPA.Code}')`,configWs2);
+                        if(updateLineaApSAP.status!=204){
+                            let errorUpdateLineaApSAP = await updateLineaApSAP.json();
+                            arrayError.push({
+                                message:`Error en actualización de la linea ${lineaPA.Code} del proceso de aprbación SAP : ${errorUpdateLineaApSAP.error.message.value}`
+                            });
+                        }
+
+                    }
+
+                }else{
+                    //No existe proceso de aprobación para la solped
+                    //recorrer array del proceso de aprobacion de mysql e insrtar lineas en SAP
+
+                    configWs2.method = 'POST';
+                    for(let item of resultListAprobacionesSolpedMysql){
+
+                        let data = {    
+                                    "Code":item.key, 
+                                    "Name":item.key,
+                                    "U_NF_FECHA_APRO":new Date(),
+                                    "U_NF_NOM_APROB":item.nombreaprobador,
+                                    "U_NF_ESTADO_APRO":"A", 
+                                    "U_NF_COM_AROB":item.comments, 
+                                    "U_NF_NUM_SOLPED_WEB":item.id, 
+                                    "U_NF_NUM_SOLPED_SAP":docNumSAP
+                                };
+
+                        configWs2.body =  JSON.stringify(data);
+                        const registrarLineaPASAP = await  fetch(`${url2}`,configWs2);
+                        if(registrarLineaPASAP.status != 201){
+                            let errorregistrarLineaPASAP = await registrarLineaPASAP.json();
+                            arrayError.push({
+                                message:`Error en registro de la linea ${item.key} del proceso de aprbación SAP : ${errorregistrarLineaPASAP.error.message.value}`
+                            });
+                        }
+                    }
+                }
+
+                /*                
+                for(let item of resultListAprobacionesSolpedMysql){
+                    
+                    
                     data = { "Code":item.key, 
                     "Name":item.key,
-                    "U_NF_FECHA_APRO":item.updated_at,
+                    "U_NF_FECHA_APRO":new Date(),
                     "U_NF_NOM_APROB":item.nombreaprobador,
                     "U_NF_ESTADO_APRO":"A", 
                     "U_NF_COM_AROB":item.comments, 
                     "U_NF_NUM_SOLPED_WEB":item.id, 
                     "U_NF_NUM_SOLPED_SAP":docNumSAP};
 
-                    //console.log(data);
+                    ////console.log(data);
 
-                    let configWs2 = {
-                        method: "POST",
+                    let configWs2:any = {
+                        method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
-    
                     }
-    
-                    let response2 = await fetch(url2, configWs2);
-                    let data2 = await response2.json();
-                    arrayResult.push(data2);
-                    ////console.log(data2);
 
+                    //Validar existencia de de id aprobación
+                    let response1 = await fetch(url2+`('${item.key}')`, configWs2);
+                    let data1 = await response1.json();
+                    console.log('GET',url2+`('${item.key}')`);
+                    configWs2.body = JSON.stringify(data);
+                    if(response1.status===200){
+                        //existe id, acttualizar solped num
+                        configWs2.method = 'PATCH'
+                        console.log('PATCH',url2+`('${item.key}')`,configWs2);
+                        let response2 = await fetch(url2+`('${item.key}')`, configWs2);
+                        ////console.log(response2.status)
+                        if(response2.status===204){
+                            arrayResult.push({
+                                solped:idSolped,
+                                sapdocnum:docNumSAP,
+                                idaprobacion:item.key,
+                                error:false,
+                                message:`Actualizacón de linea aprobación ${item.key}` 
+                            });
+                            //console.log(Solped);
+                            let DocEntryOld:any = await helper.getSolpedByIdSL(infoUsuario,data1.U_NF_NUM_SOLPED_SAP,Solped.solped.serie)
+                            await helper.CancelSolpedSAP(infoUsuario,DocEntryOld.value[0].DocEntry)
+                        }else{
+                            //Error al actualizar la linea de aprobacion
+                            let data2 = await response2.json();
+                            //console.log('data2',data2)    
+                            arrayResult.push({
+                                solped:idSolped,
+                                sapdocnum:docNumSAP,
+                                idaprobacion:item.key,
+                                error:true,
+                                message:data2.error.message.value
+                            });
+                        }
+                        //
+                    }else{
+                        //Registro la linea de aprobación
+                        configWs2.method = 'POST'
+                        //console.log(configWs2);
+                        let response3 = await fetch(url2, configWs2);
+                        
+                        let data3 = await response3.json();
+                        //console.log('data3',data3,response3.status);
+                        if(response3.status!=201){
+                            //Error en registro de linea
+                            
+                            arrayResult.push({
+                                solped:idSolped,
+                                sapdocnum:docNumSAP,
+                                idaprobacion:item.key,
+                                error:true,
+                                message:data3.error.message.value
+                            });
+                            let DocEntryOld:any = await helper.getSolpedByIdSL(infoUsuario,data1.U_NF_NUM_SOLPED_SAP,Solped.solped.serie)
+                            await helper.CancelSolpedSAP(infoUsuario,DocEntryOld.value[0].DocEntry)        
+                        }else{
+                            arrayResult.push({
+                                solped:idSolped,
+                                sapdocnum:docNumSAP,
+                                idaprobacion:item.key,
+                                error:false,
+                                message:`Registro de linea aprobación ${item.key}` 
+                            });
+                        }
+                    }
                     
                 }
-
-                
+                */
 
                 helper.logoutWsSAP(bieSession);
-
-                return arrayResult;
+                ////console.log(arrayResult);
+                return arrayError;
 
             }
 
         } catch (error) {
-            ////console.log(error);
+            //console.log(error);
             return '';
         }
 
 
 
+    }
+
+    async modeloAprobacionesMysql(infoUsuario: InfoUsuario):Promise<any> {
+        
+        const bdmysql = infoUsuario.bdmysql;
+        const modelos = await db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+        const data2 = modelos;
+
+        let arrayModelos: any[] = [];
+
+        for (let item in data2) {
+            let pos_eq = data2[item].query.indexOf('=');
+            let pos_quote = data2[item].query.indexOf(`'`, pos_eq);
+            let pos_next_quote = data2[item].query.indexOf(`'`, pos_quote + 1);
+            let area = data2[item].query.substring(pos_quote + 1, pos_next_quote);
+            let numeric = data2[item].query.indexOf(`(19,6)`) + '(19,6)'.length + 1;
+            let condicion = data2[item].query.substring(numeric, data2[item].query.length);  
+            data2[item].area = area;
+            data2[item].condicion = condicion;
+            arrayModelos.push(data2[item]);
+        }
+        //console.log(arrayModelos);
+        return arrayModelos;
+    }
+
+    async modeloAprobacionesSAP(infoUsuario: InfoUsuario):Promise<any> {
+               
+        const compania = infoUsuario.dbcompanysap;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+        console.log(url2);
+        const response2 = await fetch(url2);
+        //console.log(response2.status)
+        if(response2.status!=200){
+           return {error: response2.statusText}
+        }
+        const data2 = await response2.json();
+
+        let arrayModelos: any[] = [];
+
+        for (let item in data2) {
+            let pos_eq = data2[item].query.indexOf('=');
+            let pos_quote = data2[item].query.indexOf(`'`, pos_eq);
+            let pos_next_quote = data2[item].query.indexOf(`'`, pos_quote + 1);
+            let area = data2[item].query.substring(pos_quote + 1, pos_next_quote);
+            let numeric = data2[item].query.indexOf(`(19,6)`) + '(19,6)'.length + 1;
+            let condicion = data2[item].query.substring(numeric, data2[item].query.length);  
+            data2[item].area = area;
+            data2[item].condicion = condicion;
+            arrayModelos.push(data2[item]);
+        }
+       // console.log(arrayModelos);
+        return arrayModelos;
     }
 
     async getEntradaById(idEntrada: string, bdmysql: string): Promise<any> {
@@ -1667,7 +1901,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idEntrada]);
 
-        //////console.log((solpedResult));
+        ////////console.log((solpedResult));
 
         let entrada = {
             id: idEntrada,
@@ -1709,7 +1943,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 LineTotal: item.linetotal,
                 TaxCode: item.tax,
                 TaxTotal: item.taxvalor,
-                linegtotal: item.linegtotal,
+                GrossTotal: item.linegtotal,
                 CostingCode: item.ocrcode,
                 CostingCode2: item.ocrcode2,
                 CostingCode3: item.ocrcode3,
@@ -1738,7 +1972,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 LineTotal: item.linetotal,
                 TaxCode: item.tax,
                 TaxTotal: item.taxvalor,
-                linegtotal: item.linegtotal,
+                GrossTotal: item.linegtotal,
                 CostingCode: item.ocrcode,
                 CostingCode2: item.ocrcode2,
                 CostingCode3: item.ocrcode3,
@@ -1781,7 +2015,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             DocumentLines
         }
 
-        ////console.log(entradaObject,infoEntrada);
+        //////console.log(entradaObject,infoEntrada);
 
         return infoEntrada;
     }
@@ -1796,11 +2030,92 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.sapdocnum = ?`, [idEntrada]);
 
-        console.log(entradaResult);
+        //console.log(entradaResult);
 
         
 
         return entradaResult;
+    }
+
+    async loadInfoEntradaSAPToJSONSAP(Entrada:any): Promise<any>{
+        let dataEntradaJSONSAP:any;
+        let DocumentLines:any[] =[];
+        let DocumentLine:any;
+
+        for(let item of Entrada.DocumentLines){
+            DocumentLine={
+                //LineNum:item.linenum,
+                //Currency:item.trm===1?'$':item.moneda,
+                //Currency:item.moneda==='COP'?'$':item.moneda,
+                //Rate: item.trm,
+                ItemDescription:item.ItemDescription,
+                //RequiredDate:item.reqdatedet,
+                //Quantity:item.cantidad,
+                //Price:item.precio,
+                UnitPrice:item.UnitPrice,
+                LineTotal:item.LineTotal,
+                //GrossTotal:item.linegtotal,
+                TaxCode:item.TaxCode,
+                CostingCode:item.CostingCode,
+                CostingCode2:item.CostingCode2,
+                CostingCode3:item.CostingCode3,
+                WarehouseCode:item.WarehouseCode!==''?item.WarehouseCode:'SM_N300',
+                BaseType:item.BaseType,
+                BaseEntry:item.BaseEntry,
+                BaseLine:item.BaseLine
+                
+            };
+
+            if(item.ItemCode!=='' && Entrada.DocType=='dDocument_Items'){
+                DocumentLine.ItemCode = item.ItemCode;
+            }
+
+            if(Entrada.DocType=='dDocument_Items'){
+                DocumentLine.Quantity=item.Quantity;
+            }
+            
+            if(item.AccountCode!==''){
+                DocumentLine.AccountCode = item.AccountCode;
+            }
+            if(item.WarehouseCode===''){
+                
+                    DocumentLine.WarehouseCode = 'SM_N300';
+                
+            }else{
+                DocumentLine.WarehouseCode = item.WarehouseCode;
+            }
+
+            DocumentLines.push(DocumentLine);
+        }
+
+        dataEntradaJSONSAP = {
+               
+            DocType:Entrada.DocType,
+            //Series:Entrada.entrada.serie,
+            DocDate: Entrada.DocDate,
+            DocDueDate:Entrada.DocDueDate,
+            //TaxDate:Entrada.entrada.taxdate,
+            //RequriedDate:Entrada.entrada.reqdate,
+            CardCode:Entrada.CardCode,
+            CardName:Entrada.CardName,
+            Comments:Entrada.Comments,
+            JournalMemo:Entrada.JournalMemo,
+            U_AUTOR_PORTAL:Entrada.U_AUTOR_PORTAL,
+            /*U_NF_BIEN_OPORTUNIDAD:Entrada.U_NF_BIEN_OPORTUNIDAD,
+            U_NF_SERVICIO_CALIDAD:Entrada.U_NF_SERVICIO_CALIDAD,
+            U_NF_SERVICIO_TIEMPO:Entrada.U_NF_SERVICIO_TIEMPO,
+            U_NF_SERVICIO_SEGURIDAD:Entrada.U_NF_SERVICIO_SEGURIDAD,
+            U_NF_SERVICIO_AMBIENTE:Entrada.U_NF_SERVICIO_AMBIENTE,
+            U_NF_TIPO_HE:Entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
+            U_NF_PUNTAJE_HE:Entrada.U_NF_PUNTAJE_HE,
+            U_NF_CALIFICACION:Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
+            ClosingRemarks:Entrada.entrada.footer,*/
+            DocumentLines
+            
+
+        };
+
+        return dataEntradaJSONSAP;
     }
 
     async loadInfoEntradaToJSONSAP(Entrada:any): Promise<any>{
@@ -1816,9 +2131,10 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 //Rate: item.trm,
                 ItemDescription:item.dscription,
                 //RequiredDate:item.reqdatedet,
-                Quantity:item.cantidad,
-                Price:item.precio,
-                //LineTotal:item.linetotal,
+                //Quantity:item.cantidad,
+                //Price:item.precio,
+                UnitPrice:item.precio,
+                LineTotal:item.linetotal,
                 //GrossTotal:item.linegtotal,
                 TaxCode:item.tax,
                 CostingCode:item.ocrcode,
@@ -1831,8 +2147,12 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 
             };
 
-            if(item.itemcode!==''){
+            if(item.itemcode!=='' && Entrada.entrada.doctype=='I'){
                 DocumentLine.ItemCode = item.itemcode;
+            }
+
+            if(Entrada.entrada.doctype=='I'){
+                DocumentLine.Quantity=item.cantidad;
             }
             
             if(item.acctcode!==''){
@@ -1876,6 +2196,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             };
 
         ////console.log(JSON.stringify(dataEntradaJSONSAP));
+        ////console.log(dataEntradaJSONSAP);
 
         return dataEntradaJSONSAP;
     }
@@ -1904,7 +2225,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -1912,7 +2233,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -1943,7 +2264,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -1951,7 +2272,48 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async consultarSolpedByIdSL(infoUsuario: any, DocEntry: any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})`;
+                //console.log(url2);
+
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                ////////console.log(response2);
+                const data2 = await response2.json();
+
+                
+                ////////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
             return '';
         }
 
@@ -1968,7 +2330,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
-                console.log(url2);
+                //console.log(url2);
 
                 let configWs2 = {
                     method: "POST",
@@ -1980,11 +2342,11 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 }
 
                 const response2 = await fetch(url2, configWs2);
-                //////console.log(response2);
+                ////////console.log(response2);
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -1992,7 +2354,89 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async cerrarSolpedByIdSL(infoUsuario: any, DocEntry: any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Close`;
+                //console.log(url2);
+
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                ////////console.log(response2);
+                const data2 = await response2.json();
+
+                
+                ////////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async reopenSolpedByIdSL(infoUsuario: any, DocEntry: any): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Reopen`;
+                //console.log(url2);
+
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                ////////console.log(response2);
+                const data2 = await response2.json();
+
+                
+                ////////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
             return '';
         }
 
@@ -2008,12 +2452,19 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         
 
 
-        console.log(url2);
+        //console.log(url2);
         
     
             const response2 = await fetch(url2);
-            const data2 = await response2.json();   
-            return data2;   
+            console.log(response2.status);
+            if(response2.status==200){
+                const data2 = await response2.json();   
+                return data2;
+            }else{
+                console.log(response2.statusText);
+                return [];
+            }
+               
 
         }catch (error: any) {
             console.error(error);
@@ -2022,16 +2473,9 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
     }
 
     async getPresupuesto(infoUsuario: InfoUsuario, idSolped:number,bdmysql:string, bdPresupuesto: string ){
-        //console.log(infoUsuario.companyname.substring(0,8));
+        ////console.log(infoUsuario.companyname.substring(0,8));
         let arrayErrorPresupuesto:any[]=[];
         let compania = infoUsuario.dbcompanysap;
-        /*const dimensionesSolped :any[] = await db.query(`
-      
-        SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
-        FROM ${bdmysql}.solped_det t1 
-        INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id 
-        WHERE id = ${idSolped} 
-        GROUP BY acctcode, ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [idSolped]);*/
 
         const dimensionesSolped :any[] = await db.query(`
       
@@ -2041,16 +2485,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         WHERE t0.id = ${idSolped} 
         GROUP BY acctcode, ocrcode2, YEAR(t0.docdate)`, [idSolped]);
 
-
-
         let errorPresupuesto = false;
         let messageError = "";
         for(let lineaDimension of dimensionesSolped){
-            ////console.log(lineaDimension);
+            //////console.log(lineaDimension);
             const cuentaValidaPresupuesto = await helper.validaPresupuestoCuenta(compania, lineaDimension.acctcode);
             const presupuestoLineaDimensionSAP = await helper.getPresupuestoXE(infoUsuario.companyname.substring(0,8),lineaDimension,bdPresupuesto);
             const comprometidoAprobacionMysql = await helper.getPresupuestoSolpedEnAprobacion(lineaDimension,bdmysql,idSolped);
-            //console.log(cuentaValidaPresupuesto,presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
+            ////console.log(cuentaValidaPresupuesto,presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
             if(lineaDimension.subtotal > (presupuestoLineaDimensionSAP-comprometidoAprobacionMysql) && cuentaValidaPresupuesto=='Y'){
                 arrayErrorPresupuesto.push(`Cuenta: ${lineaDimension.acctcode} Dependencia: ${lineaDimension.ocrcode2} }`);
             }
@@ -2064,14 +2506,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         try {
 
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
-            console.log(url2);
+            //console.log(url2);
             const response2 = await fetch(url2);
             const data2 = await response2.json();   
-                //////console.log(data2);
+            ////console.log('validaPresupuestoCuenta',data2);
             return (data2[0].Budget);  
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
     }
@@ -2079,26 +2521,6 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
     async getPresupuestoSolpedEnAprobacion(lineaPresupuesto:any,bdmysql:string,idSolped:number){
         const {anio, acctcode, ocrcode2, ocrcode, subtotal, total} = lineaPresupuesto;
         let comprometidoAprobacion = 0;
-        /*const queryComprometidoAprobacion :any[] = await db.query(`
-      
-        SELECT
-            t0.id,
-            YEAR(t0.docdate) AS anio, 
-            t1.acctcode, 
-            t1.ocrcode2, 
-            t1.ocrcode, 
-            SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
-            FROM ${bdmysql}.solped t0 
-            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            WHERE 
-            t1.acctcode = ? AND
-            t1.ocrcode = ? AND
-            t1.ocrcode2= ? AND
-            YEAR(t0.docdate) = ? AND
-            t0.approved ='P' AND
-            t0.id <> ?
-            GROUP BY t0.id, t1.acctcode, t1.ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode,ocrcode,ocrcode2,anio,idSolped]);*/
-
             const queryComprometidoAprobacion :any[] = await db.query(`
       
         SELECT
@@ -2140,19 +2562,66 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
-                //////console.log(data2);
+                ////console.log('getPresupuestoXE',data2);
                 return (data2[0].Disponible);  
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
     }
 
+    async cancelarEntrada  (infoUsuario: InfoUsuario, dataCancel: any ): Promise<any> {
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotesService_Cancel2`;
+                //console.log(url2);
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    },
+                    body: JSON.stringify(dataCancel)
+
+                }
+                
+                const response2 = await fetch(url2, configWs2);
+                let data2:any;
+                if(response2.status ===204){
+                    data2 = {
+                        status:204
+                    }
+                }else{
+                    data2 = await response2.json();
+                }
+                
+                //const data2 = await response2.json();
+
+                //console.log(JSON.stringify(data2));
+
+                
+               // //////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+
+    }
 
     async getEntradaByIdSL(infoUsuario: InfoUsuario, DocNum: any ): Promise<any> {
 
-        ////console.log(DocNum);
+        //////console.log(DocNum);
 
         try {
 
@@ -2161,7 +2630,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
-                //console.log(url2);
+                ////console.log(url2);
                 let configWs2 = {
                     method: "GET",
                     headers: {
@@ -2172,10 +2641,11 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 }
                 
                 const response2 = await fetch(url2, configWs2);
+                ////console.log(response2.status);
                 const data2 = await response2.json();
 
                 
-               // ////console.log(data2);
+               // //////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2183,7 +2653,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2191,7 +2661,128 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     }
 
-    
+    async getEntradasByBaseDoc(infoUsuario: InfoUsuario, BaseEntry: any, BaseType:any ): Promise<any> {
+
+        //////console.log(DocNum);
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+
+            if (bieSession != '') {
+                //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq ${BaseType} and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${BaseEntry} `;
+                ////console.log(url2);
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+                
+                const response2 = await fetch(url2, configWs2);
+                ////console.log(response2.status);
+                const data2 = await response2.json();
+
+                
+               // //////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async getEntradasByPedido(infoUsuario: InfoUsuario, DocEntry: any ): Promise<any> {
+
+        //////console.log(DocNum);
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+
+
+            if (bieSession != '') {
+                //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/CancelStatus eq 'csNo'`;
+                ////console.log(url2);
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+                
+                const response2 = await fetch(url2, configWs2);
+                ////console.log(response2.status);
+                const data2 = await response2.json();
+
+                
+               // //////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async getCuentasXE(compania:string): Promise<any>{
+        try {
+           
+
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                return data2;   
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+   
+    async getAreasUserXE(compania:string,codusersap:string): Promise<any>{
+        try {
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ////console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
 
     async getSeriesXE(compania:string,objtype?:string): Promise<any>{
         try {
@@ -2200,16 +2791,214 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             if(objtype) filtroObjtype = `&tipodoc=${objtype}`;
 
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
-            ////console.log(url2);
+            //////console.log(url2);
             
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();   
-                //////console.log(data2);
+                ////console.log('getSeriesXE',data2);
                 return (data2);  
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
+            return '';
+        }
+    }
+
+    async getTaxesXE(compania:string): Promise<any>{
+        try {
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ////console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+    async getTrmDiaXE(compania:string, fechaTrm:any): Promise<any>{
+        try {
+
+            
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${(fechaTrm)}&compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                console.log(data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+    
+
+    async getModelosAPXE(compania:string): Promise<any>{
+        try {
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ///console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+
+    async getProveedores2XE(compania: string): Promise<any>{
+        try {
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+            console.log(url2);
+           
+        
+                const response2 = await fetch(url2);
+
+                if(response2.status===200){
+                    const data2 = await response2.json();   
+                    return (data2);
+                }else{
+                    return [];
+                }
+                   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
+
+    async getDependenciasSL(compania: string): Promise<any>{
+        const infoUsuario:any = {
+            dbcompanysap:compania
+        }
+        const bieSession = await helper.loginWsSAP(infoUsuario);
+
+        if (bieSession != '') {
+            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/RECC`;
+
+            let configWs2 = {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cookie': bieSession || ''
+                }
+
+            }
+            
+            const response2 = await fetch(url2, configWs2);
+            const data2 = await response2.json();
+
+            
+           //console.log(data2.value);
+           helper.logoutWsSAP(bieSession);
+
+            return data2.value;
+
+        }
+    }
+    async getAlmacenes(compania: string): Promise<any>{
+        try {
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MT_ALMACENES.xsjs?&compania=${compania}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ////console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+    
+
+    async getCuentasDependenciasSL(compania: string): Promise<any>{
+        const infoUsuario:any = {
+            dbcompanysap:compania
+        }
+        const bieSession = await helper.loginWsSAP(infoUsuario);
+
+        if (bieSession != '') {
+            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CDI2`;
+
+            let configWs2 = {
+                method: "GET",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'cookie': bieSession || ''
+                }
+
+            }
+            
+            const response2 = await fetch(url2, configWs2);
+            const data2 = await response2.json();
+
+            
+           //console.log(data2.value);
+           helper.logoutWsSAP(bieSession);
+
+            return data2.value;
+
+        }
+    }
+
+    
+    async getStoresUserXE(compania:string,codusersap:string): Promise<any>{
+        try {
+
+         
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+            console.log(url2); 
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ////console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
+            return '';
+        }
+    }
+
+    
+    async getDependenciasUserXE(compania:string,codusersap:string): Promise<any>{
+        try {
+
+         
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`; 
+            console.log(url2); 
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                ////console.log('getSeriesXE',data2);
+                return (data2);  
+
+        } catch (error) {
+            //////console.log(error);
             return '';
         }
     }
@@ -2239,7 +3028,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-               // ////console.log(data2);
+               // //////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2247,7 +3036,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
     }
@@ -2278,7 +3067,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2286,7 +3075,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2303,7 +3092,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
-                ////console.log(url2);
+                console.log(url2);
 
                 let configWs2 = {
                     method: "GET",
@@ -2318,7 +3107,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2326,7 +3115,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2343,7 +3132,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
-                ////console.log(url2);
+                //////console.log(url2);
 
                 let configWs2 = {
                     method: "GET",
@@ -2358,7 +3147,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2366,7 +3155,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2383,7 +3172,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             return fecha;
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2397,18 +3186,21 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         try {
 
             let serie =0;
-            let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
-            for(let item in seriesDoc) {
+            //let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
+            let seriesDoc = await db.query(`select * from ${infoUsuario.bdmysql}.series where name ='OCM' `);
+            /*for(let item in seriesDoc) {
                 if(seriesDoc[item].name ==='OCM'){
                     serie = seriesDoc[item].code;
                 }
-            }
+            }*/
+
+            serie = seriesDoc[0].code;
 
             const bieSession = await helper.loginWsSAP(infoUsuario);
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
-                ////console.log(url2);
+                //////console.log(url2);
                 let configWs2 = {
                     method: "GET",
                     headers: {
@@ -2422,7 +3214,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2430,7 +3222,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2447,7 +3239,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes?$filter=U_NF_PEDMP eq 'S' and DocumentStatus eq 'bost_Open'`;
-                ////console.log(url2);
+                //////console.log(url2);
                 let configWs2 = {
                     method: "GET",
                     headers: {
@@ -2461,7 +3253,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2469,7 +3261,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2485,15 +3277,18 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             const compania = infoUsuario.dbcompanysap;
 
             let serie =0;
-            let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
-            for(let item in seriesDoc) {
+            //let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
+            let seriesDoc = await db.query(`select * from ${infoUsuario.bdmysql}.series where name ='OCM' `);
+            /*for(let item in seriesDoc) {
                 if(seriesDoc[item].name ==='OCM'){
                     serie = seriesDoc[item].code;
                 }
-            }
+            }*/
+
+            serie = seriesDoc[0].code;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}&serie=${serie}`;
-            ////console.log(url2);
+            //////console.log(url2);
 
         
                 const response2 = await fetch(url2);
@@ -2535,7 +3330,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
                 
 
-                ////console.log(response2);
+                //////console.log(response2);
                 helper.logoutWsSAP(bieSession);
 
                 return response2;
@@ -2543,7 +3338,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2558,7 +3353,26 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             const compania = infoUsuario.dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}`;
+            console.log(url2);
 
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                return (data2);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
+
+    async getInventariosItemMPXE(infoUsuario: InfoUsuario, item:string,zona:string): Promise<any>{
+        try {
+
+            const compania = infoUsuario.dbcompanysap;
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+            console.log(url2);
 
         
                 const response2 = await fetch(url2);
@@ -2578,7 +3392,26 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             const compania = infoUsuario.dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}`;
+            console.log(url2);
+           
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                return (data2);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
 
+    async getInventariosTrackingItemMPXE(infoUsuario: InfoUsuario,item:string,zona:string): Promise<any>{
+        try {
+
+            const compania = infoUsuario.dbcompanysap;
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+            console.log(url2);
            
         
                 const response2 = await fetch(url2);
@@ -2597,7 +3430,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             const compania = infoUsuario.dbcompanysap;
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
-
+            console.log(url2);
            
         
                 const response2 = await fetch(url2);
@@ -2612,7 +3445,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     async getCodigoSerie(dbcompanysap:any, tipoDoc:any, sirieStr:string){
 
-        ////console.log(dbcompanysap,tipoDoc,sirieStr);
+        //////console.log(dbcompanysap,tipoDoc,sirieStr);
         let serie =0;
             let seriesDoc = await helper.getSeriesXE(dbcompanysap,tipoDoc);
             for(let item in seriesDoc) {
@@ -2628,19 +3461,19 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             const bdmysql = infoUsuario.bdmysql;
 
-            let serie =0;
+            /*let serie =0;
             let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'1470000113');
             for(let item in seriesDoc) {
                 if(seriesDoc[item].name ==='SPMP'){
                     serie = seriesDoc[item].code;
                 }
-            }
+            }*/
 
            
 
-            let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
+            //let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
         
-            const query = `SELECT 
+            /*const query = `SELECT 
             'Proyectado' AS "TIPO",
             '' AS "CardCode",
             '' AS "CardName",
@@ -2673,15 +3506,55 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
             WHERE t0.serie = ${serie} AND 
+            t0.sapdocnum =0 and t0.approved='N'`;*/
+
+            const query = `SELECT 
+            'Proyectado' AS "TIPO",
+            '' AS "CardCode",
+            '' AS "CardName",
+            t0.id AS "DocNum",
+            '' AS "DocCur",
+            '' AS "BaseRef",
+            t0.status AS "DocStatus",
+            '' AS "CANCELED",
+            t0.reqdate AS "FECHANECESIDAD",
+            t0.nf_pedmp AS "U_NF_PEDMP",
+            t0.nf_incoterms AS "U_NT_Incoterms",
+            t0.reqdate AS "ETA", 
+            t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
+            t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
+            t0.nf_agente AS "U_NF_AGENTE",
+            t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
+            t0.nf_motonave AS "U_NF_MOTONAVE",
+            t0.u_nf_status AS "U_NF_STATUS",
+            t1.linevendor AS "LineVendor",
+            t3.CardName, 
+            t1.itemcode AS "ItemCode",
+            t1.whscode AS "WhsCode",
+            t1.zonacode AS "State_Code",
+            '' AS "PENTRADA",
+            t1.quantity AS "Quantity",
+            t1.price AS "Price",
+            t1.trm AS "Rate",
+            '' AS "OpenCreQty",
+            t1.linenum
+            
+            FROM ${bdmysql}.solped t0 
+            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+            INNER JOIN ${bdmysql}.series t2 ON t0.serie = t2.code
+            LEFT OUTER JOIN ${bdmysql}.socios_negocio t3 ON t1.linevendor = t3.CardCode
+            WHERE t2.name = 'SPMP' AND 
             t0.sapdocnum =0 and t0.approved='N'`;
+
+            //console.log(query);
 
             const solpeds = await db.query(query);
 
-            for(let solped of solpeds) {
+            /*for(let solped of solpeds) {
                 if(solped.LineVendor!=''){
                     solped.CardName = proveedores.filter((data: { CardCode: any; }) =>data.CardCode === solped.LineVendor)[0].CardName;
                 }
-            }
+            }*/
         
                   
                 return (solpeds);   
@@ -2691,9 +3564,28 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 return (error);
             } 
     }
+    async documentsTracking(compania: string): Promise<any>{
+        try {
+
+
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsVistaCalculadora.xsjs?&compania=${compania}`;
+            console.log(url2);
+           
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                return (data2);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
+    
 
     async covertirResultadoSLArray(data:any):Promise<any>{
-        ////console.log('Convertir SL to array');
+        //////console.log('Convertir SL to array');
         let dataArray:any[] =[];
     
         let lineaDetalleArray:any[] = [];
@@ -2740,6 +3632,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                             U_NF_TIPOCARGA: documento.U_NF_TIPOCARGA,
                             U_NT_Incoterms: documento.U_NT_Incoterms,
                             U_NF_PEDMP: documento.U_NF_PEDMP,
+                            
                             CardCode: '',
                             CardName: '',
                             ItemCode: '',
@@ -2753,6 +3646,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                             key:'0',
                             WarehouseCode:'',
                             ProveedorDS:'',
+                            U_ID_PORTAL:''
+
             
                         };
     
@@ -2765,7 +3660,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                         lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
                         lineaArray.key =documento.DocEntry+'-'+documento.DocNum+'-'+lineaDetalle.LineNum;
                         lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
-                        ////console.log(lineaArray.LineNum);
+                        lineaArray.U_ID_PORTAL = lineaDetalle.U_ID_PORTAL==null?'':lineaDetalle.U_ID_PORTAL;
+                        //////console.log(lineaArray.LineNum);
                        
                         dataArray.push(lineaArray);
                     }
@@ -2779,8 +3675,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             //break;
         }
 
-        //////console.log(dataArray);
-        //////console.log(dataArray.length);
+        ////////console.log(dataArray);
+        ////////console.log(dataArray.length);
         return dataArray;
     }
 
@@ -2806,12 +3702,337 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
     }
 
 
+    async registrarSeries(arraySeries:any[], bdmysql:string, objtype:string):Promise<void>{
+
+        for (let serie of arraySeries){
+                serie.objtype = objtype;
+            let existeSerie = await db.query(`select * from ${bdmysql}.series t0 where t0.code=${serie.code}`);
+            
+            if(existeSerie.length==0){
+                console.log('Registrar serie');
+                await db.query(`insert into ${bdmysql}.series set ?`, [serie]);
+            }
+        }
+
+    }
+
+    async registrarCuentas(arrayCuentas:any[], bdmysql:string):Promise<void>{
+
+        for (let cuenta of arrayCuentas){
+               
+            let existeCuenta = await db.query(`select * from ${bdmysql}.cuentas_contable t0 where t0.Code=${cuenta.Code}`);
+            
+            if(existeCuenta.length==0){
+                console.log('Registrar cuenta');
+                await db.query(`insert into ${bdmysql}.cuentas_contable set ?`, [cuenta]);
+            }
+        }
+
+    }
+
+    async registrarImpuestos(arrayImpuestos:any[], bdmysql:string):Promise<void>{
+
+        for (let item of arrayImpuestos){
+               
+            let existeImpuesto = await db.query(`select * from ${bdmysql}.taxes t0 where t0.Code='${item.Code}'`);
+            
+            if(existeImpuesto.length==0){
+                console.log('Registrar item');
+                await db.query(`insert into ${bdmysql}.taxes set ?`, [item]);
+            }
+        }
+
+    }
+
+    async registrarItems(arrayItems:any[], bdmysql:string):Promise<void>{
+        try{
+            for (let item of arrayItems){
+            //console.log(item);   
+            let existeItem = await db.query(`select * from ${bdmysql}.items_sap t0 where t0.ItemCode='${item.ItemCode}'`);
+            
+            if(existeItem.length==0){
+                //console.log('Registrar item');
+                await db.query(`insert into ${bdmysql}.items_sap set ?`, [item]);
+            }else{
+                //console.log((JSON.stringify(item) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(item) === JSON.stringify(existeItem[0]))){
+                    console.log('Actualizar item');
+                    await db.query(`update ${bdmysql}.items_sap set ? where ItemCode='${item.ItemCode}'`, [item]);
+                }
+            }
+        }
+
+    }catch (error: any) {
+        console.error(error);
+        //return res.json(error);
+    }
+
+    }
+    async registrarModelosAP(arrayModelos:any[], bdmysql:string):Promise<void>{
+
+        for (let modelo of arrayModelos){
+            //console.log(modelo);   
+            let existeModelo = await db.query(`select * 
+                                               from ${bdmysql}.modelos_aprobacion t0 
+                                               where t0.modeloid=${modelo.modeloid} and 
+                                                     t0.autorusercode = '${modelo.autorusercode}' and 
+                                                     t0.etapaid=${modelo.etapaid} and 
+                                                     t0.nivel = ${modelo.nivel}`);
+            
+            if(existeModelo.length==0){
+                //console.log('Registrar modelo');
+                await db.query(`insert into ${bdmysql}.modelos_aprobacion set ?`, [modelo]);
+            }else{
+                //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(modelo) === JSON.stringify(existeModelo[0]))){
+                    //console.log('Actualizar modelo');
+                    await db.query(`update ${bdmysql}.modelos_aprobacion set ? where modeloid=${modelo.modeloid} and autorusercode = '${modelo.autorusercode}' and etapaid=${modelo.etapaid} and nivel = ${modelo.nivel}`, [modelo]);
+                }
+            }
+        }
+
+    }
+
+    async registrarProveedores(arrayProveedores:any[], bdmysql:string):Promise<void>{
+
+        for (let proveedor of arrayProveedores){
+            //console.log(modelo);   
+            let existeProveedor = await db.query(`select * from ${bdmysql}.socios_negocio t0 where t0.CardCode='${proveedor.CardCode}' `);
+            
+            if(existeProveedor.length==0){
+                console.log('Registrar proveedor');
+                await db.query(`insert into ${bdmysql}.socios_negocio set ?`, [proveedor]);
+            }else{
+                //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(proveedor) === JSON.stringify(existeProveedor[0]))){
+                    console.log('Actualizar proveedor');
+                    await db.query(`update ${bdmysql}.socios_negocio set ? where CardCode='${proveedor.CardCode}'`, [proveedor]);
+                }
+            }
+        }
+
+    }
+
+    async registrarDependencias(arrayDependencias:any[], bdmysql:string):Promise<void>{
+
+        for (let dependencia of arrayDependencias){
+            console.log(dependencia);   
+            let existeDependencia = await db.query(`select * from ${bdmysql}.dependencias t0 where t0.Code='${dependencia.Code}' `);
+
+            let lineaDependencia:any = {
+                Code:dependencia.Code,
+                U_NF_DIM3_VICE:dependencia.U_NF_DIM3_VICE,
+                U_NF_DIM2_DEP:dependencia.U_NF_DIM2_DEP,
+                U_NF_DIM1_LOC:dependencia.U_NF_DIM1_LOC
+            }  
+            
+            if(existeDependencia.length==0){
+                console.log('Registrar proveedor');
+
+                await db.query(`insert into ${bdmysql}.dependencias set ?`, [lineaDependencia]);
+            }else{
+                //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(lineaDependencia) === JSON.stringify(existeDependencia[0]))){
+                    console.log('Actualizar Dependencia');
+                    await db.query(`update ${bdmysql}.dependencias set ? where Code='${dependencia.Code}'`, [lineaDependencia]);
+                }
+            }
+        }
+
+    }
+
+    async registrarCuentasDependencias(arrayDependencias:any[], bdmysql:string):Promise<void>{
+
+        for (let dependencia of arrayDependencias){
+            //console.log(dependencia);   
+            
+
+            for(let cuenta of dependencia.NF_RES_CTA_DIM2_DETCollection){
+
+                if(cuenta.U_NF_CUENTA!=null){
+
+                    let lineaCuentaDependencia:any = {
+                        Code:dependencia.Code,
+                        Name:dependencia.Name,
+                        U_NF_CUENTA:cuenta.U_NF_CUENTA,
+                        U_NF_NOMCUENTA:cuenta.U_NF_NOMCUENTA
+                    }
+    
+                    let existeCuentaDependencia = await db.query(`select * 
+                                                            from ${bdmysql}.cuentas_dependencias t0 
+                                                            where t0.Code='${dependencia.Code}' and
+                                                                  t0.U_NF_CUENTA = '${cuenta.U_NF_CUENTA}'`); 
+                    
+                    if(existeCuentaDependencia.length==0){
+                        console.log('Registrar cuenta dependencia');
+        
+                        await db.query(`insert into ${bdmysql}.cuentas_dependencias set ?`, [lineaCuentaDependencia]);
+                    }else{
+                        //console.log((JSON.stringify(lineaCuentaDependencia) === JSON.stringify(existeCuentaDependencia[0])));
+                        if(!(JSON.stringify(lineaCuentaDependencia) === JSON.stringify(existeCuentaDependencia[0]))){
+                            console.log('Actualizar cuenta Dependencia');
+                            await db.query(`update ${bdmysql}.cuentas_dependencias set ? where Code='${dependencia.Code}' and U_NF_CUENTA = '${cuenta.U_NF_CUENTA}'`, [lineaCuentaDependencia]);
+                        }
+                    }
+    
+                }
+
+                
+                  
+            }
+
+            
+            
+            
+        }
+
+    }
+
+    async registrarAlmacenes(arrayAlmacenes:any[], bdmysql:string):Promise<void>{
+
+        for (let almacen of arrayAlmacenes){
+            console.log(almacen);   
+            let existeAlmacen = await db.query(`select * from ${bdmysql}.almacenes t0 where t0.WhsCode_Code='${almacen.WhsCode_Code}' `);
+            
+            if(existeAlmacen.length==0){
+                console.log('Registrar Almancen');
+
+                await db.query(`insert into ${bdmysql}.almacenes set ?`, [almacen]);
+            }else{
+                //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(almacen) === JSON.stringify(existeAlmacen[0]))){
+                    console.log('Actualizar Almancen');
+                    await db.query(`update ${bdmysql}.almacenes set ? where Code='${almacen.WhsCode_Code}'`, [almacen]);
+                }
+            }
+        }
+
+    }
+
+    
+    async registrarTrmDia(arrayTrmDia:any[], fechaTrm:any):Promise<void>{
+        for (let trmDia of arrayTrmDia){
+            console.log(trmDia);   
+            let existeTrmDia = await db.query(`select * 
+                                                    from trm_dia_monedas t0
+                                                    inner join monedas t1 ON t1.id = t0.monedaid 
+                                                    where t1.Code='${trmDia.Currency}' and 
+                                                          t0.fecha = '${fechaTrm}' `);
+
+            let moneda = await db.query(`select * from monedas where Code='${trmDia.Currency}'`);
+            console.log(moneda[0]);
+
+            let lineaTrmDia:any = {
+                monedaid:moneda[0].id,
+                fecha:fechaTrm,
+                TRM:trmDia.TRM
+            }  
+            
+            if(existeTrmDia.length==0){
+                console.log('Registrar proveedor');
+
+                await db.query(`insert into trm_dia_monedas set ?`, [lineaTrmDia]);
+                await db.query(`update monedas  set TRM = ? where id = ?`, [ trmDia.TRM,moneda[0].id]);
+            }else{
+                //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                if(!(JSON.stringify(trmDia) === JSON.stringify(existeTrmDia[0]))){
+                    console.log('Actualizar Dependencia');
+                    await db.query(`update trm_dia_monedas set ? where monedaid='${moneda[0].id}' and fecha = '${fechaTrm}'`, [lineaTrmDia]);
+                    await db.query(`update monedas  set TRM = ? where id = ?`, [trmDia.TRM,moneda[0].id]);
+                }
+            }
+        }
+    }
+    
+
+    
+    
+    
+
+    async registrarAreasUsuario(arrayAreas:any[],  companyid:number, userid:number):Promise<void>{
+
+        for (let area of arrayAreas){
+               
+            let existeArea = await db.query(`select * 
+                                             from areas_user t0 
+                                             where t0.area = '${area.area}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+            
+            if(existeArea.length==0){
+                if(area.area!=null){
+                    
+                    area.companyid=companyid;
+                    area.userid = userid;
+                    console.log('Registrar area',area);
+                    await db.query(`insert into areas_user set ?`, [area]);
+                }
+                
+            }
+        }
+
+    }
+    
+    
+    async registrarStoresUsuario(arrayStores:any[],  companyid:number, userid:number):Promise<void>{
+
+        for (let store of arrayStores){
+               
+            let existeStore = await db.query(`select * 
+                                             from stores_users t0 
+                                             where t0.store = '${store.store}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+            
+            if(existeStore.length==0){
+                if(store.store!=null){
+                    
+                    store.companyid=companyid;
+                    store.userid = userid;
+                    console.log('Registrar store',store);
+                    await db.query(`insert into stores_users set ?`, [store]);
+                }
+                
+            }
+        }
+
+    }
+
+    async registrarDependenciasUsuario(arrayDependencias:any[],  companyid:number, userid:number):Promise<void>{
+
+        for (let dependencia of arrayDependencias){
+               
+            let existeDependencia = await db.query(`select * 
+                                             from dependencies_user t0 
+                                             where t0.dependence = '${dependencia.dependence}' and
+                                             t0.location = '${dependencia.location}' and
+                                             t0.vicepresidency = '${dependencia.vicepresidency}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+            
+            if(existeDependencia.length==0){
+                if(dependencia.vicepresidency!=null){
+                    
+                    dependencia.companyid=companyid;
+                    dependencia.userid = userid;
+                    console.log('Registrar dependencia',dependencia);
+                    await db.query(`insert into dependencies_user set ?`, [dependencia]);
+                }
+                
+            }
+        }
+
+    }
+
+
+
+    
 
     /************** Seccion Liquitech *****************/
 
     async loginWsLQ(): Promise<any> {
 
-        const jsonLog = {"username": "NITROFERTSAS", "password": "Nitrocredit2022*"};
+        const jsonLog = {"username": "NITROFERTSAS", "password": "Nitrocredit2023*"};
         const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
 
         let configWs = {
@@ -2822,14 +4043,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             body: JSON.stringify(jsonLog)
         }
 
-        //////console.log(configWs);
+        ////////console.log(configWs);
         try {
 
             const response = await fetch(url, configWs);
             const data = await response.json();
 
             if (response.ok) {
-                //////console.log('successfully logged  Liquitech');
+                ////////console.log('successfully logged  Liquitech');
                 return  data;
                 
             } else {
@@ -2838,7 +4059,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             }
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2859,16 +4080,16 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
         }
 
-        //////console.log(configWs);
+        ////////console.log(configWs);
         try {
 
             const response = await fetch(url, configWs);
            
 
             if (response.ok) {
-                ////console.log('successfully logged  Liquitech');
+                //////console.log('successfully logged  Liquitech');
                 const data = await response.json();
-                //////console.log(data);    
+                ////////console.log(data);    
                 return  data;
                 
             } else {
@@ -2877,7 +4098,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             }
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2898,14 +4119,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
         }
 
-        //////console.log(configWs);
+        ////////console.log(configWs);
         try {
 
             const response = await fetch(url, configWs);
             const data = await response.json();
 
             if (response.ok) {
-                //////console.log('successfully logged  Liquitech',response,data);
+                ////////console.log('successfully logged  Liquitech',response,data);
                 
                 return  data;
                 
@@ -2915,7 +4136,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             }
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -2947,7 +4168,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$filter=U_FACTURA eq '${no_titulo}'`;
-                ////console.log(url2);
+                //////console.log(url2);
 
                 let configWs2 = {
                     method: "GET",
@@ -2962,7 +4183,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -2970,7 +4191,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -3016,7 +4237,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -3024,7 +4245,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -3068,7 +4289,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -3076,7 +4297,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -3118,7 +4339,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 //const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return response2;
@@ -3126,7 +4347,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -3170,7 +4391,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 const data2 = await response2.json();
 
                 
-                //////console.log(data2);
+                ////////console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -3178,7 +4399,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             return '';
         }
 
@@ -3204,23 +4425,34 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         let resultInsertTitulo:any;
         let resultUpdateTitulo:any;
         
-        //////console.log(titulos.length,titulos.length); 
+        ////////console.log(titulos.length,titulos.length); 
 
         let fechaEjecucion = new Date();
-
+        console.log('Inicio Titulos: ');
         while(nextPage!=null){
-             ////console.log(nextPage);
+             console.log(nextPage);
              titulosPage = await helper.getTitulosLQ(token,nextPage);
              
-             ////console.log(titulosPage);
+             //console.log(titulosPage);
 
              if(titulosPage.results){
                 for(let titulo of titulosPage.results){
+                    //console.log('Titulo: ',titulo.no_titulo);
+                    //console.log('Estado titulo: ',titulo.estado);
+                    if(titulo.no_titulo==12879){
+                        console.log('Titulo: ',titulo.no_titulo);
+                        console.log('Estado titulo: ',titulo.estado);
+                    }
 
                     if(titulo.estado=='aprobado' || titulo.estado=='desembolsado' || titulo.estado=='abonado' || titulo.estado=='pagado'){
                         no_titulo = titulo.no_titulo;
-                        tituloSap = await helper.getTituloById(no_titulo);
-                        //////console.log(titulo);
+
+                        //Parcialmente comentado para pureba de webservice 
+
+                        /*
+                        tituloSap = await helper.getTituloById(no_titulo);  
+
+                        ////////console.log(titulo);
                         if(tituloSap.value.length==0){
                             //Insertar factura en udo
                         
@@ -3241,7 +4473,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                                 U_NF_VALOR_GIRO:titulo.valor_giro
                             }
         
-                            resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);
+                            //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
         
                             titulos.push(titulo)
             
@@ -3258,11 +4490,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                                 U_NF_VALOR_GIRO:titulo.valor_giro
                             };
         
-                            resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);
-                            //////console.log(resultUpdateTitulo);
+                            //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
+                            ////////console.log(resultUpdateTitulo);
         
                             titulosUpdate.push(titulo);
                         }
+
+                        */
                     }
                     
                  }
@@ -3278,7 +4512,9 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
 
         //Envio Notificcación registros 
-        
+
+        //Parcialmente comentado para pureba de webservice
+        /*
         let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
                     <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
 
@@ -3303,13 +4539,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         }
         //Envio de notificación al siguiente aprobador con copia al autor
         await helper.sendNotification(infoEmail);
-       
+        
+        */
 
         return ({'Titulos registrados':titulos,'Titulos actualizados':titulosUpdate}); 
 
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             let infoEmail:any = {
                 //to: LineAprovedSolped.aprobador.email,
                 to:'ralbor@nitrofert.com.co',
@@ -3338,14 +4575,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             let fechaFinPagoFormat = `${fechaFinPago.getFullYear()}-${fechaFinPago.getMonth()+1}-${fechaFinPago.getUTCDate()}` ;
             let fechaInicioPago = await helper.sumarDiasFecha(new Date(),-100);
             let fechaInicioPagoFormat = `${fechaInicioPago.getFullYear()}-${fechaInicioPago.getMonth()+1}-${fechaInicioPago.getUTCDate()}` ;
-            ////console.log(fechaFinPagoFormat,fechaInicioPagoFormat);
+            //////console.log(fechaFinPagoFormat,fechaInicioPagoFormat);
     
             //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
     
             let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
         
             //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
-            ////console.log(nextPage); 
+            //////console.log(nextPage); 
             let pagos:any[] = [];
             let pagosPage:any;
             let refPago:any;
@@ -3353,21 +4590,27 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             let tituloSap:any;
             let pagosTitulo:any[];
             let DocEntry:any;
-    
+            console.log('Inicio Pagos: ');
             while(nextPage!=null){
-                ////console.log(nextPage);
+                //console.log(nextPage);
                 pagosPage = await helper.getPagosLQ(token,nextPage);
-                ////console.log(pagosPage);
+                console.log(pagosPage);
                 if(pagosPage.results){
                     for(let pago of pagosPage.results){
-                        //////console.log(pago);
+                        ////////console.log(pago);
+                        //console.log('Pago: ',pago.referencia_pago);
+                        //console.log('Pago titulo: ',pago.no_titulo);
                         
                         if(pago.valor_pagado!=0 && pago.referencia_pago!=''){
                             //Buscar titulo en SAP
+
+                            //Parcialmente comentado para pureba de webservice
+
+                            /*
                             tituloSap = await helper.getTituloById(pago.no_titulo);
                             if(tituloSap.value.length>0){
                                 
-                                //////console.log(tituloSap);
+                                ////////console.log(tituloSap);
                                 pagosTitulo = tituloSap.value[0].NF_CXC_LIQUITEC_DETCollection;
                                 DocEntry = tituloSap.value[0].DocEntry;
         
@@ -3386,13 +4629,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         
         
                                 if(pagosTitulo.length==0 ||  pagosTitulo.filter(item =>item.U_NF_REF_PAGO==pago.referencia_pago).length==0){
-                                    ////console.log(dataNewPago);
+                                    //////console.log(dataNewPago);
                                     //Insertar pago a titulo
                                     await helper.UpdateTituloSL(dataNewPago,DocEntry);
                                     pagos.push(pago);
                                 }
         
                             }
+                            */
                           
                         }
                     }
@@ -3403,7 +4647,10 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 }
                 
             }
-             
+            
+            //Parcialmente comentado para pureba de webservice
+
+            /*
             let fechaFinalizacion = new Date();
             let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
             <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
@@ -3427,13 +4674,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             }
             //Envio de notificación al siguiente aprobador con copia al autor
             await helper.sendNotification(infoEmail);
-    
+            */
     
             return (pagos);
 
 
         } catch (error) {
-            ////console.log(error);
+            //////console.log(error);
             let infoEmail:any = {
                 //to: LineAprovedSolped.aprobador.email,
                 to:'ralbor@nitrofert.com.co',

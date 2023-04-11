@@ -54,7 +54,7 @@ class SharedFunctionsController {
        
         
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
-    
+        console.log(url2);
         
         
             const response2 = await fetch(url2); 
@@ -86,7 +86,7 @@ class SharedFunctionsController {
         //console.log(dependencia);
         
         const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
-        
+        console.log(url2);
 
        
         

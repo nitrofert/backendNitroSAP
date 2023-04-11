@@ -22,6 +22,7 @@ import entradaRoutes from './routes/entradaRoutes';
 import authRoutesLQ from './routes/authRoutesLQ';
 import mrpRoutes from './routes/mrpRoutes';
 import reportesRoutes from './routes/reportesRoutes';
+import mysqlRoutes from './routes/mysqlRoutes';
 
 
 class Server{
@@ -39,7 +40,7 @@ class Server{
         this.app.set('port', process.env.PORT || 3001);
         this.app.use(morgan('dev'));
         this.app.use(cors({ 
-            origin:['http://portal2.nitrofert.com.co','https://portal2.nitrofert.com.co','http://portal.nitrofert.com.co','http://portal.dev.nitrofert.com.co','http://localhost:4200','http://localhost:57361','http://aprobaciones.nitrofert.com.co','https://aprobaciones.nitrofert.com.co'],
+            origin:['http://portal2.nitrofert.com.co','https://portal2.nitrofert.com.co','http://portal.nitrofert.com.co','http://portal.dev.nitrofert.com.co','http://localhost:4200','http://localhost:55280','http://aprobaciones.nitrofert.com.co','https://aprobaciones.nitrofert.com.co'],
             //origin:['*'],
             methods:["GET","HEAD","PUT","PATCH","POST","DELETE","OPTIONS"],
             allowedHeaders:['Access-Control-Allow-Origin','Content-Type', 'Authorization','withCredentials','enctype'],
@@ -79,6 +80,7 @@ class Server{
         this.app.use('/api/wssap',wssapRoutes);
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
         this.app.use('/api/nitroLQ',authRoutesLQ);
+        this.app.use('/api/mysql/query',mysqlRoutes);
 
         
         //console.log('Routes');
