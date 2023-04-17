@@ -11,9 +11,9 @@ import fs from 'fs';
 
 class SolpedController {
 
-  
+    
 
-    public async list(req: Request, res: Response) {
+    public async listadoSolpeds(req: Request, res: Response) { 
         try {
             //Obtener datos del usurio logueado que realizo la petición
             let jwt = req.headers.authorization || '';
@@ -24,98 +24,15 @@ class SolpedController {
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
-
-            //////console.log(await helper.loginWsSAP(infoUsuario[0]));
-            
-            
-
-            let serie = await helper.getCodigoSerie(infoUsuario[0].dbcompanysap,'1470000113','SPMP');
-
+       
             let where = "";
 
             if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.serie!='${serie}'`;
+                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t2.name!='SPMP'  and t0.approved !='A'`;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {
-                where = ` WHERE t0.serie!='${serie}' and 
-                                t0.approved !='A'`;
-            }
-
-            if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
-               
-                where =` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and 
-                               t0.serie!='${serie}' and 
-                               t0.approved !='A'`;
-            }
-
-           
-        
-
-            //////console.log(decodedToken);
-            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.serieName as serieStr,
-            t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
-            t0.reqdate,t0.u_nf_depen_solped,t0.approved,t0.comments,t0.trm,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) aprobador,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) usersapaprobador,
-            SUM(linetotal) AS "subtotal",SUM(taxvalor) AS "impuestos",SUM(linegtotal) AS "total"
-            FROM ${bdmysql}.solped t0
-            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            ${where}
-            GROUP BY 
-            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.doctype,t0.status,
-            t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,t0.u_nf_depen_solped,
-            t0.approved,t0.comments,t0.trm
-            ORDER BY t0.id DESC`;
-
-           //////console.log(queryList);
-           await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ingreso al modulo de solped`);
-
-            const solped = await db.query(queryList);
-            //////console.log(solped);
-            res.json(solped);     
-
-        }catch (error: any) {
-            console.error(error);
-            return res.json(error);
-        }
-    }
-
-    public async list2(req: Request, res: Response) { 
-        try {
-            //Obtener datos del usurio logueado que realizo la petición
-            let jwt = req.headers.authorization || '';
-            jwt = jwt.slice('bearer'.length).trim();
-            const decodedToken = await helper.validateToken(jwt);
-            //******************************************************* */
-
-            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
-            const bdmysql = infoUsuario[0].bdmysql;
-            const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
-
-            //////console.log(await helper.loginWsSAP(infoUsuario[0]));
-            
-            
-
-            //let serie = await helper.getCodigoSerie(infoUsuario[0].dbcompanysap,'1470000113','SPMP');
-
-            let where = "";
-
-            if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t2.name!='SPMP'`;
-            }
-
-            if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {
-                where = ` WHERE t2.name!='SPMP' and 
-                                t0.approved !='A'`;
+                where = ` WHERE t2.name!='SPMP' and t0.approved !='A'`;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
@@ -125,33 +42,70 @@ class SolpedController {
                                t0.approved !='A'`;
             }
 
-           
-        
-
             //////console.log(decodedToken);
-            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t2.name as serieStr,
-            t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
-            t0.reqdate,t0.u_nf_depen_solped,t0.approved,t0.comments,t0.trm,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) aprobador,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) usersapaprobador,
-            SUM(linetotal) AS "subtotal",SUM(taxvalor) AS "impuestos",SUM(linegtotal) AS "total"
-            FROM ${bdmysql}.solped t0
-            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            INNER JOIN ${bdmysql}.series t2 ON t2.code = t0.serie
-            ${where}
-            GROUP BY 
-            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t2.name,t0.doctype,t0.status,
-            t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,t0.u_nf_depen_solped,
-            t0.approved,t0.comments,t0.trm
-            ORDER BY t0.id DESC`;
+            let queryList = `SELECT t0.id,
+                                    t0.id_user,
+                                    t0.usersap,
+                                    t0.fullname,
+                                    t0.serie,
+                                    t2.name as serieStr,
+                                    t0.doctype,
+                                    t0.status,
+                                    t0.sapdocnum,
+                                    t0.docdate,
+                                    t0.docduedate,
+                                    t0.taxdate,
+                                    t0.reqdate,
+                                    t0.u_nf_depen_solped,
+                                    t0.approved,
+                                    t0.comments,t0.trm,
+                                    (CASE
+                                        WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador 
+                                                                     FROM ${bdmysql}.aprobacionsolped t2 
+                                                                     WHERE t2.id_solped = t0.id AND t2.estadoap ='P' 
+                                                                     ORDER BY t2.nivel ASC LIMIT 1)
+                                        WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador 
+                                                                     FROM ${bdmysql}.aprobacionsolped t2 
+                                                                     WHERE t2.id_solped = t0.id AND t2.estadoap ='R' 
+                                                                     ORDER BY t2.nivel ASC LIMIT 1)
+                                        ELSE ""
+                                    END) aprobador,
+                                    (CASE
+                                        WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador 
+                                                                     FROM ${bdmysql}.aprobacionsolped t2 
+                                                                     WHERE t2.id_solped = t0.id AND t2.estadoap ='P' 
+                                                                     ORDER BY t2.nivel ASC LIMIT 1)
+                                        WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador 
+                                                                     FROM ${bdmysql}.aprobacionsolped t2 
+                                                                     WHERE t2.id_solped = t0.id AND t2.estadoap ='R' 
+                                                                     ORDER BY t2.nivel ASC LIMIT 1)
+                                        ELSE ""
+                                    END) usersapaprobador,
+                                    SUM(linetotal) AS "subtotal",
+                                    SUM(taxvalor) AS "impuestos",
+                                    SUM(linegtotal) AS "total"
+                            FROM    ${bdmysql}.solped t0
+                            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+                            INNER JOIN ${bdmysql}.series t2 ON t2.code = t0.serie
+                            ${where}
+                            GROUP BY 
+                                    t0.id,
+                                    t0.id_user,
+                                    t0.usersap,
+                                    t0.fullname,
+                                    t0.serie,
+                                    t2.name,
+                                    t0.doctype,
+                                    t0.status,
+                                    t0.sapdocnum,
+                                    t0.docdate,
+                                    t0.docduedate,
+                                    t0.taxdate,
+                                    t0.reqdate,
+                                    t0.u_nf_depen_solped,
+                                    t0.approved,
+                                    t0.comments,t0.trm
+                            ORDER BY t0.id DESC`;
 
            //console.log(queryList);
            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ingreso al modulo de solped`);
@@ -178,57 +132,86 @@ class SolpedController {
             const bdmysql = infoUsuario[0].bdmysql;
             const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
 
-            //////console.log(await helper.loginWsSAP(infoUsuario[0]));
-
-            let serie = await helper.getCodigoSerie(infoUsuario[0].dbcompanysap,'1470000113','SPMP');
-
+    
             let where = "";
 
             if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.serie!='${serie}' and t0.approved = 'A' and t0.sapdocnum != 0`;
+                where = ` WHERE t0.id_user=${infoUsuario[0].id} and  t2.name!='SPMP' and t0.approved = 'A' and t0.sapdocnum != 0`;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {
-                where = ` WHERE t0.serie!='${serie}' and t0.approved = 'A' and t0.sapdocnum != 0`;
+                where = ` WHERE  t2.name!='SPMP' and t0.approved = 'A' and t0.sapdocnum != 0`;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
                
-                where =` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and t0.serie!='${serie}' and t0.approved = 'A' and t0.sapdocnum != 0`;
+                where =` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and  t2.name!='SPMP' and t0.approved = 'A' and t0.sapdocnum != 0`;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil == 'Comprador').length > 0) {
-                where = ` WHERE t0.serie!='${serie}' and t0.approved = 'A' and t0.sapdocnum != 0`; 
+                where = ` WHERE  t2.name!='SPMP' and t0.approved = 'A' and t0.sapdocnum != 0`; 
             }
 
 
         
 
             //////console.log(decodedToken);
-            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
-            t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
-            t0.reqdate,t0.u_nf_depen_solped,t0.approved,t0.comments,t0.trm,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) aprobador,
-            (CASE
-                WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
-                WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
-                ELSE ""
-            END) usersapaprobador,
-            SUM(linetotal) AS "subtotal",SUM(taxvalor) AS "impuestos",SUM(linegtotal) AS "total"
-            FROM ${bdmysql}.solped t0
-            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            ${where}
-            GROUP BY 
-            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.doctype,t0.status,
-            t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,t0.u_nf_depen_solped,
-            t0.approved,t0.comments,t0.trm
-            ORDER BY t0.id DESC`;
+            let queryList = `SELECT t0.id,
+                                    t0.id_user,
+                                    t0.usersap,
+                                    t0.fullname,
+                                    t0.serie,
+                                    t2.name as serieStr,
+                                    t0.doctype,
+                                    t0.status,
+                                    t0.sapdocnum,
+                                    t0.docdate,
+                                    t0.docduedate,
+                                    t0.taxdate,
+                                    t0.reqdate,
+                                    t0.u_nf_depen_solped,
+                                    t0.approved,
+                                    (select max(tt0.updated_at) from ${bdmysql}.aprobacionsolped tt0 where tt0.id_solped = t0.id and estadoap='A') as fechaap,
+                                    t0.comments,
+                                    t0.trm,
+                                    (CASE
+                                        WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
+                                        WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
+                                        ELSE ""
+                                    END) aprobador,
+                                    (CASE
+                                        WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
+                                        WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
+                                        ELSE ""
+                                    END) usersapaprobador,
+                                    SUM(linetotal) AS "subtotal",
+                                    SUM(taxvalor) AS "impuestos",
+                                    SUM(linegtotal) AS "total"
+                            FROM ${bdmysql}.solped t0
+                            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+                            INNER JOIN ${bdmysql}.series t2 ON t2.code = t0.serie
+                                    ${where}
+                            GROUP BY 
+                                    t0.id,
+                                    t0.id_user,
+                                    t0.usersap,
+                                    t0.fullname,
+                                    t0.serie,
+                                    t2.name,
+                                    t0.doctype,
+                                    t0.status,
+                                    t0.sapdocnum,
+                                    t0.docdate,
+                                    t0.docduedate,
+                                    t0.taxdate,
+                                    t0.reqdate,
+                                    t0.u_nf_depen_solped,
+                                    t0.approved,
+                                    t0.comments,
+                                    t0.trm
+                                ORDER BY t0.id DESC`;
 
-           //////console.log(queryList);
+           console.log(queryList);
            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ingreso al modulo de solped`);
 
             const solped = await db.query(queryList);
@@ -2020,7 +2003,7 @@ class SolpedController {
         }
     }
 
-    //Deprecated Methods
+   
     public async aprovedMail(req: Request, res: Response) {
 
         const { idcrypt } = req.params
@@ -3913,6 +3896,85 @@ class SolpedController {
             return res.json(error);
         }
     }
+
+     //Deprecated Methods
+
+     public async listadoSolpeds_old(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
+
+            //////console.log(await helper.loginWsSAP(infoUsuario[0]));
+            
+            
+
+            let serie = await helper.getCodigoSerie(infoUsuario[0].dbcompanysap,'1470000113','SPMP');
+
+            let where = "";
+
+            if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
+                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t0.serie!='${serie}'`;
+            }
+
+            if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {
+                where = ` WHERE t0.serie!='${serie}' and 
+                                t0.approved !='A'`;
+            }
+
+            if (perfilesUsuario.filter(perfil => perfil.perfil === 'Aprobador Solicitud').length > 0) {
+               
+                where =` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and 
+                               t0.serie!='${serie}' and 
+                               t0.approved !='A'`;
+            }
+
+           
+        
+
+            //////console.log(decodedToken);
+            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.serieName as serieStr,
+            t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
+            t0.reqdate,t0.u_nf_depen_solped,t0.approved,t0.comments,t0.trm,
+            (CASE
+                WHEN t0.approved = 'P' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
+                WHEN t0.approved = 'R' THEN (SELECT t2.nombreaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
+                ELSE ""
+            END) aprobador,
+            (CASE
+                WHEN t0.approved = 'P' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='P' ORDER BY t2.nivel ASC LIMIT 1)
+                WHEN t0.approved = 'R' THEN (SELECT t2.usersapaprobador FROM ${bdmysql}.aprobacionsolped t2 WHERE t2.id_solped = t0.id AND t2.estadoap ='R' ORDER BY t2.nivel ASC LIMIT 1)
+                ELSE ""
+            END) usersapaprobador,
+            SUM(linetotal) AS "subtotal",SUM(taxvalor) AS "impuestos",SUM(linegtotal) AS "total"
+            FROM ${bdmysql}.solped t0
+            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+            ${where}
+            GROUP BY 
+            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.doctype,t0.status,
+            t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,t0.u_nf_depen_solped,
+            t0.approved,t0.comments,t0.trm
+            ORDER BY t0.id DESC`;
+
+           //////console.log(queryList);
+           await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ingreso al modulo de solped`);
+
+            const solped = await db.query(queryList);
+            //////console.log(solped);
+            res.json(solped);     
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
 
    
 }

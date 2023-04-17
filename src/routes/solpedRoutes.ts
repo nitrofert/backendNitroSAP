@@ -14,7 +14,7 @@ class SolpedRoutes{
      
 
     config():void{
-        this.router.get('/list', solpedController.list2);
+        this.router.get('/list', solpedController.listadoSolpeds);
         this.router.get('/list/aprobadas', solpedController.listAprobadores);
         this.router.post('/', solpedController.create);
         this.router.post('/detail', solpedController.createDetail);

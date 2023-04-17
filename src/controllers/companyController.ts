@@ -42,12 +42,8 @@ class ComapnyController {
             const decodedToken = await helper.validateToken(jwt);
         }
         //******************************************************* */
-
-       
-
-        
-
-            const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
+            //const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
+            const companies: CompanyInterface[] = await db.query("SELECT id, companyname from companies where status ='A'");
             // console.log(companies);
             res.json(companies);
 

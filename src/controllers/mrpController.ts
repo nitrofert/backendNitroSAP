@@ -197,7 +197,9 @@ class MrpController {
             //new Date(data.ETA) <= new Date(fechafin) &&
             data.U_NF_STATUS == 'Descargado');*/
 
-            let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && data.U_NF_STATUS == 'Descargado');
+            //Se elimina el inventario en Zona Franca por petición de Christan Freire
+            //let inventarioItemZF = array_inventarios.filter(data=>data.TIPO ==='Compra' && data.U_NF_STATUS == 'Descargado');
+            let inventarioItemZF:any[] = [];
 
             let totalInventarioItemZF =0;
 

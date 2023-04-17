@@ -185,15 +185,29 @@ class Helpers {
     }
 
     async getInfoUsuario(userid: number, company:string): Promise<any> {
-        
-        const infoUsuario = await db.query(`
-        SELECT t0.id, fullname, email, username, codusersap, t0.status, 
-            id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  ,nit, direccion, telefono
-        FROM users t0 
+        const query = `
+        SELECT 	
+                t0.id, 
+                t0.fullname, 
+                t0.email, 
+                t0.username, 
+                t0.codusersap, 
+                t0.status, 
+                t1.id_company,
+                t2.companyname, 
+                t2.logoempresa, 
+                t2.urlwsmysql AS bdmysql, 
+                t2.dbcompanysap, 
+                t2.urlwssap ,
+                t2.nit,
+                t2.direccion,
+                t2.telefono 
+        FROM    users t0 
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
-        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`,[userid,company]);
-
+        WHERE   t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`;
+        //console.log(query,userid,company);
+        const infoUsuario = await db.query(query,[userid,company]);
         return infoUsuario;
     }
 
@@ -227,7 +241,7 @@ class Helpers {
 
     async getPermisoUsuario(userid: number): Promise<any> {
         
-        const permisosUsuario = await db.query(`SELECT * 
+        const permisosUsuario = await db.query(`SELECT t0.*,  t2.url
                                                         FROM perfil_menu_accions t0 
                                                         INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
                                                         INNER JOIN menu t2 ON t2.id = t0.id_menu
@@ -2840,8 +2854,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             //////console.log(error);
             return '';
         }
-    }
-    
+    } 
 
     async getModelosAPXE(compania:string): Promise<any>{
         try {
@@ -3040,7 +3053,6 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             return '';
         }
     }
-
 
 
     async getSolpedMPopenSL(infoUsuario: InfoUsuario, serie:any): Promise<any> {

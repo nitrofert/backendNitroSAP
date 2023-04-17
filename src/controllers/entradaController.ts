@@ -31,21 +31,22 @@ class EntradaController {
         
 
             ////console.log(decodedToken);
-            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,
+            let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t2.name AS "serieStr",
             t0.doctype,t0.status,t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,
             t0.reqdate,t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap,
            
             SUM(linetotal) AS "subtotal",SUM(taxvalor) AS "impuestos",SUM(linegtotal) AS "total"
             FROM ${bdmysql}.entrada t0
             INNER JOIN ${bdmysql}.entrada_det t1 ON t1.id_entrada = t0.id
+            INNER JOIN ${bdmysql}.series t2 ON t0.serie = t2.code
             ${where}
             GROUP BY 
-            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t0.doctype,t0.status,
+            t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t2.name,t0.doctype,t0.status,
             t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,
             t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap
             ORDER BY t0.id DESC`;
 
-            ////console.log(queryList);
+            //console.log(queryList);
 
             const entrada = await db.query(queryList);
             ////console.log(entrada);
@@ -82,8 +83,8 @@ class EntradaController {
             ////console.log(resultInsertSolped);
 
             let entradaId = resultInsertEntrada.insertId;
-            let newEntradaDet = [];
-            let newEntradaLine = [];
+            let newEntradaDet:any[] = [];
+            let newEntradaLine:any[] = [];
             for (let item in newEntrada.EntradaDet) {
                 newEntradaLine.push(entradaId);
                 newEntradaLine.push(newEntrada.EntradaDet[item].linenum);

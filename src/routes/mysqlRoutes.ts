@@ -15,10 +15,13 @@ class MySQLRoutes{
 
     config():void{
         
+        this.router.get('/load-config-solped', mysqlQueriesController.configSolped);
+        this.router.get('/load-config-solped-mp', mysqlQueriesController.configSolpedMP);
         this.router.get('/series/:objtype?', mysqlQueriesController.series);
         this.router.get('/cuentas', mysqlQueriesController.cuentas);
         this.router.get('/impuestos-compra', mysqlQueriesController.impuestosCompra);
         this.router.get('/items', mysqlQueriesController.items); 
+        this.router.get('/items-calculadora', mysqlQueriesController.itemsCalculadora); 
         this.router.get('/almacenes', mysqlQueriesController.almacenes); 
         this.router.get('/zonas', mysqlQueriesController.zonas); 
         this.router.get('/monedas', mysqlQueriesController.monedas); 
