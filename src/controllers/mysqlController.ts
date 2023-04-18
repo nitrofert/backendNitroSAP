@@ -241,6 +241,32 @@ class MySQLController {
         }
     }
 
+    public async itemsMP(req: Request, res: Response) {
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
+            
+            const  items = await db.query(`SELECT *
+                            FROM ${bdmysql}.items_sap t0
+                            WHERE t0.ItemCode LIKE 'MP%' OR t0.ItemCode LIKE 'IN%'
+                            ORDER BY t0.ItemName DESC`);
+           
+            //console.log(items);
+            res.json(items);     
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
     public async itemsCalculadora(req: Request, res: Response) {
         try {
             //Obtener datos del usurio logueado que realizo la petición

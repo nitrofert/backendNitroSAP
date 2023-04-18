@@ -22,6 +22,7 @@ class MySQLRoutes{
         this.router.get('/impuestos-compra', mysqlQueriesController.impuestosCompra);
         this.router.get('/items', mysqlQueriesController.items); 
         this.router.get('/items-calculadora', mysqlQueriesController.itemsCalculadora); 
+        this.router.get('/items-mp', mysqlQueriesController.itemsMP); 
         this.router.get('/almacenes', mysqlQueriesController.almacenes); 
         this.router.get('/zonas', mysqlQueriesController.zonas); 
         this.router.get('/monedas', mysqlQueriesController.monedas); 
