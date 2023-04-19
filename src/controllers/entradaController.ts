@@ -128,7 +128,7 @@ class EntradaController {
             if(resultInsertSolpedDet.affectedRows){
                 //Registrar entrada en SAP
                 let dataForSAP:any = await helper.loadInfoEntradaToJSONSAP(newEntrada);
-                //console.log(dataForSAP);
+                console.log(dataForSAP);
                 //registrar Entrada en SAP
                 const resultResgisterSAP = await helper.registerEntradaSAP(infoUsuario[0],dataForSAP);
 

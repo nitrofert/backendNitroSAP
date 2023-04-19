@@ -28,7 +28,8 @@ class SolpedController {
             let where = "";
 
             if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
-                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t2.name!='SPMP'  and t0.approved !='A'`;
+                //where = ` WHERE t0.id_user=${infoUsuario[0].id} and t2.name!='SPMP'  and t0.approved !='A'`;
+                where = ` WHERE t0.id_user=${infoUsuario[0].id} and t2.name!='SPMP' `;
             }
 
             if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length > 0) {

@@ -129,7 +129,7 @@ class MySQLController {
                                                     Name_Country,
                                                     Address2,
                                                     Address3
-                                            From ${bdmysql}.almacenes`);    
+                                            From ${bdmysql}.almacenes ORDER BY WarehouseName ASC`);    
             
            
             const areas = await db.query(`Select area 
