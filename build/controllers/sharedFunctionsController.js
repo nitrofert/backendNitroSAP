@@ -52,6 +52,7 @@ class SharedFunctionsController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 const compania = infoUsuario[0].dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
@@ -76,6 +77,7 @@ class SharedFunctionsController {
                 let dependencia = req.params.dependencia;
                 //console.log(dependencia);
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);

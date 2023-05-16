@@ -15,6 +15,8 @@ class EntradaRoutes {
         this.router.post('/', entradaController_1.default.create);
         this.router.get('/:id', entradaController_1.default.getEntradaById);
         this.router.get('/impresion/:id', entradaController_1.default.getEntradaByIdSL);
+        this.router.patch('/cancel/:id', entradaController_1.default.cancel);
+        this.router.get('/pedido/:id', entradaController_1.default.entradasByPedido);
         /*this.router.put('/', entradaController.update);
          
         this.router.post('/envio-aprobacion',entradaController.envioAprobacionSolped);

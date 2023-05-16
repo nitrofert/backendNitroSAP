@@ -465,7 +465,7 @@ class WssapController {
             //console.log(await helper.format(fechaTrm));
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
-            
+            console.log(url2);
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();
@@ -528,6 +528,7 @@ class WssapController {
            }
         
            //console.log(data);
+          
          
         if(bieSession!=''){
             const configWs2 = {
@@ -545,6 +546,8 @@ class WssapController {
             const data2 = await response2.json();
     
             //console.log(data2);
+
+            
     
             helper.logoutWsSAP(bieSession); 
             

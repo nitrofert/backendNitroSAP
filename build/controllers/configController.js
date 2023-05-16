@@ -70,6 +70,261 @@ class ConfigController {
             }
         });
     }
+    loadSeriesSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    //objtype de la solped
+                    let objtype = '1470000113';
+                    let seriesSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getSeriesXE(company.dbcompanysap, objtype));
+                    if (seriesSAP.length > 0) {
+                        console.log(seriesSAP);
+                        //Register series Mysql
+                        yield helpers_1.default.registrarSeries(seriesSAP, company.urlwsmysql, objtype);
+                    }
+                    //objtype de la oc
+                    objtype = '22';
+                    seriesSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getSeriesXE(company.dbcompanysap, objtype));
+                    if (seriesSAP.length > 0) {
+                        console.log(seriesSAP);
+                        //Register series Mysql
+                        yield helpers_1.default.registrarSeries(seriesSAP, company.urlwsmysql, objtype);
+                    }
+                    //objtype de la entrada
+                    objtype = '20';
+                    seriesSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getSeriesXE(company.dbcompanysap, objtype));
+                    if (seriesSAP.length > 0) {
+                        console.log(seriesSAP);
+                        //Register series Mysql
+                        yield helpers_1.default.registrarSeries(seriesSAP, company.urlwsmysql, objtype);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadCuentasContablesSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let cuentasSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getCuentasXE(company.dbcompanysap));
+                    if (cuentasSAP.length > 0) {
+                        console.log(cuentasSAP);
+                        //Register cuentasSAP Mysql
+                        yield helpers_1.default.registrarCuentas(cuentasSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadTaxesSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let taxesSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getTaxesXE(company.dbcompanysap));
+                    if (taxesSAP.length > 0) {
+                        console.log(taxesSAP);
+                        //Register taxesSAP Mysql
+                        yield helpers_1.default.registrarImpuestos(taxesSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadItemsSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let itemsSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.itemsSolpedXengine(company.dbcompanysap));
+                    if (itemsSAP.length > 0) {
+                        //console.log(itemsSAP);
+                        //Register itemsSAP Mysql
+                        yield helpers_1.default.registrarItems(itemsSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadModelosAprobacionSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let modelosSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getModelosAPXE(company.dbcompanysap));
+                    console.log(modelosSAP.length);
+                    if (modelosSAP.length > 0) {
+                        //console.log(modelosSAP);
+                        //Register modelosSAP Mysql
+                        yield helpers_1.default.registrarModelosAP(modelosSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadProveedoresSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let proveedoresSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getProveedores2XE(company.dbcompanysap));
+                    if (proveedoresSAP.length > 0) {
+                        //console.log(proveedoresSAP);
+                        //Register proveedoresSAP Mysql
+                        yield helpers_1.default.registrarProveedores(proveedoresSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadDependenciasSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let dependendciasSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getDependenciasSL(company.dbcompanysap));
+                    if (dependendciasSAP.length > 0) {
+                        //console.log(dependendciasSAP);
+                        //Register dependendciasSAP Mysql
+                        yield helpers_1.default.registrarDependencias(dependendciasSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadCuentasDependenciasSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let dependendciasSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getCuentasDependenciasSL(company.dbcompanysap));
+                    if (dependendciasSAP.length > 0) {
+                        //console.log(dependendciasSAP);
+                        //Register dependendciasSAP Mysql
+                        yield helpers_1.default.registrarCuentasDependencias(dependendciasSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadUdoUsuariosSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                let usuarios = yield database_1.db.query(`Select * from users where status='A'`);
+                for (let usuario of usuarios) {
+                    for (let company of companies) {
+                        let areasUsuario = yield helpers_1.default.objectToArray(yield helpers_1.default.getAreasUserXE(company.dbcompanysap, usuario.codusersap));
+                        if (areasUsuario.length > 0) {
+                            console.log('AREAS', company.dbcompanysap, usuario.codusersap, areasUsuario);
+                            //Register cuentasSAP Mysql
+                            yield helpers_1.default.registrarAreasUsuario(areasUsuario, company.id, usuario.id);
+                        }
+                        let storesUsuario = yield helpers_1.default.objectToArray(yield helpers_1.default.getStoresUserXE(company.dbcompanysap, usuario.codusersap));
+                        if (storesUsuario.length > 0) {
+                            //console.log('ALMACENES',company.dbcompanysap,usuario.codusersap, storesUsuario);
+                            //Register cuentasSAP Mysql
+                            yield helpers_1.default.registrarStoresUsuario(storesUsuario, company.id, usuario.id);
+                        }
+                        let dependenciasUsuario = yield helpers_1.default.objectToArray(yield helpers_1.default.getDependenciasUserXE(company.dbcompanysap, usuario.codusersap));
+                        if (dependenciasUsuario.length > 0) {
+                            //console.log('DEPENDENCIAS',company.dbcompanysap,usuario.codusersap, dependenciasUsuario);
+                            //Register cuentasSAP Mysql
+                            yield helpers_1.default.registrarDependenciasUsuario(dependenciasUsuario, company.id, usuario.id);
+                        }
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadAlmacenesSapToMysql(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A'`);
+                for (let company of companies) {
+                    let almacenesSAP = yield helpers_1.default.objectToArray(yield helpers_1.default.getAlmacenes(company.dbcompanysap));
+                    if (almacenesSAP.length > 0) {
+                        //console.log(almacenesSAP);
+                        //Register almacenesSAP Mysql
+                        yield helpers_1.default.registrarAlmacenes(almacenesSAP, company.urlwsmysql);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadTasasDeCambio(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { fechaTrm } = req.params;
+            try {
+                let companies = yield database_1.db.query(`Select * from companies where status='A' and dbcompanysap='PRUEBAS_NITROFERT_PRD'`);
+                for (let company of companies) {
+                    let trmDia = yield helpers_1.default.objectToArray(yield helpers_1.default.getTrmDiaXE(company.dbcompanysap, fechaTrm));
+                    if (trmDia.length > 0) {
+                        console.log(trmDia);
+                        //Register dependendciasSAP Mysql
+                        yield helpers_1.default.registrarTrmDia(trmDia, fechaTrm);
+                    }
+                }
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
 }
 const configController = new ConfigController();
 exports.default = configController;

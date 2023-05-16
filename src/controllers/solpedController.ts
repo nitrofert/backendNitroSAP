@@ -347,6 +347,11 @@ class SolpedController {
                 newSolpedLine.push(newSolped.solpedDet[item].ocrcode3);
                 newSolpedLine.push(newSolped.solpedDet[item].whscode);
                 newSolpedLine.push(newSolped.solpedDet[item].id_user);
+                newSolpedLine.push(newSolped.solpedDet[item].proyecto);
+                newSolpedLine.push(newSolped.solpedDet[item].subproyecto);
+                newSolpedLine.push(newSolped.solpedDet[item].etapa);
+                newSolpedLine.push(newSolped.solpedDet[item].actividad);
+
                 newSolpedDet.push(newSolpedLine);
                 newSolpedLine = [];
             }
@@ -355,7 +360,7 @@ class SolpedController {
             let queryInsertDetSolped = `
                 Insert into ${bdmysql}.solped_det (id_solped,linenum,itemcode,dscription,reqdatedet,linevendor,
                  acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
-                 ocrcode3,whscode,id_user) values ?
+                 ocrcode3,whscode,id_user,proyecto,subproyecto,etapa,actividad) values ?
             `;
             const resultInsertSolpedDet = await connection.query(queryInsertDetSolped, [newSolpedDet]);
 
@@ -1025,6 +1030,8 @@ class SolpedController {
                                     infoSolpedToSAP.DocumentLines[line].Quantity = 1;
                                     infoSolpedToSAP.DocumentLines[line].WarehouseCode = 'NITROFER';
                                     infoSolpedToSAP.DocumentLines[line].AccountCode="";
+                                    infoSolpedToSAP.DocumentLines[line].ProjectCode="";
+
                                 }
                                 
                                 //console.log(infoSolpedToSAP);
@@ -1659,6 +1666,14 @@ class SolpedController {
                                         //Anular Solped de SAP por falla en registro de aprobación
                                         let cancelSolpedSAP = await helper.CancelSolpedSAP(infoUsuario[0],DocEntrySAP);
                                     }else{
+
+                                        //asociar solped a proyecto seleccionado
+
+                                        let proyectosSolped = await helper.ProyectosSolped(idSolped, bdmysql);
+                                       
+                                        if(proyectosSolped.length>0){
+                                            let result= await helper.registrarProyectosSolped(infoUsuario[0],DocEntrySAP,proyectosSolped);
+                                        }
 
                                         //Anula solped en base de datos de presupuesto
                             
@@ -3863,18 +3878,18 @@ class SolpedController {
             
             let infoSolped = await helper.getSolpedById(id,bdmysql);
             let dataForSAP:PurchaseRequestsInterface = await helper.loadInfoSolpedToJSONSAP(infoSolped);
-
+            console.log(DocNum,serie);
             //Obtener DocEntry de la solpred desde sap
             let idSolped = await helper.getSolpedByIdSL(infoUsuario[0],DocNum,serie);
 
             let DocEntry = idSolped.value[0].DocEntry;
 
             
-
+            console.log(DocEntry,JSON.stringify(dataForSAP));
             //actualizar Solped en SAP
 
             let resultUpdateSolped = await helper.updateSolpedSAP(infoUsuario[0],dataForSAP,DocEntry);
-            //////console.log(resultUpdateSolped);
+            console.log(resultUpdateSolped);
             await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} actualizao correctamente la solped ${DocNum} en SAP`);
             res.json({message:'Se realizo la actualizacon de la solped en SAP'});
 
@@ -3983,6 +3998,36 @@ class SolpedController {
         }
     }
 
+    public async getProyectos(req: Request, res: Response) {
+        try {
+
+            
+            
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+            
+            console.log('getProyectos');
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql; 
+            const compania = infoUsuario[0].dbcompanysap;
+
+
+            //let status = req.params.status;
+            
+            //let listadoOCMP = await helper.getEntradasMPSL( infoUsuario[0]);
+            let proyectos = await helper.objectToArray(await helper.getProyectosXE(compania)) ;
+            //////console.log('Entradas',listadoOCMP);
+
+            res.json(proyectos);     
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
      //Deprecated Methods
 
      public async listadoSolpeds_old(req: Request, res: Response) {

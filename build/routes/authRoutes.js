@@ -13,6 +13,7 @@ class AuthRoutes {
     config() {
         this.router.post('/login', authController_1.default.login);
         this.router.post('/validarusuario', authController_1.default.validarusuario);
+        this.router.get('/configUsuario', authController_1.default.configUsuario);
         this.router.get('/infoUsuario', authController_1.default.infoUsuario);
         this.router.get('/menuUsuario', authController_1.default.menuUsuario);
         this.router.get('/perfilesUsuario', authController_1.default.perfilesUsuario);
@@ -24,6 +25,7 @@ class AuthRoutes {
         this.router.get('/storesUser', authController_1.default.almacenUser);
         this.router.get('/storesUser2', authController_1.default.almacenUserXE);
         this.router.get('/areasUser', authController_1.default.areasUserXE);
+        this.router.get('/areas-user', authController_1.default.areasUser);
         this.router.get('/logout', authController_1.default.logout);
         this.router.get('/empresasUsuario', authController_1.default.empresasUsuario);
         this.router.post('/actulizarInfoUsuario', authController_1.default.actulizarInfoUsuario);
