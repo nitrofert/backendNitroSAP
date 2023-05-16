@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const database_1 = require("../database");
 const helpers_1 = __importDefault(require("../lib/helpers"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 class WssapController {
@@ -133,6 +134,7 @@ class WssapController {
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const compania = infoUsuario[0].dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
@@ -242,6 +244,40 @@ class WssapController {
             }
         });
     }
+    Series(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                const bdmysql = infoUsuario[0].bdmysql;
+                let { objtype } = req.params;
+                let filtroObjtype = "";
+                if (objtype)
+                    filtroObjtype = `&tipodoc=${objtype}`;
+                //console.log(await helper.format(fechaTrm));
+                /*
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+                console.log(url2);
+                
+            
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();
+                return res.json(data2);*/
+                const series = yield database_1.db.query(`Select * from ${bdmysql}.series t0 where t0.objtype ='${objtype}'`);
+                //console.log(series);
+                return res.json(series);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
     BusinessPartnersXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             //Obtener datos del usurio logueado que realizo la petición
@@ -259,6 +295,26 @@ class WssapController {
                 /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();*/
+                return res.json(proveedores);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    sociosDeNegocio(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                const bdmysql = infoUsuario[0].bdmysql;
+                const proveedores = yield database_1.db.query(`Select * From ${bdmysql}.socios_negocio t0`);
                 return res.json(proveedores);
             }
             catch (error) {
@@ -405,9 +461,10 @@ class WssapController {
                         }
                     };
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${pedido})`;
+                    console.log(url2);
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    console.log(data2);
+                    //console.log(data2);
                     helpers_1.default.logoutWsSAP(bieSession);
                     return res.json(data2);
                 }

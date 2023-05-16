@@ -55,7 +55,7 @@ class Helpers {
             }
             catch (error) {
                 let now = new Date();
-                ////console.log(error, " ", now);
+                //////console.log(error, " ", now);
             }
         });
     }
@@ -88,7 +88,7 @@ class Helpers {
     }
     validateRoute(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            ////console.log(url);
+            //////console.log(url);
             const routesAllowWithoutToken = [
                 '/api/auth/login',
                 '/api/auth/recaptcha',
@@ -103,7 +103,8 @@ class Helpers {
                 '/api/compras/solped/borrar-anexo/',
                 '/api/nitroLQ/titulos',
                 '/api/nitroLQ/titulos/pagos',
-                '/uploads/solped/'
+                '/uploads/solped/',
+                '/api/config/'
             ];
             let result = false;
             for (let item of routesAllowWithoutToken) {
@@ -116,8 +117,11 @@ class Helpers {
     }
     loginWsSAP(infoUsuario) {
         return __awaiter(this, void 0, void 0, function* () {
-            const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap, "UserName": "USERAPLICACIONES", "Password": "Nitro123" };
-            console.log(jsonLog);
+            const jsonLog = { "CompanyDB": infoUsuario.dbcompanysap,
+                "UserName": "USERAPLICACIONES",
+                "Password": "Nitro123",
+                "Language": "25" };
+            //console.log(jsonLog);
             const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Login`;
             const configWs = {
                 method: "POST",
@@ -126,13 +130,13 @@ class Helpers {
                 },
                 body: JSON.stringify(jsonLog)
             };
-            //////console.log(configWs);
+            //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
-                //////console.log(response,data);
+                //console.log(response);
                 if (response.ok) {
-                    ////console.log('successfully logged SAP');
+                    //////console.log('successfully logged SAP');
                     return response.headers.get('set-cookie');
                 }
                 else {
@@ -167,7 +171,7 @@ class Helpers {
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -183,20 +187,36 @@ class Helpers {
                 return result;
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return error;
             }
         });
     }
     getInfoUsuario(userid, company) {
         return __awaiter(this, void 0, void 0, function* () {
-            const infoUsuario = yield database_1.db.query(`
-        SELECT t0.id, fullname, email, username, codusersap, t0.status, 
-            id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap  ,nit, direccion, telefono
-        FROM users t0 
+            const query = `
+        SELECT 	
+                t0.id, 
+                t0.fullname, 
+                t0.email, 
+                t0.username, 
+                t0.codusersap, 
+                t0.status, 
+                t1.id_company,
+                t2.companyname, 
+                t2.logoempresa, 
+                t2.urlwsmysql AS bdmysql, 
+                t2.dbcompanysap, 
+                t2.urlwssap ,
+                t2.nit,
+                t2.direccion,
+                t2.telefono 
+        FROM    users t0 
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
-        WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [userid, company]);
+        WHERE   t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`;
+            //console.log(query,userid,company);
+            const infoUsuario = yield database_1.db.query(query, [userid, company]);
             return infoUsuario;
         });
     }
@@ -208,7 +228,7 @@ class Helpers {
         INNER JOIN company_users t1 ON t1.id_user = t0.id
         INNER JOIN companies t2 ON t2.id = t1.id_company
         WHERE t0.id = ? AND t2.id = ? AND t0.status ='A' AND t2.status ='A'`, [userid, company]);
-            //////console.log(infoUsuario);
+            ////////console.log(infoUsuario);
             return infoUsuario;
         });
     }
@@ -225,7 +245,7 @@ class Helpers {
     }
     getPermisoUsuario(userid) {
         return __awaiter(this, void 0, void 0, function* () {
-            const permisosUsuario = yield database_1.db.query(`SELECT * 
+            const permisosUsuario = yield database_1.db.query(`SELECT t0.*,  t2.url
                                                         FROM perfil_menu_accions t0 
                                                         INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
                                                         INNER JOIN menu t2 ON t2.id = t0.id_menu
@@ -290,7 +310,7 @@ class Helpers {
         INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idSolped]);
-            //////console.log((solpedResult));
+            ////////console.log((solpedResult));
             let solped = {
                 id: idSolped,
                 id_user: solpedResult[0].id_user,
@@ -359,6 +379,7 @@ class Helpers {
     }
     getNextLineAprovedSolped(idSolped, bdmysql, companysap, logo, origin = 'http://localhost:4200', urlbk, idLinea) {
         return __awaiter(this, void 0, void 0, function* () {
+            let lineAprovedSolped = "";
             let condicionLinea = "";
             if (idLinea)
                 condicionLinea = ` and t0.id!=${idLinea}`;
@@ -367,15 +388,10 @@ class Helpers {
         FROM ${bdmysql}.aprobacionsolped t0
         WHERE t0.id_solped = ${idSolped} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
         ORDER BY nivel ASC`;
-            //////console.log(queryNextApprovedLine);
-            const queryCompania = `SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
-            const compania = yield database_1.db.query(queryCompania);
             const nextLineAprovedSolped = yield database_1.db.query(queryNextApprovedLine);
-            //////console.log(nextLineAprovedSolped);
-            //////console.log(nextLineAprovedSolped.length);
-            //////console.log(nextLineAprovedSolped[0].id);
-            let lineAprovedSolped;
             if (nextLineAprovedSolped.length > 0) {
+                const queryCompania = `SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
+                const compania = yield database_1.db.query(queryCompania);
                 lineAprovedSolped = {
                     autor: {
                         fullname: nextLineAprovedSolped[0].nombreautor,
@@ -399,16 +415,12 @@ class Helpers {
                     }
                 };
             }
-            else {
-                lineAprovedSolped = '';
-            }
-            // ////console.log(lineAprovedSolped);
             return lineAprovedSolped;
         });
     }
     sendNotification(infoEmail) {
         return __awaiter(this, void 0, void 0, function* () {
-            //////console.log(infoEmail);
+            ////////console.log(infoEmail);
             let mailer = mailer_1.default.getTransporter();
             (yield mailer).sendMail({
                 from: `"Notificaciones NitroPortal" <${mailer_1.default.emailsend}>`,
@@ -422,10 +434,10 @@ class Helpers {
             }, function (error, info) {
                 return __awaiter(this, void 0, void 0, function* () {
                     if (error) {
-                        ////console.log(error);
+                        //////console.log(error);
                     }
                     else {
-                        ////console.log("Email Send");
+                        //////console.log("Email Send");
                     }
                 });
             });
@@ -467,7 +479,7 @@ class Helpers {
         FROM ${bdmysql}.aprobacionsolped t0
         WHERE id_solped = ? AND estadoseccion = 'A' and estadoap !='P'
         ORDER BY nivel ASC`, [idSolped]);
-            ////console.log((detalleAprobacionSolped));
+            //////console.log((detalleAprobacionSolped));
             return detalleAprobacionSolped;
         });
     }
@@ -488,7 +500,7 @@ class Helpers {
                     serieNombre = seriesDoc[item].name;
                 }
             }
-            ////console.log(infoUsuario,seriesDoc);
+            //////console.log(infoUsuario,seriesDoc);
             //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
                 lineaDetalleAprobacion = lineaDetalleAprobacion + `
@@ -793,7 +805,7 @@ class Helpers {
                     serieNombre = seriesDoc[item].name;
                 }
             }
-            ////console.log(infoUsuario,seriesDoc);
+            //////console.log(infoUsuario,seriesDoc);
             //if (detalleAprobacionSolped.length > 0) {
             for (let item of detalleAprobacionSolped) {
                 lineaDetalleAprobacion = lineaDetalleAprobacion + `
@@ -1411,7 +1423,7 @@ class Helpers {
             if (Solped.solped.nf_Incoterms != null) {
                 dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
-            //////console.log(JSON.stringify(dataSolopedJSONSAP));
+            ////////console.log(JSON.stringify(dataSolopedJSONSAP));
             return dataSolopedJSONSAP;
         });
     }
@@ -1419,10 +1431,10 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
-                ////console.log(JSON.stringify(data));
+                //////console.log(JSON.stringify(data));
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests`;
-                    //console.log(url2,JSON.stringify(data));
+                    ////console.log(url2,JSON.stringify(data));
                     let configWs2 = {
                         method: "POST",
                         headers: {
@@ -1431,16 +1443,45 @@ class Helpers {
                         },
                         body: JSON.stringify(data)
                     };
+                    //console.log(configWs2);
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
-                    //////console.log(response2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////console.log('registerSolpedSAP',data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    CancelSolpedSAP(infoUsuario, docEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${docEntry})/Cancel`;
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    helper.logoutWsSAP(bieSession);
+                    if (response2.status != 204) {
+                        const data2 = yield response2.json();
+                        return data2;
+                    }
+                    return response2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
@@ -1461,13 +1502,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     //const data2 = await response2.json();
-                    ////console.log(response2);
+                    //////console.log(response2);
                     helper.logoutWsSAP(bieSession);
                     return response2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -1475,48 +1516,239 @@ class Helpers {
     registerProcApSolpedSAP(infoUsuario, bdmysql, idSolped, docNumSAP) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                let queryListAprobacionesSolped = `
+                const Solped = yield helper.getSolpedById(idSolped, infoUsuario.bdmysql);
+                let queryListAprobacionesSolpedMysql = `
                 SELECT t0.id AS "key",t1.sapdocnum,t1.id, t0.updated_at,t0.nombreaprobador,t0.estadoap,t0.comments
                 FROM ${bdmysql}.aprobacionsolped t0 
                 INNER JOIN ${bdmysql}.solped t1 ON t1.id = t0.id_solped 
                 WHERE t0.id_solped =${idSolped} and t0.estadoseccion='A'`;
-                let resultListAprobacionesSolped = yield database_1.db.query(queryListAprobacionesSolped);
+                let resultListAprobacionesSolpedMysql = yield database_1.db.query(queryListAprobacionesSolpedMysql);
+                //console.log('resultListAprobacionesSolpedMysql', resultListAprobacionesSolpedMysql);
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
+                let arrayError = [];
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/U_NF_APRO_SOLPED_WEB`;
-                    let arrayResult = [];
-                    let data;
-                    for (let item of resultListAprobacionesSolped) {
-                        data = { "Code": item.key,
-                            "Name": item.key,
-                            "U_NF_FECHA_APRO": item.updated_at,
-                            "U_NF_NOM_APROB": item.nombreaprobador,
-                            "U_NF_ESTADO_APRO": "A",
-                            "U_NF_COM_AROB": item.comments,
-                            "U_NF_NUM_SOLPED_WEB": item.id,
-                            "U_NF_NUM_SOLPED_SAP": docNumSAP };
-                        //console.log(data);
-                        let configWs2 = {
-                            method: "POST",
+                    //let data ;
+                    //Buscar id solped del portal en tabla de aprobaciones de SAP
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const consultaAprobacionesSolpedSAP = yield (0, node_fetch_1.default)(`${url2}?$filter=U_NF_NUM_SOLPED_WEB eq '${idSolped}'`, configWs2);
+                    const aprobacionesSolpedSAP = yield consultaAprobacionesSolpedSAP.json();
+                    //console.log('aprobacionesSolpedSAP LENGTH',aprobacionesSolpedSAP.value.length);
+                    if (aprobacionesSolpedSAP.value.length > 0) {
+                        //Existe proceso de aprobación para la solped
+                        //Obtener SapDocNum del proceso de aprobacion y cancelar solped
+                        let oldSapDocNum = aprobacionesSolpedSAP.value[0].U_NF_NUM_SOLPED_SAP;
+                        let oldDocEntry = yield helper.getSolpedByIdSL(infoUsuario, oldSapDocNum, Solped.solped.serie);
+                        //console.log('oldDocEntry',oldDocEntry.value[0].DocEntry);
+                        const cancelOldSolpedSap = yield helper.CancelSolpedSAP(infoUsuario, oldDocEntry.value[0].DocEntry);
+                        if (cancelOldSolpedSap.error) {
+                            arrayError.push({
+                                message: `Error en cancelación de solpe antigua ${oldSapDocNum}: ${cancelOldSolpedSap.error.message.value}`
+                            });
+                        }
+                        //Recorrer array del proceso de aprobacion de SAP y actualizar fecha y codigo  de solped nueva en linea del processo de aprobacion SAP
+                        configWs2.method = 'PATCH';
+                        for (let lineaPA of aprobacionesSolpedSAP.value) {
+                            let data = {
+                                "U_NF_NUM_SOLPED_SAP": docNumSAP
+                            };
+                            if (resultListAprobacionesSolpedMysql.find(lineaPAMysql => lineaPAMysql.key == lineaPA.Code && lineaPAMysql.estadoap == 'A')) {
+                                data.U_NF_FECHA_APRO = new Date(resultListAprobacionesSolpedMysql.find(lineaPAMysql => lineaPAMysql.key == lineaPA.Code && lineaPAMysql.estadoap == 'A').updated_at);
+                            }
+                            else {
+                                data.U_NF_FECHA_APRO = new Date();
+                                data.U_NF_ESTADO_APRO = 'A';
+                            }
+                            configWs2.body = JSON.stringify(data);
+                            console.log('PATCH', `${url2}('${lineaPA.Code}')`, data);
+                            const updateLineaApSAP = yield (0, node_fetch_1.default)(`${url2}('${lineaPA.Code}')`, configWs2);
+                            if (updateLineaApSAP.status != 204) {
+                                let errorUpdateLineaApSAP = yield updateLineaApSAP.json();
+                                arrayError.push({
+                                    message: `Error en actualización de la linea ${lineaPA.Code} del proceso de aprbación SAP : ${errorUpdateLineaApSAP.error.message.value}`
+                                });
+                            }
+                        }
+                    }
+                    else {
+                        //No existe proceso de aprobación para la solped
+                        //recorrer array del proceso de aprobacion de mysql e insrtar lineas en SAP
+                        configWs2.method = 'POST';
+                        for (let item of resultListAprobacionesSolpedMysql) {
+                            let data = {
+                                "Code": item.key,
+                                "Name": item.key,
+                                "U_NF_FECHA_APRO": new Date(),
+                                "U_NF_NOM_APROB": item.nombreaprobador,
+                                "U_NF_ESTADO_APRO": "A",
+                                "U_NF_COM_AROB": item.comments,
+                                "U_NF_NUM_SOLPED_WEB": item.id,
+                                "U_NF_NUM_SOLPED_SAP": docNumSAP
+                            };
+                            configWs2.body = JSON.stringify(data);
+                            const registrarLineaPASAP = yield (0, node_fetch_1.default)(`${url2}`, configWs2);
+                            if (registrarLineaPASAP.status != 201) {
+                                let errorregistrarLineaPASAP = yield registrarLineaPASAP.json();
+                                arrayError.push({
+                                    message: `Error en registro de la linea ${item.key} del proceso de aprbación SAP : ${errorregistrarLineaPASAP.error.message.value}`
+                                });
+                            }
+                        }
+                    }
+                    /*
+                    for(let item of resultListAprobacionesSolpedMysql){
+                        
+                        
+                        data = { "Code":item.key,
+                        "Name":item.key,
+                        "U_NF_FECHA_APRO":new Date(),
+                        "U_NF_NOM_APROB":item.nombreaprobador,
+                        "U_NF_ESTADO_APRO":"A",
+                        "U_NF_COM_AROB":item.comments,
+                        "U_NF_NUM_SOLPED_WEB":item.id,
+                        "U_NF_NUM_SOLPED_SAP":docNumSAP};
+    
+                        ////console.log(data);
+    
+                        let configWs2:any = {
+                            method: "GET",
                             headers: {
                                 'Content-Type': 'application/json',
                                 'cookie': bieSession || ''
                             },
-                            body: JSON.stringify(data)
-                        };
-                        let response2 = yield (0, node_fetch_1.default)(url2, configWs2);
-                        let data2 = yield response2.json();
-                        arrayResult.push(data2);
-                        ////console.log(data2);
+                        }
+    
+                        //Validar existencia de de id aprobación
+                        let response1 = await fetch(url2+`('${item.key}')`, configWs2);
+                        let data1 = await response1.json();
+                        console.log('GET',url2+`('${item.key}')`);
+                        configWs2.body = JSON.stringify(data);
+                        if(response1.status===200){
+                            //existe id, acttualizar solped num
+                            configWs2.method = 'PATCH'
+                            console.log('PATCH',url2+`('${item.key}')`,configWs2);
+                            let response2 = await fetch(url2+`('${item.key}')`, configWs2);
+                            ////console.log(response2.status)
+                            if(response2.status===204){
+                                arrayResult.push({
+                                    solped:idSolped,
+                                    sapdocnum:docNumSAP,
+                                    idaprobacion:item.key,
+                                    error:false,
+                                    message:`Actualizacón de linea aprobación ${item.key}`
+                                });
+                                //console.log(Solped);
+                                let DocEntryOld:any = await helper.getSolpedByIdSL(infoUsuario,data1.U_NF_NUM_SOLPED_SAP,Solped.solped.serie)
+                                await helper.CancelSolpedSAP(infoUsuario,DocEntryOld.value[0].DocEntry)
+                            }else{
+                                //Error al actualizar la linea de aprobacion
+                                let data2 = await response2.json();
+                                //console.log('data2',data2)
+                                arrayResult.push({
+                                    solped:idSolped,
+                                    sapdocnum:docNumSAP,
+                                    idaprobacion:item.key,
+                                    error:true,
+                                    message:data2.error.message.value
+                                });
+                            }
+                            //
+                        }else{
+                            //Registro la linea de aprobación
+                            configWs2.method = 'POST'
+                            //console.log(configWs2);
+                            let response3 = await fetch(url2, configWs2);
+                            
+                            let data3 = await response3.json();
+                            //console.log('data3',data3,response3.status);
+                            if(response3.status!=201){
+                                //Error en registro de linea
+                                
+                                arrayResult.push({
+                                    solped:idSolped,
+                                    sapdocnum:docNumSAP,
+                                    idaprobacion:item.key,
+                                    error:true,
+                                    message:data3.error.message.value
+                                });
+                                let DocEntryOld:any = await helper.getSolpedByIdSL(infoUsuario,data1.U_NF_NUM_SOLPED_SAP,Solped.solped.serie)
+                                await helper.CancelSolpedSAP(infoUsuario,DocEntryOld.value[0].DocEntry)
+                            }else{
+                                arrayResult.push({
+                                    solped:idSolped,
+                                    sapdocnum:docNumSAP,
+                                    idaprobacion:item.key,
+                                    error:false,
+                                    message:`Registro de linea aprobación ${item.key}`
+                                });
+                            }
+                        }
+                        
                     }
+                    */
                     helper.logoutWsSAP(bieSession);
-                    return arrayResult;
+                    ////console.log(arrayResult);
+                    return arrayError;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //console.log(error);
                 return '';
             }
+        });
+    }
+    modeloAprobacionesMysql(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const bdmysql = infoUsuario.bdmysql;
+            const modelos = yield database_1.db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+            const data2 = modelos;
+            let arrayModelos = [];
+            for (let item in data2) {
+                let pos_eq = data2[item].query.indexOf('=');
+                let pos_quote = data2[item].query.indexOf(`'`, pos_eq);
+                let pos_next_quote = data2[item].query.indexOf(`'`, pos_quote + 1);
+                let area = data2[item].query.substring(pos_quote + 1, pos_next_quote);
+                let numeric = data2[item].query.indexOf(`(19,6)`) + '(19,6)'.length + 1;
+                let condicion = data2[item].query.substring(numeric, data2[item].query.length);
+                data2[item].area = area;
+                data2[item].condicion = condicion;
+                arrayModelos.push(data2[item]);
+            }
+            //console.log(arrayModelos);
+            return arrayModelos;
+        });
+    }
+    modeloAprobacionesSAP(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const compania = infoUsuario.dbcompanysap;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+            console.log(url2);
+            const response2 = yield (0, node_fetch_1.default)(url2);
+            //console.log(response2.status)
+            if (response2.status != 200) {
+                return { error: response2.statusText };
+            }
+            const data2 = yield response2.json();
+            let arrayModelos = [];
+            for (let item in data2) {
+                let pos_eq = data2[item].query.indexOf('=');
+                let pos_quote = data2[item].query.indexOf(`'`, pos_eq);
+                let pos_next_quote = data2[item].query.indexOf(`'`, pos_quote + 1);
+                let area = data2[item].query.substring(pos_quote + 1, pos_next_quote);
+                let numeric = data2[item].query.indexOf(`(19,6)`) + '(19,6)'.length + 1;
+                let condicion = data2[item].query.substring(numeric, data2[item].query.length);
+                data2[item].area = area;
+                data2[item].condicion = condicion;
+                arrayModelos.push(data2[item]);
+            }
+            // console.log(arrayModelos);
+            return arrayModelos;
         });
     }
     getEntradaById(idEntrada, bdmysql) {
@@ -1528,7 +1760,7 @@ class Helpers {
         INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idEntrada]);
-            //////console.log((solpedResult));
+            ////////console.log((solpedResult));
             let entrada = {
                 id: idEntrada,
                 id_user: entradaResult[0].id_user,
@@ -1567,7 +1799,7 @@ class Helpers {
                     LineTotal: item.linetotal,
                     TaxCode: item.tax,
                     TaxTotal: item.taxvalor,
-                    linegtotal: item.linegtotal,
+                    GrossTotal: item.linegtotal,
                     CostingCode: item.ocrcode,
                     CostingCode2: item.ocrcode2,
                     CostingCode3: item.ocrcode3,
@@ -1595,7 +1827,7 @@ class Helpers {
                     LineTotal: item.linetotal,
                     TaxCode: item.tax,
                     TaxTotal: item.taxvalor,
-                    linegtotal: item.linegtotal,
+                    GrossTotal: item.linegtotal,
                     CostingCode: item.ocrcode,
                     CostingCode2: item.ocrcode2,
                     CostingCode3: item.ocrcode3,
@@ -1634,7 +1866,7 @@ class Helpers {
                 currency: entradaResult[0].currency,
                 DocumentLines
             };
-            ////console.log(entradaObject,infoEntrada);
+            //////console.log(entradaObject,infoEntrada);
             return infoEntrada;
         });
     }
@@ -1647,8 +1879,78 @@ class Helpers {
         INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.sapdocnum = ?`, [idEntrada]);
-            console.log(entradaResult);
+            //console.log(entradaResult);
             return entradaResult;
+        });
+    }
+    loadInfoEntradaSAPToJSONSAP(Entrada) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let dataEntradaJSONSAP;
+            let DocumentLines = [];
+            let DocumentLine;
+            for (let item of Entrada.DocumentLines) {
+                DocumentLine = {
+                    //LineNum:item.linenum,
+                    //Currency:item.trm===1?'$':item.moneda,
+                    //Currency:item.moneda==='COP'?'$':item.moneda,
+                    //Rate: item.trm,
+                    ItemDescription: item.ItemDescription,
+                    //RequiredDate:item.reqdatedet,
+                    //Quantity:item.cantidad,
+                    //Price:item.precio,
+                    UnitPrice: item.UnitPrice,
+                    LineTotal: item.LineTotal,
+                    //GrossTotal:item.linegtotal,
+                    TaxCode: item.TaxCode,
+                    CostingCode: item.CostingCode,
+                    CostingCode2: item.CostingCode2,
+                    CostingCode3: item.CostingCode3,
+                    WarehouseCode: item.WarehouseCode !== '' ? item.WarehouseCode : 'SM_N300',
+                    BaseType: item.BaseType,
+                    BaseEntry: item.BaseEntry,
+                    BaseLine: item.BaseLine
+                };
+                if (item.ItemCode !== '' && Entrada.DocType == 'dDocument_Items') {
+                    DocumentLine.ItemCode = item.ItemCode;
+                }
+                if (Entrada.DocType == 'dDocument_Items') {
+                    DocumentLine.Quantity = item.Quantity;
+                }
+                if (item.AccountCode !== '') {
+                    DocumentLine.AccountCode = item.AccountCode;
+                }
+                if (item.WarehouseCode === '') {
+                    DocumentLine.WarehouseCode = 'SM_N300';
+                }
+                else {
+                    DocumentLine.WarehouseCode = item.WarehouseCode;
+                }
+                DocumentLines.push(DocumentLine);
+            }
+            dataEntradaJSONSAP = {
+                DocType: Entrada.DocType,
+                //Series:Entrada.entrada.serie,
+                DocDate: Entrada.DocDate,
+                DocDueDate: Entrada.DocDueDate,
+                //TaxDate:Entrada.entrada.taxdate,
+                //RequriedDate:Entrada.entrada.reqdate,
+                CardCode: Entrada.CardCode,
+                CardName: Entrada.CardName,
+                Comments: Entrada.Comments,
+                JournalMemo: Entrada.JournalMemo,
+                U_AUTOR_PORTAL: Entrada.U_AUTOR_PORTAL,
+                /*U_NF_BIEN_OPORTUNIDAD:Entrada.U_NF_BIEN_OPORTUNIDAD,
+                U_NF_SERVICIO_CALIDAD:Entrada.U_NF_SERVICIO_CALIDAD,
+                U_NF_SERVICIO_TIEMPO:Entrada.U_NF_SERVICIO_TIEMPO,
+                U_NF_SERVICIO_SEGURIDAD:Entrada.U_NF_SERVICIO_SEGURIDAD,
+                U_NF_SERVICIO_AMBIENTE:Entrada.U_NF_SERVICIO_AMBIENTE,
+                U_NF_TIPO_HE:Entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
+                U_NF_PUNTAJE_HE:Entrada.U_NF_PUNTAJE_HE,
+                U_NF_CALIFICACION:Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
+                ClosingRemarks:Entrada.entrada.footer,*/
+                DocumentLines
+            };
+            return dataEntradaJSONSAP;
         });
     }
     loadInfoEntradaToJSONSAP(Entrada) {
@@ -1664,9 +1966,10 @@ class Helpers {
                     //Rate: item.trm,
                     ItemDescription: item.dscription,
                     //RequiredDate:item.reqdatedet,
-                    Quantity: item.cantidad,
-                    Price: item.precio,
-                    //LineTotal:item.linetotal,
+                    //Quantity:item.cantidad,
+                    //Price:item.precio,
+                    UnitPrice: item.precio,
+                    LineTotal: item.linetotal,
                     //GrossTotal:item.linegtotal,
                     TaxCode: item.tax,
                     CostingCode: item.ocrcode,
@@ -1677,8 +1980,11 @@ class Helpers {
                     BaseEntry: item.BaseEntry,
                     BaseLine: item.linenum
                 };
-                if (item.itemcode !== '') {
+                if (item.itemcode !== '' && Entrada.entrada.doctype == 'I') {
                     DocumentLine.ItemCode = item.itemcode;
+                }
+                if (Entrada.entrada.doctype == 'I') {
+                    DocumentLine.Quantity = item.cantidad;
                 }
                 if (item.acctcode !== '') {
                     DocumentLine.AccountCode = item.acctcode;
@@ -1714,6 +2020,7 @@ class Helpers {
                 DocumentLines
             };
             ////console.log(JSON.stringify(dataEntradaJSONSAP));
+            ////console.log(dataEntradaJSONSAP);
             return dataEntradaJSONSAP;
         });
     }
@@ -1733,13 +2040,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -1759,13 +2066,41 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    consultarSolpedByIdSL(infoUsuario, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})`;
+                    //console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////////console.log(response2);
+                    const data2 = yield response2.json();
+                    ////////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
@@ -1776,7 +2111,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
-                    console.log(url2);
+                    //console.log(url2);
                     let configWs2 = {
                         method: "POST",
                         headers: {
@@ -1785,15 +2120,71 @@ class Helpers {
                         }
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
-                    //////console.log(response2);
+                    ////////console.log(response2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    cerrarSolpedByIdSL(infoUsuario, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Close`;
+                    //console.log(url2);
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////////console.log(response2);
+                    const data2 = yield response2.json();
+                    ////////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    reopenSolpedByIdSL(infoUsuario, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Reopen`;
+                    //console.log(url2);
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////////console.log(response2);
+                    const data2 = yield response2.json();
+                    ////////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
@@ -1803,10 +2194,17 @@ class Helpers {
             try {
                 //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
-                console.log(url2);
+                //console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
-                const data2 = yield response2.json();
-                return data2;
+                console.log(response2.status);
+                if (response2.status == 200) {
+                    const data2 = yield response2.json();
+                    return data2;
+                }
+                else {
+                    console.log(response2.statusText);
+                    return [];
+                }
             }
             catch (error) {
                 console.error(error);
@@ -1816,16 +2214,9 @@ class Helpers {
     }
     getPresupuesto(infoUsuario, idSolped, bdmysql, bdPresupuesto) {
         return __awaiter(this, void 0, void 0, function* () {
-            //console.log(infoUsuario.companyname.substring(0,8));
+            ////console.log(infoUsuario.companyname.substring(0,8));
             let arrayErrorPresupuesto = [];
             let compania = infoUsuario.dbcompanysap;
-            /*const dimensionesSolped :any[] = await db.query(`
-          
-            SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, t1.ocrcode, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
-            FROM ${bdmysql}.solped_det t1
-            INNER JOIN ${bdmysql}.solped t0 ON t1.id_solped = t0.id
-            WHERE id = ${idSolped}
-            GROUP BY acctcode, ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [idSolped]);*/
             const dimensionesSolped = yield database_1.db.query(`
       
         SELECT YEAR(t0.docdate) AS anio, t1.acctcode, t1.ocrcode2, SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
@@ -1836,11 +2227,11 @@ class Helpers {
             let errorPresupuesto = false;
             let messageError = "";
             for (let lineaDimension of dimensionesSolped) {
-                ////console.log(lineaDimension);
+                //////console.log(lineaDimension);
                 const cuentaValidaPresupuesto = yield helper.validaPresupuestoCuenta(compania, lineaDimension.acctcode);
                 const presupuestoLineaDimensionSAP = yield helper.getPresupuestoXE(infoUsuario.companyname.substring(0, 8), lineaDimension, bdPresupuesto);
                 const comprometidoAprobacionMysql = yield helper.getPresupuestoSolpedEnAprobacion(lineaDimension, bdmysql, idSolped);
-                //console.log(cuentaValidaPresupuesto,presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
+                ////console.log(cuentaValidaPresupuesto,presupuestoLineaDimensionSAP, comprometidoAprobacionMysql,(presupuestoLineaDimensionSAP-comprometidoAprobacionMysql));
                 if (lineaDimension.subtotal > (presupuestoLineaDimensionSAP - comprometidoAprobacionMysql) && cuentaValidaPresupuesto == 'Y') {
                     arrayErrorPresupuesto.push(`Cuenta: ${lineaDimension.acctcode} Dependencia: ${lineaDimension.ocrcode2} }`);
                 }
@@ -1852,14 +2243,14 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
-                console.log(url2);
+                //console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
-                //////console.log(data2);
+                ////console.log('validaPresupuestoCuenta',data2);
                 return (data2[0].Budget);
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -1868,25 +2259,6 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
             let comprometidoAprobacion = 0;
-            /*const queryComprometidoAprobacion :any[] = await db.query(`
-          
-            SELECT
-                t0.id,
-                YEAR(t0.docdate) AS anio,
-                t1.acctcode,
-                t1.ocrcode2,
-                t1.ocrcode,
-                SUM(t1.linetotal) AS subtotal, SUM(t1.linegtotal) AS total
-                FROM ${bdmysql}.solped t0
-                INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-                WHERE
-                t1.acctcode = ? AND
-                t1.ocrcode = ? AND
-                t1.ocrcode2= ? AND
-                YEAR(t0.docdate) = ? AND
-                t0.approved ='P' AND
-                t0.id <> ?
-                GROUP BY t0.id, t1.acctcode, t1.ocrcode2, t1.ocrcode, YEAR(t0.docdate)`, [acctcode,ocrcode,ocrcode2,anio,idSolped]);*/
             const queryComprometidoAprobacion = yield database_1.db.query(`
       
         SELECT
@@ -1920,23 +2292,61 @@ class Helpers {
                 console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
-                //////console.log(data2);
+                ////console.log('getPresupuestoXE',data2);
                 return (data2[0].Disponible);
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    cancelarEntrada(infoUsuario, dataCancel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotesService_Cancel2`;
+                    //console.log(url2);
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(dataCancel)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    let data2;
+                    if (response2.status === 204) {
+                        data2 = {
+                            status: 204
+                        };
+                    }
+                    else {
+                        data2 = yield response2.json();
+                    }
+                    //const data2 = await response2.json();
+                    //console.log(JSON.stringify(data2));
+                    // //////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
     }
     getEntradaByIdSL(infoUsuario, DocNum) {
         return __awaiter(this, void 0, void 0, function* () {
-            ////console.log(DocNum);
+            //////console.log(DocNum);
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
-                    //console.log(url2);
+                    ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -1945,14 +2355,106 @@ class Helpers {
                         }
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////console.log(response2.status);
                     const data2 = yield response2.json();
-                    // ////console.log(data2);
+                    // //////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradasByBaseDoc(infoUsuario, BaseEntry, BaseType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //////console.log(DocNum);
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq ${BaseType} and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${BaseEntry} `;
+                    ////console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////console.log(response2.status);
+                    const data2 = yield response2.json();
+                    // //////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getEntradasByPedido(infoUsuario, DocEntry) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //////console.log(DocNum);
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                if (bieSession != '') {
+                    //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/CancelStatus eq 'csNo'`;
+                    ////console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    ////console.log(response2.status);
+                    const data2 = yield response2.json();
+                    // //////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getCuentasXE(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return data2;
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getAreasUserXE(compania, codusersap) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ////console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
@@ -1964,14 +2466,176 @@ class Helpers {
                 if (objtype)
                     filtroObjtype = `&tipodoc=${objtype}`;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
-                ////console.log(url2);
+                //////console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
-                //////console.log(data2);
+                ////console.log('getSeriesXE',data2);
                 return (data2);
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getTaxesXE(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ////console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getTrmDiaXE(compania, fechaTrm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${(fechaTrm)}&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                console.log(data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getModelosAPXE(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ///console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getProveedores2XE(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                if (response2.status === 200) {
+                    const data2 = yield response2.json();
+                    return (data2);
+                }
+                else {
+                    return [];
+                }
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getDependenciasSL(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const infoUsuario = {
+                dbcompanysap: compania
+            };
+            const bieSession = yield helper.loginWsSAP(infoUsuario);
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/RECC`;
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+                };
+                const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                const data2 = yield response2.json();
+                //console.log(data2.value);
+                helper.logoutWsSAP(bieSession);
+                return data2.value;
+            }
+        });
+    }
+    getAlmacenes(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MT_ALMACENES.xsjs?&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ////console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getCuentasDependenciasSL(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const infoUsuario = {
+                dbcompanysap: compania
+            };
+            const bieSession = yield helper.loginWsSAP(infoUsuario);
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CDI2`;
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+                };
+                const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                const data2 = yield response2.json();
+                //console.log(data2.value);
+                helper.logoutWsSAP(bieSession);
+                return data2.value;
+            }
+        });
+    }
+    getStoresUserXE(compania, codusersap) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ////console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
+                return '';
+            }
+        });
+    }
+    getDependenciasUserXE(compania, codusersap) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                ////console.log('getSeriesXE',data2);
+                return (data2);
+            }
+            catch (error) {
+                //////console.log(error);
                 return '';
             }
         });
@@ -1992,13 +2656,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    // ////console.log(data2);
+                    // //////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2018,13 +2682,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2035,7 +2699,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
-                    ////console.log(url2);
+                    console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2045,13 +2709,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2062,7 +2726,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
-                    ////console.log(url2);
+                    //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2072,13 +2736,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2090,7 +2754,7 @@ class Helpers {
                 return fecha;
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2099,16 +2763,18 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 let serie = 0;
-                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '22');
-                for (let item in seriesDoc) {
-                    if (seriesDoc[item].name === 'OCM') {
+                //let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
+                let seriesDoc = yield database_1.db.query(`select * from ${infoUsuario.bdmysql}.series where name ='OCM' `);
+                /*for(let item in seriesDoc) {
+                    if(seriesDoc[item].name ==='OCM'){
                         serie = seriesDoc[item].code;
                     }
-                }
+                }*/
+                serie = seriesDoc[0].code;
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
-                    ////console.log(url2);
+                    //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2118,13 +2784,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2135,7 +2801,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes?$filter=U_NF_PEDMP eq 'S' and DocumentStatus eq 'bost_Open'`;
-                    ////console.log(url2);
+                    //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2145,13 +2811,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2161,14 +2827,16 @@ class Helpers {
             try {
                 const compania = infoUsuario.dbcompanysap;
                 let serie = 0;
-                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '22');
-                for (let item in seriesDoc) {
-                    if (seriesDoc[item].name === 'OCM') {
+                //let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'22');
+                let seriesDoc = yield database_1.db.query(`select * from ${infoUsuario.bdmysql}.series where name ='OCM' `);
+                /*for(let item in seriesDoc) {
+                    if(seriesDoc[item].name ==='OCM'){
                         serie = seriesDoc[item].code;
                     }
-                }
+                }*/
+                serie = seriesDoc[0].code;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}&serie=${serie}`;
-                ////console.log(url2);
+                //////console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -2195,13 +2863,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     //const data2 = await response2.json();
-                    ////console.log(response2);
+                    //////console.log(response2);
                     helper.logoutWsSAP(bieSession);
                     return response2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2211,6 +2879,23 @@ class Helpers {
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getInventariosItemMPXE(infoUsuario, item, zona) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -2226,6 +2911,23 @@ class Helpers {
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    getInventariosTrackingItemMPXE(infoUsuario, item, zona) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const compania = infoUsuario.dbcompanysap;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -2241,6 +2943,7 @@ class Helpers {
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -2253,7 +2956,7 @@ class Helpers {
     }
     getCodigoSerie(dbcompanysap, tipoDoc, sirieStr) {
         return __awaiter(this, void 0, void 0, function* () {
-            ////console.log(dbcompanysap,tipoDoc,sirieStr);
+            //////console.log(dbcompanysap,tipoDoc,sirieStr);
             let serie = 0;
             let seriesDoc = yield helper.getSeriesXE(dbcompanysap, tipoDoc);
             for (let item in seriesDoc) {
@@ -2268,14 +2971,48 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const bdmysql = infoUsuario.bdmysql;
-                let serie = 0;
-                let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '1470000113');
-                for (let item in seriesDoc) {
-                    if (seriesDoc[item].name === 'SPMP') {
+                /*let serie =0;
+                let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'1470000113');
+                for(let item in seriesDoc) {
+                    if(seriesDoc[item].name ==='SPMP'){
                         serie = seriesDoc[item].code;
                     }
-                }
-                let proveedores = yield helper.objectToArray(yield helper.getProveedoresXE(infoUsuario));
+                }*/
+                //let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
+                /*const query = `SELECT
+                'Proyectado' AS "TIPO",
+                '' AS "CardCode",
+                '' AS "CardName",
+                t0.id AS "DocNum",
+                '' AS "DocCur",
+                '' AS "BaseRef",
+                t0.status AS "DocStatus",
+                '' AS "CANCELED",
+                t0.reqdate AS "FECHANECESIDAD",
+                t0.nf_pedmp AS "U_NF_PEDMP",
+                t0.nf_incoterms AS "U_NT_Incoterms",
+                t0.reqdate AS "ETA",
+                t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
+                t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
+                t0.nf_agente AS "U_NF_AGENTE",
+                t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
+                t0.nf_motonave AS "U_NF_MOTONAVE",
+                t0.u_nf_status AS "U_NF_STATUS",
+                t1.linevendor AS "LineVendor",
+                t1.itemcode AS "ItemCode",
+                t1.whscode AS "WhsCode",
+                t1.zonacode AS "State_Code",
+                '' AS "PENTRADA",
+                t1.quantity AS "Quantity",
+                t1.price AS "Price",
+                t1.trm AS "Rate",
+                '' AS "OpenCreQty",
+                t1.linenum
+                
+                FROM ${bdmysql}.solped t0
+                INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
+                WHERE t0.serie = ${serie} AND
+                t0.sapdocnum =0 and t0.approved='N'`;*/
                 const query = `SELECT 
             'Proyectado' AS "TIPO",
             '' AS "CardCode",
@@ -2296,6 +3033,7 @@ class Helpers {
             t0.nf_motonave AS "U_NF_MOTONAVE",
             t0.u_nf_status AS "U_NF_STATUS",
             t1.linevendor AS "LineVendor",
+            t3.CardName, 
             t1.itemcode AS "ItemCode",
             t1.whscode AS "WhsCode",
             t1.zonacode AS "State_Code",
@@ -2308,15 +3046,33 @@ class Helpers {
             
             FROM ${bdmysql}.solped t0 
             INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            WHERE t0.serie = ${serie} AND 
+            INNER JOIN ${bdmysql}.series t2 ON t0.serie = t2.code
+            LEFT OUTER JOIN ${bdmysql}.socios_negocio t3 ON t1.linevendor = t3.CardCode
+            WHERE t2.name = 'SPMP' AND 
             t0.sapdocnum =0 and t0.approved='N'`;
+                //console.log(query);
                 const solpeds = yield database_1.db.query(query);
-                for (let solped of solpeds) {
-                    if (solped.LineVendor != '') {
-                        solped.CardName = proveedores.filter((data) => data.CardCode === solped.LineVendor)[0].CardName;
+                /*for(let solped of solpeds) {
+                    if(solped.LineVendor!=''){
+                        solped.CardName = proveedores.filter((data: { CardCode: any; }) =>data.CardCode === solped.LineVendor)[0].CardName;
                     }
-                }
+                }*/
                 return (solpeds);
+            }
+            catch (error) {
+                console.error(error);
+                return (error);
+            }
+        });
+    }
+    documentsTracking(compania) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsVistaCalculadora.xsjs?&compania=${compania}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2);
+                const data2 = yield response2.json();
+                return (data2);
             }
             catch (error) {
                 console.error(error);
@@ -2326,7 +3082,7 @@ class Helpers {
     }
     covertirResultadoSLArray(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            ////console.log('Convertir SL to array');
+            //////console.log('Convertir SL to array');
             let dataArray = [];
             let lineaDetalleArray = [];
             for (let documento of data.value) {
@@ -2379,6 +3135,7 @@ class Helpers {
                                 key: '0',
                                 WarehouseCode: '',
                                 ProveedorDS: '',
+                                U_ID_PORTAL: ''
                             };
                             lineaArray.CardCode = lineaDetalle.LineVendor == null ? '' : lineaDetalle.LineVendor;
                             lineaArray.ItemCode = lineaDetalle.ItemCode;
@@ -2389,15 +3146,16 @@ class Helpers {
                             lineaArray.RemainingOpenQuantity = lineaDetalle.RemainingOpenQuantity;
                             lineaArray.key = documento.DocEntry + '-' + documento.DocNum + '-' + lineaDetalle.LineNum;
                             lineaArray.WarehouseCode = lineaDetalle.WarehouseCode;
-                            ////console.log(lineaArray.LineNum);
+                            lineaArray.U_ID_PORTAL = lineaDetalle.U_ID_PORTAL == null ? '' : lineaDetalle.U_ID_PORTAL;
+                            //////console.log(lineaArray.LineNum);
                             dataArray.push(lineaArray);
                         }
                     }
                 }
                 //break;
             }
-            //////console.log(dataArray);
-            //////console.log(dataArray.length);
+            ////////console.log(dataArray);
+            ////////console.log(dataArray.length);
             return dataArray;
         });
     }
@@ -2420,10 +3178,279 @@ class Helpers {
             return empresa[0].validapresupuesto;
         });
     }
+    registrarSeries(arraySeries, bdmysql, objtype) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let serie of arraySeries) {
+                serie.objtype = objtype;
+                let existeSerie = yield database_1.db.query(`select * from ${bdmysql}.series t0 where t0.code=${serie.code}`);
+                if (existeSerie.length == 0) {
+                    console.log('Registrar serie');
+                    yield database_1.db.query(`insert into ${bdmysql}.series set ?`, [serie]);
+                }
+            }
+        });
+    }
+    registrarCuentas(arrayCuentas, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let cuenta of arrayCuentas) {
+                let existeCuenta = yield database_1.db.query(`select * from ${bdmysql}.cuentas_contable t0 where t0.Code=${cuenta.Code}`);
+                if (existeCuenta.length == 0) {
+                    console.log('Registrar cuenta');
+                    yield database_1.db.query(`insert into ${bdmysql}.cuentas_contable set ?`, [cuenta]);
+                }
+            }
+        });
+    }
+    registrarImpuestos(arrayImpuestos, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let item of arrayImpuestos) {
+                let existeImpuesto = yield database_1.db.query(`select * from ${bdmysql}.taxes t0 where t0.Code='${item.Code}'`);
+                if (existeImpuesto.length == 0) {
+                    console.log('Registrar item');
+                    yield database_1.db.query(`insert into ${bdmysql}.taxes set ?`, [item]);
+                }
+            }
+        });
+    }
+    registrarItems(arrayItems, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                for (let item of arrayItems) {
+                    //console.log(item);   
+                    let existeItem = yield database_1.db.query(`select * from ${bdmysql}.items_sap t0 where t0.ItemCode='${item.ItemCode}'`);
+                    if (existeItem.length == 0) {
+                        //console.log('Registrar item');
+                        yield database_1.db.query(`insert into ${bdmysql}.items_sap set ?`, [item]);
+                    }
+                    else {
+                        //console.log((JSON.stringify(item) === JSON.stringify(existeItem[0])));
+                        if (!(JSON.stringify(item) === JSON.stringify(existeItem[0]))) {
+                            console.log('Actualizar item');
+                            yield database_1.db.query(`update ${bdmysql}.items_sap set ? where ItemCode='${item.ItemCode}'`, [item]);
+                        }
+                    }
+                }
+            }
+            catch (error) {
+                console.error(error);
+                //return res.json(error);
+            }
+        });
+    }
+    registrarModelosAP(arrayModelos, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let modelo of arrayModelos) {
+                //console.log(modelo);   
+                let existeModelo = yield database_1.db.query(`select * 
+                                               from ${bdmysql}.modelos_aprobacion t0 
+                                               where t0.modeloid=${modelo.modeloid} and 
+                                                     t0.autorusercode = '${modelo.autorusercode}' and 
+                                                     t0.etapaid=${modelo.etapaid} and 
+                                                     t0.nivel = ${modelo.nivel}`);
+                if (existeModelo.length == 0) {
+                    //console.log('Registrar modelo');
+                    yield database_1.db.query(`insert into ${bdmysql}.modelos_aprobacion set ?`, [modelo]);
+                }
+                else {
+                    //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                    if (!(JSON.stringify(modelo) === JSON.stringify(existeModelo[0]))) {
+                        //console.log('Actualizar modelo');
+                        yield database_1.db.query(`update ${bdmysql}.modelos_aprobacion set ? where modeloid=${modelo.modeloid} and autorusercode = '${modelo.autorusercode}' and etapaid=${modelo.etapaid} and nivel = ${modelo.nivel}`, [modelo]);
+                    }
+                }
+            }
+        });
+    }
+    registrarProveedores(arrayProveedores, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let proveedor of arrayProveedores) {
+                //console.log(modelo);   
+                let existeProveedor = yield database_1.db.query(`select * from ${bdmysql}.socios_negocio t0 where t0.CardCode='${proveedor.CardCode}' `);
+                if (existeProveedor.length == 0) {
+                    console.log('Registrar proveedor');
+                    yield database_1.db.query(`insert into ${bdmysql}.socios_negocio set ?`, [proveedor]);
+                }
+                else {
+                    //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                    if (!(JSON.stringify(proveedor) === JSON.stringify(existeProveedor[0]))) {
+                        console.log('Actualizar proveedor');
+                        yield database_1.db.query(`update ${bdmysql}.socios_negocio set ? where CardCode='${proveedor.CardCode}'`, [proveedor]);
+                    }
+                }
+            }
+        });
+    }
+    registrarDependencias(arrayDependencias, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let dependencia of arrayDependencias) {
+                console.log(dependencia);
+                let existeDependencia = yield database_1.db.query(`select * from ${bdmysql}.dependencias t0 where t0.Code='${dependencia.Code}' `);
+                let lineaDependencia = {
+                    Code: dependencia.Code,
+                    U_NF_DIM3_VICE: dependencia.U_NF_DIM3_VICE,
+                    U_NF_DIM2_DEP: dependencia.U_NF_DIM2_DEP,
+                    U_NF_DIM1_LOC: dependencia.U_NF_DIM1_LOC
+                };
+                if (existeDependencia.length == 0) {
+                    console.log('Registrar proveedor');
+                    yield database_1.db.query(`insert into ${bdmysql}.dependencias set ?`, [lineaDependencia]);
+                }
+                else {
+                    //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                    if (!(JSON.stringify(lineaDependencia) === JSON.stringify(existeDependencia[0]))) {
+                        console.log('Actualizar Dependencia');
+                        yield database_1.db.query(`update ${bdmysql}.dependencias set ? where Code='${dependencia.Code}'`, [lineaDependencia]);
+                    }
+                }
+            }
+        });
+    }
+    registrarCuentasDependencias(arrayDependencias, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let dependencia of arrayDependencias) {
+                //console.log(dependencia);   
+                for (let cuenta of dependencia.NF_RES_CTA_DIM2_DETCollection) {
+                    if (cuenta.U_NF_CUENTA != null) {
+                        let lineaCuentaDependencia = {
+                            Code: dependencia.Code,
+                            Name: dependencia.Name,
+                            U_NF_CUENTA: cuenta.U_NF_CUENTA,
+                            U_NF_NOMCUENTA: cuenta.U_NF_NOMCUENTA
+                        };
+                        let existeCuentaDependencia = yield database_1.db.query(`select * 
+                                                            from ${bdmysql}.cuentas_dependencias t0 
+                                                            where t0.Code='${dependencia.Code}' and
+                                                                  t0.U_NF_CUENTA = '${cuenta.U_NF_CUENTA}'`);
+                        if (existeCuentaDependencia.length == 0) {
+                            console.log('Registrar cuenta dependencia');
+                            yield database_1.db.query(`insert into ${bdmysql}.cuentas_dependencias set ?`, [lineaCuentaDependencia]);
+                        }
+                        else {
+                            //console.log((JSON.stringify(lineaCuentaDependencia) === JSON.stringify(existeCuentaDependencia[0])));
+                            if (!(JSON.stringify(lineaCuentaDependencia) === JSON.stringify(existeCuentaDependencia[0]))) {
+                                console.log('Actualizar cuenta Dependencia');
+                                yield database_1.db.query(`update ${bdmysql}.cuentas_dependencias set ? where Code='${dependencia.Code}' and U_NF_CUENTA = '${cuenta.U_NF_CUENTA}'`, [lineaCuentaDependencia]);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    registrarAlmacenes(arrayAlmacenes, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let almacen of arrayAlmacenes) {
+                console.log(almacen);
+                let existeAlmacen = yield database_1.db.query(`select * from ${bdmysql}.almacenes t0 where t0.WhsCode_Code='${almacen.WhsCode_Code}' `);
+                if (existeAlmacen.length == 0) {
+                    console.log('Registrar Almancen');
+                    yield database_1.db.query(`insert into ${bdmysql}.almacenes set ?`, [almacen]);
+                }
+                else {
+                    //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                    if (!(JSON.stringify(almacen) === JSON.stringify(existeAlmacen[0]))) {
+                        console.log('Actualizar Almancen');
+                        yield database_1.db.query(`update ${bdmysql}.almacenes set ? where Code='${almacen.WhsCode_Code}'`, [almacen]);
+                    }
+                }
+            }
+        });
+    }
+    registrarTrmDia(arrayTrmDia, fechaTrm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let trmDia of arrayTrmDia) {
+                console.log(trmDia);
+                let existeTrmDia = yield database_1.db.query(`select * 
+                                                    from trm_dia_monedas t0
+                                                    inner join monedas t1 ON t1.id = t0.monedaid 
+                                                    where t1.Code='${trmDia.Currency}' and 
+                                                          t0.fecha = '${fechaTrm}' `);
+                let moneda = yield database_1.db.query(`select * from monedas where Code='${trmDia.Currency}'`);
+                console.log(moneda[0]);
+                let lineaTrmDia = {
+                    monedaid: moneda[0].id,
+                    fecha: fechaTrm,
+                    TRM: trmDia.TRM
+                };
+                if (existeTrmDia.length == 0) {
+                    console.log('Registrar proveedor');
+                    yield database_1.db.query(`insert into trm_dia_monedas set ?`, [lineaTrmDia]);
+                    yield database_1.db.query(`update monedas  set TRM = ? where id = ?`, [trmDia.TRM, moneda[0].id]);
+                }
+                else {
+                    //console.log((JSON.stringify(modelo) === JSON.stringify(existeItem[0])));
+                    if (!(JSON.stringify(trmDia) === JSON.stringify(existeTrmDia[0]))) {
+                        console.log('Actualizar Dependencia');
+                        yield database_1.db.query(`update trm_dia_monedas set ? where monedaid='${moneda[0].id}' and fecha = '${fechaTrm}'`, [lineaTrmDia]);
+                        yield database_1.db.query(`update monedas  set TRM = ? where id = ?`, [trmDia.TRM, moneda[0].id]);
+                    }
+                }
+            }
+        });
+    }
+    registrarAreasUsuario(arrayAreas, companyid, userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let area of arrayAreas) {
+                let existeArea = yield database_1.db.query(`select * 
+                                             from areas_user t0 
+                                             where t0.area = '${area.area}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+                if (existeArea.length == 0) {
+                    if (area.area != null) {
+                        area.companyid = companyid;
+                        area.userid = userid;
+                        console.log('Registrar area', area);
+                        yield database_1.db.query(`insert into areas_user set ?`, [area]);
+                    }
+                }
+            }
+        });
+    }
+    registrarStoresUsuario(arrayStores, companyid, userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let store of arrayStores) {
+                let existeStore = yield database_1.db.query(`select * 
+                                             from stores_users t0 
+                                             where t0.store = '${store.store}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+                if (existeStore.length == 0) {
+                    if (store.store != null) {
+                        store.companyid = companyid;
+                        store.userid = userid;
+                        console.log('Registrar store', store);
+                        yield database_1.db.query(`insert into stores_users set ?`, [store]);
+                    }
+                }
+            }
+        });
+    }
+    registrarDependenciasUsuario(arrayDependencias, companyid, userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let dependencia of arrayDependencias) {
+                let existeDependencia = yield database_1.db.query(`select * 
+                                             from dependencies_user t0 
+                                             where t0.dependence = '${dependencia.dependence}' and
+                                             t0.location = '${dependencia.location}' and
+                                             t0.vicepresidency = '${dependencia.vicepresidency}' and 
+                                             t0.companyid=${companyid} and
+                                             t0.userid=${userid} `);
+                if (existeDependencia.length == 0) {
+                    if (dependencia.vicepresidency != null) {
+                        dependencia.companyid = companyid;
+                        dependencia.userid = userid;
+                        console.log('Registrar dependencia', dependencia);
+                        yield database_1.db.query(`insert into dependencies_user set ?`, [dependencia]);
+                    }
+                }
+            }
+        });
+    }
     /************** Seccion Liquitech *****************/
     loginWsLQ() {
         return __awaiter(this, void 0, void 0, function* () {
-            const jsonLog = { "username": "NITROFERTSAS", "password": "Nitrocredit2022*" };
+            const jsonLog = { "username": "NITROFERTSAS", "password": "Nitrocredit2023*" };
             const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
             let configWs = {
                 method: "POST",
@@ -2432,12 +3459,12 @@ class Helpers {
                 },
                 body: JSON.stringify(jsonLog)
             };
-            //////console.log(configWs);
+            ////////console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    //////console.log('successfully logged  Liquitech');
+                    ////////console.log('successfully logged  Liquitech');
                     return data;
                 }
                 else {
@@ -2445,7 +3472,7 @@ class Helpers {
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2460,13 +3487,13 @@ class Helpers {
                     'Authorization': 'Bearer ' + token
                 }
             };
-            //////console.log(configWs);
+            ////////console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 if (response.ok) {
-                    ////console.log('successfully logged  Liquitech');
+                    //////console.log('successfully logged  Liquitech');
                     const data = yield response.json();
-                    //////console.log(data);    
+                    ////////console.log(data);    
                     return data;
                 }
                 else {
@@ -2474,7 +3501,7 @@ class Helpers {
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2489,12 +3516,12 @@ class Helpers {
                     'Authorization': 'Bearer ' + token
                 }
             };
-            //////console.log(configWs);
+            ////////console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
                 if (response.ok) {
-                    //////console.log('successfully logged  Liquitech',response,data);
+                    ////////console.log('successfully logged  Liquitech',response,data);
                     return data;
                 }
                 else {
@@ -2502,7 +3529,7 @@ class Helpers {
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2527,7 +3554,7 @@ class Helpers {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$filter=U_FACTURA eq '${no_titulo}'`;
-                    ////console.log(url2);
+                    //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -2537,13 +3564,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2577,13 +3604,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2618,13 +3645,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2659,13 +3686,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     //const data2 = await response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return response2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2699,13 +3726,13 @@ class Helpers {
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    //////console.log(data2);
+                    ////////console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 return '';
             }
         });
@@ -2724,54 +3751,72 @@ class Helpers {
                 let tituloSap;
                 let resultInsertTitulo;
                 let resultUpdateTitulo;
-                //////console.log(titulos.length,titulos.length); 
+                ////////console.log(titulos.length,titulos.length); 
                 let fechaEjecucion = new Date();
+                console.log('Inicio Titulos: ');
                 while (nextPage != null) {
-                    ////console.log(nextPage);
+                    console.log(nextPage);
                     titulosPage = yield helper.getTitulosLQ(token, nextPage);
-                    ////console.log(titulosPage);
+                    //console.log(titulosPage);
                     if (titulosPage.results) {
                         for (let titulo of titulosPage.results) {
+                            //console.log('Titulo: ',titulo.no_titulo);
+                            //console.log('Estado titulo: ',titulo.estado);
+                            if (titulo.no_titulo == 12879) {
+                                console.log('Titulo: ', titulo.no_titulo);
+                                console.log('Estado titulo: ', titulo.estado);
+                            }
                             if (titulo.estado == 'aprobado' || titulo.estado == 'desembolsado' || titulo.estado == 'abonado' || titulo.estado == 'pagado') {
                                 no_titulo = titulo.no_titulo;
-                                tituloSap = yield helper.getTituloById(no_titulo);
-                                //////console.log(titulo);
-                                if (tituloSap.value.length == 0) {
+                                //Parcialmente comentado para pureba de webservice 
+                                /*
+                                tituloSap = await helper.getTituloById(no_titulo);
+        
+                                ////////console.log(titulo);
+                                if(tituloSap.value.length==0){
                                     //Insertar factura en udo
-                                    let nit_pagador_sap = yield helper.getNitProveedorByTitulo(no_titulo);
+                                
+                                    let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
+                                    
                                     dataNewTitulo = {
-                                        U_NIT: nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                        U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
                                         U_FECHA_FACT: titulo.fecha_emision,
-                                        U_TOTAL: titulo.valor_titulo,
-                                        U_FACTURA: titulo.no_titulo,
-                                        U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
-                                        U_NF_CUFE_FV: titulo.cufe,
-                                        U_NF_FECHA_PAGO: titulo.fecha_pago,
-                                        U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                        U_NF_VALOR_GIRO: titulo.valor_giro
-                                    };
-                                    resultInsertTitulo = yield helper.InsertTituloSL(dataNewTitulo);
-                                    titulos.push(titulo);
-                                }
-                                else {
+                                        U_TOTAL:titulo.valor_titulo,
+                                        U_FACTURA:titulo.no_titulo,
+                                        U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                        U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                        U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                        U_NF_CUFE_FV:titulo.cufe,
+                                        U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                        U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                        U_NF_VALOR_GIRO:titulo.valor_giro
+                                    }
+                
+                                    //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
+                
+                                    titulos.push(titulo)
+                    
+                                }else{
                                     //Update estado cabecera titulo
-                                    dataUpdateTitulo = {
-                                        U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
-                                        U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
-                                        U_NF_CUFE_FV: titulo.cufe,
-                                        U_NF_FECHA_PAGO: titulo.fecha_pago,
-                                        U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                        U_NF_VALOR_GIRO: titulo.valor_giro
+                                    dataUpdateTitulo={
+                                        U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                        U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                        U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                        U_NF_CUFE_FV:titulo.cufe,
+                                        U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                        U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                        U_NF_VALOR_GIRO:titulo.valor_giro
                                     };
-                                    resultUpdateTitulo = yield helper.UpdateTituloSL(dataUpdateTitulo, tituloSap.value[0].DocEntry);
-                                    //////console.log(resultUpdateTitulo);
+                
+                                    //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
+                                    ////////console.log(resultUpdateTitulo);
+                
                                     titulosUpdate.push(titulo);
                                 }
+        
+                                */
                             }
                         }
                         nextPage = titulosPage.next;
@@ -2782,30 +3827,38 @@ class Helpers {
                 }
                 let fechaFinalizacion = new Date();
                 //Envio Notificcación registros 
+                //Parcialmente comentado para pureba de webservice
+                /*
                 let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
-                    <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
-                if (titulos.length > 0) {
-                    html = html + `<h4>Títulos registrados</h4><br>${JSON.stringify(titulos)}<br>`;
+                            <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
+        
+                if(titulos.length>0){
+                    html = html+`<h4>Títulos registrados</h4><br>${JSON.stringify(titulos)}<br>`;
                 }
-                if (titulosUpdate.length > 0) {
-                    html = html + `<h4>Títulos actualizados</h4><br>${JSON.stringify(titulosUpdate)}<br>`;
+        
+                if(titulosUpdate.length>0){
+                    html = html+`<h4>Títulos actualizados</h4><br>${JSON.stringify(titulosUpdate)}<br>`;
                 }
-                if (titulos.length == titulosUpdate.length && titulosUpdate.length == 0) {
-                    html = html + `<h4>No se encontraron títulos a registrar</h4><br>`;
+        
+                if(titulos.length == titulosUpdate.length && titulosUpdate.length ==0){
+                    html = html+`<h4>No se encontraron títulos a registrar</h4><br>`;
                 }
-                let infoEmail = {
+        
+                let infoEmail:any = {
                     //to: LineAprovedSolped.aprobador.email,
-                    to: 'ralbor@nitrofert.com.co',
-                    cc: 'aballesteros@nitrofert.com.co',
+                    to:'ralbor@nitrofert.com.co',
+                    cc:'aballesteros@nitrofert.com.co',
                     subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
                     html
-                };
+                }
                 //Envio de notificación al siguiente aprobador con copia al autor
-                yield helper.sendNotification(infoEmail);
+                await helper.sendNotification(infoEmail);
+                
+                */
                 return ({ 'Titulos registrados': titulos, 'Titulos actualizados': titulosUpdate });
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 let infoEmail = {
                     //to: LineAprovedSolped.aprobador.email,
                     to: 'ralbor@nitrofert.com.co',
@@ -2827,11 +3880,11 @@ class Helpers {
                 let fechaFinPagoFormat = `${fechaFinPago.getFullYear()}-${fechaFinPago.getMonth() + 1}-${fechaFinPago.getUTCDate()}`;
                 let fechaInicioPago = yield helper.sumarDiasFecha(new Date(), -100);
                 let fechaInicioPagoFormat = `${fechaInicioPago.getFullYear()}-${fechaInicioPago.getMonth() + 1}-${fechaInicioPago.getUTCDate()}`;
-                ////console.log(fechaFinPagoFormat,fechaInicioPagoFormat);
+                //////console.log(fechaFinPagoFormat,fechaInicioPagoFormat);
                 //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
                 let nextPage = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
                 //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
-                ////console.log(nextPage); 
+                //////console.log(nextPage); 
                 let pagos = [];
                 let pagosPage;
                 let refPago;
@@ -2839,37 +3892,50 @@ class Helpers {
                 let tituloSap;
                 let pagosTitulo;
                 let DocEntry;
+                console.log('Inicio Pagos: ');
                 while (nextPage != null) {
-                    ////console.log(nextPage);
+                    //console.log(nextPage);
                     pagosPage = yield helper.getPagosLQ(token, nextPage);
-                    ////console.log(pagosPage);
+                    console.log(pagosPage);
                     if (pagosPage.results) {
                         for (let pago of pagosPage.results) {
-                            //////console.log(pago);
+                            ////////console.log(pago);
+                            //console.log('Pago: ',pago.referencia_pago);
+                            //console.log('Pago titulo: ',pago.no_titulo);
                             if (pago.valor_pagado != 0 && pago.referencia_pago != '') {
                                 //Buscar titulo en SAP
-                                tituloSap = yield helper.getTituloById(pago.no_titulo);
-                                if (tituloSap.value.length > 0) {
-                                    //////console.log(tituloSap);
+                                //Parcialmente comentado para pureba de webservice
+                                /*
+                                tituloSap = await helper.getTituloById(pago.no_titulo);
+                                if(tituloSap.value.length>0){
+                                    
+                                    ////////console.log(tituloSap);
                                     pagosTitulo = tituloSap.value[0].NF_CXC_LIQUITEC_DETCollection;
                                     DocEntry = tituloSap.value[0].DocEntry;
-                                    dataNewPago = {
-                                        "U_NF_SALDO_LIQUITECH": pago.saldo_favor,
+            
+                                    dataNewPago ={
+                                        
+                                        "U_NF_SALDO_LIQUITECH":pago.saldo_favor,
                                         "NF_CXC_LIQUITEC_DETCollection": [
                                             {
                                                 "U_FECHA_PAGO": pago.fecha_pago,
                                                 "U_VALOR_PAGO": pago.valor_pagado,
-                                                "U_NF_REF_PAGO": pago.referencia_pago
+                                                "U_NF_REF_PAGO":pago.referencia_pago
                                             }
                                         ]
+                                    
                                     };
-                                    if (pagosTitulo.length == 0 || pagosTitulo.filter(item => item.U_NF_REF_PAGO == pago.referencia_pago).length == 0) {
-                                        ////console.log(dataNewPago);
+            
+            
+                                    if(pagosTitulo.length==0 ||  pagosTitulo.filter(item =>item.U_NF_REF_PAGO==pago.referencia_pago).length==0){
+                                        //////console.log(dataNewPago);
                                         //Insertar pago a titulo
-                                        yield helper.UpdateTituloSL(dataNewPago, DocEntry);
+                                        await helper.UpdateTituloSL(dataNewPago,DocEntry);
                                         pagos.push(pago);
                                     }
+            
                                 }
+                                */
                             }
                         }
                         nextPage = pagosPage.next === undefined ? null : pagosPage.next;
@@ -2878,30 +3944,36 @@ class Helpers {
                         nextPage = null;
                     }
                 }
+                //Parcialmente comentado para pureba de webservice
+                /*
                 let fechaFinalizacion = new Date();
                 let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
-            <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
-            <h4>Fecha de incio pagos:</h4> ${fechaInicioPago.toLocaleDateString().toString()}<br>
-            <h4>Fecha de fin pagos:</h4> ${fechaFinPago.toLocaleDateString().toString()}<br>`;
-                if (pagos.length > 0) {
-                    html = html + `<h4>Pagos registrados</h4><br>${JSON.stringify(pagos)}<br>`;
+                <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
+                <h4>Fecha de incio pagos:</h4> ${fechaInicioPago.toLocaleDateString().toString()}<br>
+                <h4>Fecha de fin pagos:</h4> ${fechaFinPago.toLocaleDateString().toString()}<br>`;
+        
+                if(pagos.length>0){
+                html = html+`<h4>Pagos registrados</h4><br>${JSON.stringify(pagos)}<br>`;
+                }else{
+                    html = html+`<h4>No se encontraron pagos a registrar</h4><br>`;
                 }
-                else {
-                    html = html + `<h4>No se encontraron pagos a registrar</h4><br>`;
+        
+               
+        
+                let infoEmail:any = {
+                //to: LineAprovedSolped.aprobador.email,
+                to:'ralbor@nitrofert.com.co',
+                cc:'aballesteros@nitrofert.com.co',
+                subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
+                html
                 }
-                let infoEmail = {
-                    //to: LineAprovedSolped.aprobador.email,
-                    to: 'ralbor@nitrofert.com.co',
-                    cc: 'aballesteros@nitrofert.com.co',
-                    subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
-                    html
-                };
                 //Envio de notificación al siguiente aprobador con copia al autor
-                yield helper.sendNotification(infoEmail);
+                await helper.sendNotification(infoEmail);
+                */
                 return (pagos);
             }
             catch (error) {
-                ////console.log(error);
+                //////console.log(error);
                 let infoEmail = {
                     //to: LineAprovedSolped.aprobador.email,
                     to: 'ralbor@nitrofert.com.co',

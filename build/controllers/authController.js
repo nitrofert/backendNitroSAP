@@ -59,95 +59,38 @@ class AuthController {
     }
     login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            //console.log(req.body);
             //Recibe los campos del formulario Login y lo alamacenamos en una constante formLogin
             const formLogin = {
                 username: req.body.username,
                 password: yield helpers_1.default.encryptPassword(req.body.password),
                 company: req.body.company
             };
-            //console.log(formLogin);
             //Consultamos la tabla de usuarios con el nombre de usuario proporcionado en el formulario
             const user = yield database_1.db.query(`
         
-            SELECT t0.id, t0.username,t0.password, t2.id as companyid 
-                FROM users t0 
-                INNER JOIN company_users t1 ON t1.id_user = t0.id
-                INNER JOIN companies t2 ON t1.id_company = t2.id
-                WHERE (username = ? or email = ?) and id_company = ?`, [formLogin.username, formLogin.username, formLogin.company]);
+            SELECT t0.id, t0.username,t0.password, t0.fullname, t0.status, t1.id_company as companyid ,t2.companyname,  t2.urlwsmysql AS bdmysql, t2.dbcompanysap 
+            FROM users t0 
+            INNER JOIN company_users t1 ON t1.id_user = t0.id
+            INNER JOIN companies t2 ON t2.id = t1.id_company
+            WHERE (t0.username = ? or t0.email = ?) and t1.id_company = ?`, [formLogin.username, formLogin.username, formLogin.company]);
             // Validamos si el usuario buscado por el username existe, si no existe retornamos error
             if (user.length == 0)
                 return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
-            //console.log(user);
             //Comparamos el pasword registrado en el formulario con el password obtenido del query x username
             const validPassword = yield helpers_1.default.matchPassword(req.body.password, (user[0].password || ''));
-            //console.log(validPassword);
             // Si el passwornno coincide, retornamos error 
             if (!validPassword)
                 return res.status(401).json({ message: "Datos de inicio de sesión invalidos", status: 401 });
-            //Obtener datos de usuario para ecriptar en token jwt
-            const infoUsuario = yield database_1.db.query(`
-        SELECT t0.id, fullname, email, username, codusersap, t0.status, 
-               id_company,companyname, logoempresa, urlwsmysql AS bdmysql, dbcompanysap, urlwssap ,nit,direccion,telefono 
-        FROM users t0 
-        INNER JOIN company_users t1 ON t1.id_user = t0.id
-        INNER JOIN companies t2 ON t2.id = t1.id_company
-        WHERE t0.id = ? AND t2.id = ?  AND t2.status ='A'`, [user[0].id, user[0].companyid]);
-            /*const perfilesUsuario = await db.query(`SELECT t0.id, t0.perfil
-                                                    FROM perfiles t0
-                                                    INNER JOIN perfil_users t1 ON t1.id_perfil = t0.id
-                                                    WHERE t1.id_user = ?`,[user[0].id]);
-            
-            const opcionesMenu = await db.query(`SELECT t0.*
-                                                FROM menu t0
-                                                INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id
-                                                WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
-                                                    t0.hierarchy ='P' AND
-                                                    t1.read_accion = true
-                                                ORDER BY t0.ordernum ASC;`,[user[0].id]);
-    
-            const opcionesSubMenu = await db.query(`SELECT t0.*
-                                                    FROM menu t0
-                                                    INNER JOIN perfil_menu_accions t1 ON t1.id_menu = t0.id
-                                                    WHERE t1.id_perfil IN (SELECT t10.id FROM perfiles t10 INNER JOIN perfil_users t11 ON t11.id_perfil = t10.id WHERE t11.id_user = ?) AND
-                                                        t0.hierarchy ='H' AND
-                                                        t1.read_accion = true AND
-                                                        t0.visible =1
-                                                    ORDER BY t0.ordernum ASC;`,[user[0].id]);
-    
-            const permisosUsuario = await db.query(`SELECT *
-                                                            FROM perfil_menu_accions t0
-                                                            INNER JOIN  perfiles t1 ON t1.id = t0.id_perfil
-                                                            INNER JOIN menu t2 ON t2.id = t0.id_menu
-                                                            WHERE t0.id_perfil IN (SELECT tt0.id_perfil FROM perfil_users tt0 WHERE tt0.id_user = ?)`,[user[0].id]);
-            
-            const almacenesUsuario = [];
-            
-    
-            let userConfig ={
-                infoUsuario:infoUsuario[0],
-                perfilesUsuario,
-                permisosUsuario,
-                menuUsuario:{
-                    opcionesMenu,
-                    opcionesSubMenu
-                }
-            }
-    
-            */
-            //Retorno de respuesta exitosa y datos del usuario logueado o token
-            //console.log(JSON.stringify(userConfig));
-            if (infoUsuario[0].status == 'I')
+            //Validar estado del usuario
+            if (user[0].status == 'I')
                 return res.status(401).json({ message: "Usuario inactivo", status: 401 });
-            const userId = infoUsuario[0].id;
-            const company = infoUsuario[0].id_company;
-            //const token:string = await helper.generateToken(userConfig);
-            const tokenid = yield helpers_1.default.generateToken({ userId, company });
+            //Obtener datos de usuario para ecriptar en token jwt
+            const tokenid = yield helpers_1.default.generateToken({ userId: user[0].id, company: user[0].companyid });
             const token = tokenid;
             //Regstrar log
-            yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${formLogin.username} ha accedido al portal`);
-            //return res.json({message:`!Bienvenido ${userConfig.infoUsuario.fullname}¡`, status:200,infoUsuario,tokenid});
-            return res.json({ message: `Bienvenid@ ${infoUsuario[0].fullname}`, status: 200, infoUsuario, token, tokenid });
+            yield helpers_1.default.logaccion(user[0], `El usuario ${formLogin.username} ha accedido al portal`);
+            //Retorno de respuesta exitosa y datos del usuario logueado o token
+            return res.json({ message: `Bienvenid@ ${user[0].fullname}`, status: 200, token, tokenid });
         });
     }
     validarusuario(req, res) {
@@ -197,6 +140,32 @@ class AuthController {
             return res.json({ message: `Bienvenid@ ${infoUsuario[0].fullname}`, status: 200, infoUsuario, token, tokenid });
         });
     }
+    configUsuario(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //console.log(decodedToken);
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                const menuUsuario = yield helpers_1.default.getMenuUsuario(decodedToken.userId);
+                const permisosUsuario = yield helpers_1.default.getPermisoUsuario(decodedToken.userId);
+                const configUsuario = {
+                    infoUsuario,
+                    perfilesUsuario,
+                    menuUsuario,
+                    permisosUsuario
+                };
+                return res.json(configUsuario);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
     infoUsuario(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -204,7 +173,7 @@ class AuthController {
                 let jwt = req.headers.authorization || '';
                 jwt = jwt.slice('bearer'.length).trim();
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
-                console.log(decodedToken);
+                //console.log(decodedToken);
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 return res.json(infoUsuario);
             }
@@ -260,7 +229,7 @@ class AuthController {
                 let jwt = req.headers.authorization || '';
                 jwt = jwt.slice('bearer'.length).trim();
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
-                console.log(decodedToken);
+                //console.log(decodedToken);
                 const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
                 return res.json(perfilesUsuario);
             }
@@ -277,7 +246,7 @@ class AuthController {
                 let jwt = req.headers.authorization || '';
                 jwt = jwt.slice('bearer'.length).trim();
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
-                console.log(decodedToken);
+                //console.log(decodedToken);
                 const menuUsuario = yield helpers_1.default.getMenuUsuario(decodedToken.userId);
                 return res.json(menuUsuario);
             }
@@ -294,7 +263,7 @@ class AuthController {
                 let jwt = req.headers.authorization || '';
                 jwt = jwt.slice('bearer'.length).trim();
                 const decodedToken = yield helpers_1.default.validateToken(jwt);
-                console.log(decodedToken);
+                //console.log(decodedToken);
                 const permisosUsuario = yield helpers_1.default.getPermisoUsuario(decodedToken.userId);
                 return res.json(permisosUsuario);
             }
@@ -371,7 +340,15 @@ class AuthController {
                 //******************************************************* */
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const bdmysql = infoUsuario[0].bdmysql;
-                const dependenciasUsuario = yield database_1.db.query(`SELECT * FROM ${bdmysql}.dependencies_user WHERE codusersap = '${infoUsuario[0].codusersap}'`);
+                const query = `SELECT * 
+        FROM dependencies_user t0
+        INNER JOIN companies t1 ON t1.id = t0.companyid 
+        WHERE t0.codusersap = '${infoUsuario[0].codusersap}' and 
+              t1.urlwsmysql = '${bdmysql}' and
+              t1.status = 'A'`;
+                //console.log(query);      
+                const dependenciasUsuario = yield database_1.db.query(query);
+                //console.log(dependenciasUsuario);
                 res.json(dependenciasUsuario);
             }
             catch (error) {
@@ -429,6 +406,7 @@ class AuthController {
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const compania = infoUsuario[0].dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
@@ -476,10 +454,40 @@ class AuthController {
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const compania = infoUsuario[0].dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
-                //console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    areasUser(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const compania = infoUsuario[0].dbcompanysap;
+                const bdmysql = infoUsuario[0].bdmysql;
+                /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+                console.log(url2);
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();
+                return res.json(data2);*/
+                const areas = yield database_1.db.query(`Select * 
+                                          From areas_user t0 
+                                          INNER JOIN companies t1 ON t0.companyid = t1.id
+                                          where t1.status ='A' and
+                                                t1.urlwsmysql = '${bdmysql}' and
+                                                T0.codusersap = '${infoUsuario[0].codusersap}'`);
+                return res.json(areas);
             }
             catch (error) {
                 console.error(error);

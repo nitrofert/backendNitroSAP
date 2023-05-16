@@ -45,7 +45,8 @@ class ComapnyController {
                     const decodedToken = yield helpers_1.default.validateToken(jwt);
                 }
                 //******************************************************* */
-                const companies = yield database_1.db.query("SELECT * from companies where status ='A'");
+                //const companies: CompanyInterface[] = await db.query("SELECT * from companies where status ='A'");
+                const companies = yield database_1.db.query("SELECT id, companyname from companies where status ='A'");
                 // console.log(companies);
                 res.json(companies);
             }
