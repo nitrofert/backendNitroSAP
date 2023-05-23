@@ -13,11 +13,14 @@ class MySQLRoutes {
     config() {
         this.router.get('/load-config-solped', mysqlController_1.default.configSolped);
         this.router.get('/load-config-solped-mp', mysqlController_1.default.configSolpedMP);
+        this.router.get('/load-config-calculadora-precios', mysqlController_1.default.configCalculadoraPrecios);
         this.router.get('/series/:objtype?', mysqlController_1.default.series);
         this.router.get('/cuentas', mysqlController_1.default.cuentas);
         this.router.get('/impuestos-compra', mysqlController_1.default.impuestosCompra);
         this.router.get('/items', mysqlController_1.default.items);
         this.router.get('/items-calculadora', mysqlController_1.default.itemsCalculadora);
+        this.router.get('/items-mp', mysqlController_1.default.itemsMP);
+        this.router.get('/items-pt', mysqlController_1.default.itemsPT);
         this.router.get('/almacenes', mysqlController_1.default.almacenes);
         this.router.get('/zonas', mysqlController_1.default.zonas);
         this.router.get('/monedas', mysqlController_1.default.monedas);
@@ -26,6 +29,9 @@ class MySQLRoutes {
         this.router.get('/dependencias-usuario', mysqlController_1.default.dependeciasUsuario);
         this.router.get('/almacenes-usuario', mysqlController_1.default.almacenesUsuario);
         this.router.get('/cuentas-dependencia/:dependencia?', mysqlController_1.default.cuentasDependencia);
+        this.router.get('/dependencias', mysqlController_1.default.dependecias);
+        this.router.get('/autores', mysqlController_1.default.autores);
+        this.router.get('/lista-calculos-precios-item', mysqlController_1.default.listaPreciosCalculados);
     }
 }
 const mysqlRoutes = new MySQLRoutes();

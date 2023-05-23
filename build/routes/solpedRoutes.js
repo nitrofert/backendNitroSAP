@@ -17,6 +17,7 @@ class SolpedRoutes {
         this.router.post('/', solpedController_1.default.create);
         this.router.post('/detail', solpedController_1.default.createDetail);
         this.router.put('/', solpedController_1.default.update);
+        this.router.get('/proyectos', solpedController_1.default.getProyectos);
         this.router.get('/:id', solpedController_1.default.getSolpedById);
         this.router.post('/envio-aprobacion', solpedController_1.default.envioAprobacionSolped2);
         this.router.get('/aprobar/:idcrypt', solpedController_1.default.aprovedMail);

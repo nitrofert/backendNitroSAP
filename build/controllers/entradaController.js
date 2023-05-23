@@ -120,7 +120,7 @@ class EntradaController {
                 if (resultInsertSolpedDet.affectedRows) {
                     //Registrar entrada en SAP
                     let dataForSAP = yield helpers_1.default.loadInfoEntradaToJSONSAP(newEntrada);
-                    //console.log(dataForSAP);
+                    console.log(dataForSAP);
                     //registrar Entrada en SAP
                     const resultResgisterSAP = yield helpers_1.default.registerEntradaSAP(infoUsuario[0], dataForSAP);
                     if (resultResgisterSAP.error) {

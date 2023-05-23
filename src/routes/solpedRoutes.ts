@@ -19,6 +19,7 @@ class SolpedRoutes{
         this.router.post('/', solpedController.create);
         this.router.post('/detail', solpedController.createDetail);
         this.router.put('/', solpedController.update);
+        this.router.get('/proyectos',solpedController.getProyectos);
         this.router.get('/:id',solpedController.getSolpedById); 
         this.router.post('/envio-aprobacion',solpedController.envioAprobacionSolped2);
         this.router.get('/aprobar/:idcrypt',solpedController.aprovedMail);  
@@ -46,6 +47,8 @@ class SolpedRoutes{
         this.router.post('/aprobar',solpedController.aprovedMail2);  
         this.router.post('/rechazar',solpedController.rejectMail);
         this.router.get('/anexo/:id/:id2',solpedController.getAnexoSolpedById);
+
+        
         
        
         

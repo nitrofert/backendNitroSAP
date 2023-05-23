@@ -445,6 +445,44 @@ class WssapController {
         
     }
 
+    public async OrdenesUsuarioAreaXE(req: Request, res: Response) {
+
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        //console.log(infoUsuario);
+        const compania = infoUsuario[0].dbcompanysap;
+        const userSap = infoUsuario[0].codusersap;
+
+        const area = req.params.area;
+
+            
+            
+            //console.log(await helper.format(fechaTrm));
+        
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
+            console.log(url2);
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();
+                //console.log(data2);   
+                return res.json(data2);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+            } 
+        
+    }
+
+
     public async OrdenesUsuarioXE(req: Request, res: Response) {
 
         //Obtener datos del usurio logueado que realizo la petición
@@ -457,6 +495,7 @@ class WssapController {
         try {
 
         const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        //console.log(infoUsuario);
         const compania = infoUsuario[0].dbcompanysap;
         const userSap = infoUsuario[0].codusersap;
 
@@ -465,7 +504,7 @@ class WssapController {
             //console.log(await helper.format(fechaTrm));
         
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
-            
+            console.log(url2);
         
                 const response2 = await fetch(url2);
                 const data2 = await response2.json();
@@ -528,6 +567,7 @@ class WssapController {
            }
         
            //console.log(data);
+          
          
         if(bieSession!=''){
             const configWs2 = {
@@ -545,6 +585,8 @@ class WssapController {
             const data2 = await response2.json();
     
             //console.log(data2);
+
+            
     
             helper.logoutWsSAP(bieSession); 
             

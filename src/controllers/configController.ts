@@ -404,8 +404,6 @@ class ConfigController{
         }
     }
 
-    
-
     async loadAlmacenesSapToMysql(req: Request, res: Response){
 
         try {
@@ -472,13 +470,6 @@ class ConfigController{
         }
          
     }
-    
-
-    
-
-    
-
-    
     
 }
 

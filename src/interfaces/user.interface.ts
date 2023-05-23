@@ -7,5 +7,8 @@ export interface UserInterface {
     codusersap: string,
     status: string,
     created_at?: string,
-    companyid?: number
+    companyid?: number,
+    areas?:any[],
+    dependencias?:any[],
+    almacenes?:any[]
 }
