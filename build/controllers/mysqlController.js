@@ -186,8 +186,12 @@ class MySQLController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 //const series = await db.query(`Select * from ${bdmysql}.series t0 where t0.objtype ='1470000113'`);
                 //const  items = await db.query(`SELECT * FROM ${bdmysql}.items_sap t0 WHERE t0.validFor='Y' and  ItmsGrpCod = 102 ORDER BY t0.ItemName ASC`);
-                const itemsMP = yield helpers_1.default.objectToArray(yield helpers_1.default.getItemsMPCP(compania, 102));
-                const items = itemsMP.filter(item => item.INACTIVO == "N");
+                const itemsPT = yield helpers_1.default.objectToArray(yield helpers_1.default.getItemsMPCP(compania, 102));
+                const itemsMP = yield helpers_1.default.objectToArray(yield helpers_1.default.getItemsMPCP(compania, 101));
+                const itemsEmpaque = yield helpers_1.default.objectToArray(yield helpers_1.default.getItemsMPCP(compania, 103));
+                const items = itemsPT.filter(item => item.INACTIVO == "N");
+                const itemsMP2 = itemsMP.filter(item => item.INACTIVO == "N");
+                const itemsEmpaqueMP2 = itemsEmpaque.filter(item => item.INACTIVO == "N");
                 //console.log(itemsMP);
                 //const cuentas = await db.query(`Select * From ${bdmysql}.cuentas_contable`);
                 //const impuestos = await db.query(`Select * From ${bdmysql}.taxes where ValidForAP='Y'`);
@@ -245,6 +249,8 @@ class MySQLController {
                 const configuracionSolped = {
                     //series,
                     items,
+                    itemsMP2,
+                    itemsEmpaqueMP2,
                     //cuentas,
                     //impuestos,
                     //almacenes,
@@ -591,10 +597,12 @@ class MySQLController {
                 const bdmysql = infoUsuario[0].bdmysql;
                 const compania = infoUsuario[0].dbcompanysap;
                 let dependencia = req.params.dependencia;
-                //console.log(dependencia);
-                const cuentas = yield database_1.db.query(`Select *
-                                            From ${bdmysql}.cuentas_dependencias t0 
-                                            Where t0.Code='${dependencia}'`);
+                console.log(dependencia);
+                let where = "";
+                if (dependencia) {
+                    where = ` Where t0.Code='${dependencia}' `;
+                }
+                const cuentas = yield database_1.db.query(`Select * From ${bdmysql}.cuentas_dependencias t0 ${where} Order by t0.Code ASC`);
                 return res.json(cuentas);
             }
             catch (error) {
@@ -697,11 +705,15 @@ class MySQLController {
                                   t1.brutoS1, 
                                   t1.netoS1, 
                                   t1.brutoS2, 
-                                  t1.netoS2
+                                  t1.netoS2,
+                                  t1.precioGerente,
+                                  t1.precioVendedor,
+                                  t1.precioLP
                  
             FROM ${bdmysql}.calculo_precio_item t0
             INNER JOIN ${bdmysql}.detalle_precio_calculo_item t1 ON t1.id_calculo = t0.id
             WHERE t1.linea=2`;
+                //console.log(query);
                 //console.log(query);      
                 const preciosCalculados = yield database_1.db.query(query);
                 //console.log(dependenciasUsuario);

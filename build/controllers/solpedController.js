@@ -1396,7 +1396,7 @@ class SolpedController {
                                     yield helpers_1.default.logaccion(infoUsuario[0], `Solped:${idSolped}  Registro solped SAP: ${infoUsuario[0].fullname}`);
                                     //Generar data para registro de la solped en SAP
                                     let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(Solped);
-                                    console.log(dataForSAP);
+                                    console.log(JSON.stringify(dataForSAP));
                                     //registrar Solped en SAP
                                     const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
                                     ////////console.log(resultResgisterSAP);

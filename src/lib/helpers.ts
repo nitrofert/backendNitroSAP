@@ -3187,7 +3187,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsPrecioUnitarioVentas.xsjs?pItem=${(itemCode)}&pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
-            //console.log(url2);
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);
@@ -3225,7 +3225,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MATERIALES.xsjs?tipo=${(tipo)}&compania=${compania}`;
-            //console.log(url2);
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);

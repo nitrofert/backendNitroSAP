@@ -2781,7 +2781,7 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsPrecioUnitarioVentas.xsjs?pItem=${(itemCode)}&pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
-                //console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 //////console.log(data2);
@@ -2813,7 +2813,7 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MATERIALES.xsjs?tipo=${(tipo)}&compania=${compania}`;
-                //console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 ////console.log(data2);

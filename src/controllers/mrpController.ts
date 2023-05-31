@@ -1648,7 +1648,7 @@ class MrpController {
             console.log(infoUsuario);
             const bdmysql = infoUsuario[0].bdmysql;
 
-            const { fecha, semanaAnio, semanaMes,ItemCode, ItemName, trmDia, moneda, trmMoneda,precioRef,precioBase,prcGerente,prcLP,promAdmin,promRecurso,detalle_calculo_mp,detalle_calculo_precio_item,observacion } = req.body;
+            const { fecha, semanaAnio, semanaMes,ItemCode, ItemName, trmDia, moneda, trmMoneda,precioRef,precioBase,prcGerente,prcLP,prcVendedor,promAdmin,promRecurso,detalle_calculo_mp,detalle_calculo_precio_item,observacion,costoRecursoSAP} = req.body;
 
             //console.log(req.body);
             await connection.beginTransaction();
@@ -1658,7 +1658,7 @@ class MrpController {
             let fechaCalculo = fecha.split("T");
 
             const queryInsertCalculo = `Insert into ${bdmysql}.calculo_precio_item (fecha, userid,semanaAnio, semanaMes,ItemCode, ItemName, trmDia, moneda, trmMoneda,precioRef,
-                                                                                    precioBase,prcGerente,prcLP,promAdmin,promRecurso,observacion)
+                                                                                    precioBase,prcGerente,prcLP,promAdmin,promRecurso,observacion,costoRecursoSAP,prcVendedor)
                                                                             values ('${fechaCalculo[0]}', 
                                                                                     ${infoUsuario[0].id},
                                                                                     ${semanaAnio}, 
@@ -1674,7 +1674,9 @@ class MrpController {
                                                                                     ${prcLP},
                                                                                     ${promAdmin},
                                                                                     ${promRecurso},
-                                                                                    '${observacion}')`;
+                                                                                    '${observacion}',
+                                                                                    ${costoRecursoSAP},
+                                                                                    ${prcVendedor})`;
             const resultInsert = await connection.query(queryInsertCalculo);
 
             const id_calculo = resultInsert.insertId;

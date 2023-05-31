@@ -211,9 +211,17 @@ class MySQLController {
             //const  items = await db.query(`SELECT * FROM ${bdmysql}.items_sap t0 WHERE t0.validFor='Y' and  ItmsGrpCod = 102 ORDER BY t0.ItemName ASC`);
 
 
-            const itemsMP:any[] = await helper.objectToArray( await helper.getItemsMPCP(compania,102));
+            const itemsPT:any[] = await helper.objectToArray( await helper.getItemsMPCP(compania,102));
 
-            const items = itemsMP.filter(item=>item.INACTIVO=="N");
+            const itemsMP:any[] = await helper.objectToArray( await helper.getItemsMPCP(compania,101));
+
+            const itemsEmpaque:any[] = await helper.objectToArray( await helper.getItemsMPCP(compania,103));
+
+            const items = itemsPT.filter(item=>item.INACTIVO=="N");
+
+            const itemsMP2 = itemsMP.filter(item=>item.INACTIVO=="N");
+
+            const itemsEmpaqueMP2 = itemsEmpaque.filter(item=>item.INACTIVO=="N");
 
             //console.log(itemsMP);
 
@@ -285,6 +293,8 @@ class MySQLController {
             const configuracionSolped: any = {
                 //series,
                 items,
+                itemsMP2,
+                itemsEmpaqueMP2,
                 //cuentas,
                 //impuestos,
                 //almacenes,
@@ -675,10 +685,12 @@ class MySQLController {
             const compania = infoUsuario[0].dbcompanysap;
         
             let dependencia = req.params.dependencia;
-            //console.log(dependencia);
-            const cuentas = await db.query(`Select *
-                                            From ${bdmysql}.cuentas_dependencias t0 
-                                            Where t0.Code='${dependencia}'`);
+            console.log(dependencia);
+            let where = "";
+            if(dependencia){
+                where =` Where t0.Code='${dependencia}' `
+            }
+            const cuentas = await db.query(`Select * From ${bdmysql}.cuentas_dependencias t0 ${where} Order by t0.Code ASC`);
         
             return res.json(cuentas);  
 
@@ -792,11 +804,16 @@ class MySQLController {
                                   t1.brutoS1, 
                                   t1.netoS1, 
                                   t1.brutoS2, 
-                                  t1.netoS2
+                                  t1.netoS2,
+                                  t1.precioGerente,
+                                  t1.precioVendedor,
+                                  t1.precioLP
                  
             FROM ${bdmysql}.calculo_precio_item t0
             INNER JOIN ${bdmysql}.detalle_precio_calculo_item t1 ON t1.id_calculo = t0.id
             WHERE t1.linea=2`;
+
+            //console.log(query);
 
 
     
