@@ -354,6 +354,7 @@ export interface PurchaseRequestsInterface {
     U_NF_PUERTOSALIDA?:string;
     U_NF_MOTONAVE?:string;
     U_NF_PEDMP?:string;
+    U_NF_MES_REAL?:string;
 }
 
 export interface AddressExtension {

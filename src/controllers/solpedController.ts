@@ -3817,6 +3817,8 @@ class SolpedController {
 
                     let dataForSAP:PurchaseRequestsInterface = await helper.loadInfoSolpedToJSONSAP(infoSolped);
 
+                    console.log(dataForSAP);
+
                     //registrar Solped en SAP
                     const resultResgisterSAP = await helper.registerSolpedSAP(infoUsuario[0],dataForSAP);
 

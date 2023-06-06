@@ -377,7 +377,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             nf_motonave:solpedResult[0].nf_motonave,
             nf_pedmp:solpedResult[0].nf_pedmp,
             nf_Incoterms:solpedResult[0].nf_Incoterms,
-            docentrySP:solpedResult[0].docentrySP
+            docentrySP:solpedResult[0].docentrySP,
+            U_NF_MES_REAL:solpedResult[0].U_NF_MES_REAL,
 
         }
         let solpedDet: any[] = [];
@@ -1529,6 +1530,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 Comments:Solped.solped.comments,
                 U_AUTOR_PORTAL:Solped.solped.usersap,
                 //JournalMemo:Solped.solped.comments,
+                U_NF_MES_REAL:Solped.solped.U_NF_MES_REAL,
                 
                 DocumentLines
     

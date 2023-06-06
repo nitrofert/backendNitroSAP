@@ -708,7 +708,8 @@ class MySQLController {
                                   t1.netoS2,
                                   t1.precioGerente,
                                   t1.precioVendedor,
-                                  t1.precioLP
+                                  t1.precioLP,
+                                  t0.observacion
                  
             FROM ${bdmysql}.calculo_precio_item t0
             INNER JOIN ${bdmysql}.detalle_precio_calculo_item t1 ON t1.id_calculo = t0.id

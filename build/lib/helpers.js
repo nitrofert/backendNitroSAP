@@ -369,7 +369,8 @@ class Helpers {
                 nf_motonave: solpedResult[0].nf_motonave,
                 nf_pedmp: solpedResult[0].nf_pedmp,
                 nf_Incoterms: solpedResult[0].nf_Incoterms,
-                docentrySP: solpedResult[0].docentrySP
+                docentrySP: solpedResult[0].docentrySP,
+                U_NF_MES_REAL: solpedResult[0].U_NF_MES_REAL,
             };
             let solpedDet = [];
             for (let item of solpedResult) {
@@ -1441,6 +1442,7 @@ class Helpers {
                 Comments: Solped.solped.comments,
                 U_AUTOR_PORTAL: Solped.solped.usersap,
                 //JournalMemo:Solped.solped.comments,
+                U_NF_MES_REAL: Solped.solped.U_NF_MES_REAL,
                 DocumentLines
             };
             if (Solped.solped.u_nf_status != null) {

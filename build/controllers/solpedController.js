@@ -3230,6 +3230,7 @@ class SolpedController {
                     }
                     else {
                         let dataForSAP = yield helpers_1.default.loadInfoSolpedToJSONSAP(infoSolped);
+                        console.log(dataForSAP);
                         //registrar Solped en SAP
                         const resultResgisterSAP = yield helpers_1.default.registerSolpedSAP(infoUsuario[0], dataForSAP);
                         if (resultResgisterSAP.error) {
