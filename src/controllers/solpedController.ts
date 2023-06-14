@@ -40,7 +40,7 @@ class SolpedController {
                
                 where =` WHERE t0.id in (SELECT tt0.id_solped FROM ${bdmysql}.aprobacionsolped tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and 
                                t2.name!='SPMP' and 
-                               t0.approved !='A'`;
+                               t0.approved ='P'`;
             }
 
             ////////console.log(decodedToken);
@@ -108,7 +108,7 @@ class SolpedController {
                                     t0.comments,t0.trm
                             ORDER BY t0.id DESC`;
 
-           ////console.log(queryList);
+           console.log(queryList);
            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} ingreso al modulo de solped`);
 
             const solped = await db.query(queryList);
@@ -936,7 +936,7 @@ class SolpedController {
         try {
         
             //const modeloAprobacionesSAP:any = await helper.modeloAprobacionesSAP(infoUsuario[0]);
-            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} incio proceso de envio de aprobación de la/s solped ${JSON.stringify(arraySolpedId)}`);
+           /*await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} incio proceso de envio de aprobación de la/s solped ${JSON.stringify(arraySolpedId)}`);
             const modeloAprobacionesSAP:any = await helper.modeloAprobacionesMysql(infoUsuario[0]);
             
             if(modeloAprobacionesSAP.error){
@@ -946,7 +946,7 @@ class SolpedController {
                 });        
                 error = true;
                 await helper.logaccion(infoUsuario[0],`Error interno: error al obtener modelos de apobación SAP`);
-            }
+            }*/
 
             if(!error){
 
@@ -970,9 +970,26 @@ class SolpedController {
                     //Obtener la info de la solped segun el id
                     Solped = await helper.getSolpedById(id, bdmysql);
                     //filtrar los modelos segun el usuario autor y area de la solped
-                    modelos = modeloAprobacionesSAP.filter((modelo: { autorusercode: any; area: any; }) => 
+
+                    await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} incio proceso de envio de aprobación de la/s solped ${JSON.stringify(arraySolpedId)}`);
+                    let modeloAprobacionesSAP:any = await helper.modeloAprobacionesMysql(infoUsuario[0],Solped.solped.u_nf_depen_solped);
+
+                    console.log(modeloAprobacionesSAP);
+                    
+                    /*if(modeloAprobacionesSAP.error){
+                        arrayErrors.push({
+                            message:`Error interno: error al obtener modelos de apobación SAP`
+                            
+                        });        
+                        error = true;
+                        await helper.logaccion(infoUsuario[0],`Error interno: error al obtener modelos de apobación SAP`);
+                    }*/
+                    
+                    /*modelos = modeloAprobacionesSAP.filter((modelo: { autorusercode: any; area: any; }) => 
                                                             modelo.autorusercode === Solped.solped.usersap && 
-                                                            modelo.area === Solped.solped.u_nf_depen_solped);
+                                                            modelo.area === Solped.solped.u_nf_depen_solped);*/
+
+                    modelos = modeloAprobacionesSAP.filter((modelo: { autorusercode: any; area: any; }) => modelo.area === Solped.solped.u_nf_depen_solped);
                     
                     if(modelos.length ==0){
                         //console.log('validacion de modelos usuario, area');

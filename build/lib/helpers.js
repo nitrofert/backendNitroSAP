@@ -241,6 +241,53 @@ class Helpers {
             }
         });
     }
+    getUser(userid) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const query = `
+            SELECT 	
+                    t0.id, 
+                    t0.fullname, 
+                    t0.email, 
+                    t0.username, 
+                    t0.codusersap, 
+                    t0.status 
+            FROM    users t0 
+            WHERE   t0.id = ? `;
+                const infoUsuario = yield database_1.db.query(query, [userid]);
+                return infoUsuario;
+            }
+            catch (error) {
+                console.error(error);
+                return error;
+            }
+        });
+    }
+    getCompany(company) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const query = `
+        SELECT 	
+                t2.companyname, 
+                t2.logoempresa, 
+                t2.urlwsmysql AS bdmysql, 
+                t2.dbcompanysap, 
+                t2.urlwssap ,
+                t2.nit,
+                t2.direccion,
+                t2.telefono 
+        FROM    companies t2 
+        WHERE   t2.id = ? `;
+                //////console.log(query,userid,company);
+                const infoCompany = yield database_1.db.query(query, [company]);
+                return infoCompany;
+            }
+            catch (error) {
+                console.error(error);
+                return error;
+            }
+        });
+    }
     getLogo64(userid, company) {
         return __awaiter(this, void 0, void 0, function* () {
             const infoUsuario = yield database_1.db.query(`
@@ -370,7 +417,7 @@ class Helpers {
                 nf_pedmp: solpedResult[0].nf_pedmp,
                 nf_Incoterms: solpedResult[0].nf_Incoterms,
                 docentrySP: solpedResult[0].docentrySP,
-                U_NF_MES_REAL: solpedResult[0].U_NF_MES_REAL,
+                U_NF_MES_REAL: solpedResult[0].U_NF_MES_REAL == null ? '' : solpedResult[0].U_NF_MES_REAL,
             };
             let solpedDet = [];
             for (let item of solpedResult) {
@@ -1807,10 +1854,24 @@ class Helpers {
             }
         });
     }
-    modeloAprobacionesMysql(infoUsuario) {
+    modeloAprobacionesMysql(infoUsuario, area) {
         return __awaiter(this, void 0, void 0, function* () {
             const bdmysql = infoUsuario.bdmysql;
-            const modelos = yield database_1.db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+            //const modelos = await db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+            const modelos = yield database_1.db.query(`SELECT DISTINCT 
+        t0.modeloid, 
+        t0.modelo,
+        '${infoUsuario.username}' as autorusercode,
+        '${infoUsuario.fullname}' as autornombre,
+        '${infoUsuario.email}' as emailautor, 
+        t0.etapaid, 
+        t0.aprobadorusercode, 
+        t0.aprobadornombre, 
+        t0.emailaprobador, 
+        t0.query,
+        t0.nivel 
+        FROM ${bdmysql}.modelos_aprobacion t0 
+        WHERE t0.query LIKE '%${area}%'`);
             const data2 = modelos;
             let arrayModelos = [];
             for (let item in data2) {
@@ -2296,6 +2357,69 @@ class Helpers {
             }
         });
     }
+    findUserSAPSL(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                const userSAP = infoUsuario.codusersap;
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users?$filter=UserCode eq '${userSAP}'`;
+                    ////console.log(url2);
+                    let configWs2 = {
+                        method: "GET",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        }
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    ////////////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////////console.log(error);
+                return '';
+            }
+        });
+    }
+    registerUserSAPSL(infoUsuario) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const bieSession = yield helper.loginWsSAP(infoUsuario);
+                const userSAP = infoUsuario.codusersap;
+                const data = {
+                    "UserCode": infoUsuario.codusersap,
+                    "UserName": infoUsuario.fullname,
+                    "Superuser": "tNO",
+                    "eMail": infoUsuario.email,
+                };
+                if (bieSession != '') {
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users`;
+                    ////console.log(url2);
+                    let configWs2 = {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'cookie': bieSession || ''
+                        },
+                        body: JSON.stringify(data)
+                    };
+                    const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
+                    const data2 = yield response2.json();
+                    ////////////console.log(data2);
+                    helper.logoutWsSAP(bieSession);
+                    return data2;
+                }
+            }
+            catch (error) {
+                //////////console.log(error);
+                return '';
+            }
+        });
+    }
     itemsSolpedXengine(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -2767,7 +2891,7 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?material=${(itemCode)}&compania=${compania}`;
-                ////console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 //////console.log(data2);

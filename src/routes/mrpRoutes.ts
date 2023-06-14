@@ -29,9 +29,10 @@ class MrpRoutes{
         this.router.post('/lista-precios-mp', mrpController.grabarListaPreciosMP);
         this.router.get('/lista-precios-mp', mrpController.getListaPreciosMP);
         this.router.get('/lista-precios-mp/:semana', mrpController.getListaPreciosMPSemana);
-
         this.router.post('/lista-precios-pt', mrpController.grabarListaPreciosPT);
         this.router.get('/lista-precios-pt', mrpController.getListaPreciosPT);
+        this.router.get('/lista-precios-sugeridos', mrpController.getListaPreciosSugeridos);
+        this.router.get('/lista-precios-sugeridos/:item', mrpController.getListaPreciosSugeridosItem);
         this.router.get('/lista-precios-pt/:semana', mrpController.getListaPreciosPTSemana);
         this.router.get('/lista-precios-pt-seman-zona', mrpController.getPreciosPTxSemanaZonaAutor);
         this.router.get('/lista-precios-item/:itemcode', mrpController.getListaPreciosItemSap);
@@ -43,6 +44,7 @@ class MrpRoutes{
         this.router.post('/nuevo-autor', mrpController.nuevoAutor);
         this.router.post('/cargar-lp-mercado', multer.single('myFileLP'), mrpController.cargarLPMercado);
         this.router.post('/cargar-lp-mp', multer.single('myFileMP'), mrpController.cargarLPMP);
+        this.router.post('/cargar-lp-sugerido', multer.single('myFileLPSugerido'), mrpController.cargarLPSugerido);
         this.router.post('/grabar-calculo-precios-item',  mrpController.grabarCalculoPreciosItem);
         this.router.get('/consulta-calculos-item', mrpController.getInfoCalculoItem);
         this.router.get('/precio-venta-item', mrpController.getPrecioVentaItemSAP);

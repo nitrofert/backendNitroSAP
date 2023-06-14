@@ -230,6 +230,52 @@ class Helpers {
        }
     }
 
+    async getUser(userid: number): Promise<any> {
+        try{
+            const query = `
+            SELECT 	
+                    t0.id, 
+                    t0.fullname, 
+                    t0.email, 
+                    t0.username, 
+                    t0.codusersap, 
+                    t0.status 
+            FROM    users t0 
+            WHERE   t0.id = ? `;
+            
+            const infoUsuario = await db.query(query,[userid]);
+            
+            return infoUsuario;
+        }catch(error){
+            console.error(error);
+            return error;
+           }
+    }
+
+    async getCompany(company:string): Promise<any> {
+        try{
+        const query = `
+        SELECT 	
+                t2.companyname, 
+                t2.logoempresa, 
+                t2.urlwsmysql AS bdmysql, 
+                t2.dbcompanysap, 
+                t2.urlwssap ,
+                t2.nit,
+                t2.direccion,
+                t2.telefono 
+        FROM    companies t2 
+        WHERE   t2.id = ? `;
+        //////console.log(query,userid,company);
+        const infoCompany = await db.query(query,[company]);
+        
+        return infoCompany;
+    }catch(error){
+        console.error(error);
+        return error;
+       }
+    }
+
     async getLogo64(userid: number, company:string): Promise<any> {
         
         const infoUsuario = await db.query(`
@@ -378,7 +424,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             nf_pedmp:solpedResult[0].nf_pedmp,
             nf_Incoterms:solpedResult[0].nf_Incoterms,
             docentrySP:solpedResult[0].docentrySP,
-            U_NF_MES_REAL:solpedResult[0].U_NF_MES_REAL,
+            U_NF_MES_REAL:solpedResult[0].U_NF_MES_REAL==null?'':solpedResult[0].U_NF_MES_REAL,
 
         }
         let solpedDet: any[] = [];
@@ -1978,10 +2024,25 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     }
 
-    async modeloAprobacionesMysql(infoUsuario: InfoUsuario):Promise<any> {
+    async modeloAprobacionesMysql(infoUsuario: InfoUsuario, area:string):Promise<any> {
         
         const bdmysql = infoUsuario.bdmysql;
-        const modelos = await db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+        //const modelos = await db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
+
+        const modelos = await db.query(`SELECT DISTINCT 
+        t0.modeloid, 
+        t0.modelo,
+        '${infoUsuario.username}' as autorusercode,
+        '${infoUsuario.fullname}' as autornombre,
+        '${infoUsuario.email}' as emailautor, 
+        t0.etapaid, 
+        t0.aprobadorusercode, 
+        t0.aprobadornombre, 
+        t0.emailaprobador, 
+        t0.query,
+        t0.nivel 
+        FROM ${bdmysql}.modelos_aprobacion t0 
+        WHERE t0.query LIKE '%${area}%'`);
         const data2 = modelos;
 
         let arrayModelos: any[] = [];
@@ -2382,8 +2443,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
     }
 
-    async getSolpedByIdSL(infoUsuario: InfoUsuario, DocNum: any, Serie:any ): Promise<any> {
 
+    async getSolpedByIdSL(infoUsuario: InfoUsuario, DocNum: any, Serie:any ): Promise<any> {
 
         try {
 
@@ -2567,6 +2628,95 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
                 const response2 = await fetch(url2, configWs2);
                 ////////////console.log(response2);
+                const data2 = await response2.json();
+
+                
+                ////////////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async findUserSAPSL(infoUsuario: InfoUsuario): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+            const userSAP = infoUsuario.codusersap;
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users?$filter=UserCode eq '${userSAP}'`;
+                ////console.log(url2);
+
+                let configWs2 = {
+                    method: "GET",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    }
+
+                }
+
+                const response2 = await fetch(url2, configWs2);
+                const data2 = await response2.json();
+
+                
+                ////////////console.log(data2);
+                helper.logoutWsSAP(bieSession);
+
+                return data2;
+
+            }
+
+        } catch (error) {
+            //////////console.log(error);
+            return '';
+        }
+
+
+
+    }
+
+    async registerUserSAPSL(infoUsuario: InfoUsuario): Promise<any> {
+
+
+        try {
+
+            const bieSession = await helper.loginWsSAP(infoUsuario);
+            const userSAP = infoUsuario.codusersap;
+
+            const data = {
+                "UserCode": infoUsuario.codusersap,
+                "UserName": infoUsuario.fullname,
+                "Superuser": "tNO",
+                "eMail": infoUsuario.email,
+            }
+
+            if (bieSession != '') {
+                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users`;
+                ////console.log(url2);
+
+                let configWs2 = {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'cookie': bieSession || ''
+                    },
+                    body: JSON.stringify(data)
+                }
+
+                const response2 = await fetch(url2, configWs2);
                 const data2 = await response2.json();
 
                 
@@ -3170,7 +3320,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
             
             const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?material=${(itemCode)}&compania=${compania}`;
-            ////console.log(url2);
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);

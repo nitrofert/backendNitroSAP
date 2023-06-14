@@ -201,28 +201,66 @@ class UserController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 //Obtener datos del usurio logueado que realizo la petición
-                let jwt = req.headers.authorization;
-                if (jwt) {
-                    jwt = jwt.slice('bearer'.length).trim();
-                    const decodedToken = yield helpers_1.default.validateToken(jwt);
-                }
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
                 //******************************************************* */
                 const accessRequest = req.body;
+                const user = yield helpers_1.default.getUser(accessRequest.id_user);
+                const company = yield helpers_1.default.getCompany(accessRequest.id_company);
+                console.log(user, company);
+                const infoUsuario = {
+                    bdmysql: company[0].bdmysql,
+                    codusersap: user[0].codusersap,
+                    companyname: company[0].companyname,
+                    dbcompanysap: company[0].dbcompanysap,
+                    email: user[0].email,
+                    fullname: user[0].fullname,
+                    id: accessRequest.id_user,
+                    id_company: accessRequest.id_company,
+                    logoempresa: company[0].logoempresa,
+                    status: user[0].status,
+                    urlwssap: company[0].urlwssap,
+                    username: user[0].username,
+                };
+                let error = false;
+                let messageError = "";
+                let result;
                 let sqlAccess = "";
                 if (accessRequest.valor == 0) {
                     //Eliminar acceso de la empresa seleccionada
                     sqlAccess = `Delete from company_users where id_company = ? and id_user = ?`;
                 }
                 else {
-                    //Otorgar acceso a la empresa seleccionada
-                    sqlAccess = `Insert into company_users (id_company,id_user) values(?,?)`;
+                    //Buscar Usuario SAP en base de datos
+                    const userSAP = yield helpers_1.default.findUserSAPSL(infoUsuario);
+                    console.log(userSAP);
+                    if (userSAP.value.length == 0) {
+                        //NO existe el usuario crear en SAP
+                        const registerUserSAP = yield helpers_1.default.registerUserSAPSL(infoUsuario);
+                        console.log(registerUserSAP);
+                        if (registerUserSAP.error) {
+                            error = true;
+                            messageError = registerUserSAP.error.message.value;
+                        }
+                    }
+                    if (!error) {
+                        //Otorgar acceso a la empresa seleccionada
+                        sqlAccess = `Insert into company_users (id_company,id_user) values(?,?)`;
+                    }
                 }
-                const result = yield database_1.db.query(sqlAccess, [accessRequest.id_company, accessRequest.id_user]);
+                if (!error) {
+                    result = yield database_1.db.query(sqlAccess, [accessRequest.id_company, accessRequest.id_user]);
+                }
+                else {
+                    result = { error, messageError };
+                }
                 res.json(result);
             }
-            catch (error) {
-                console.error(error);
-                return res.json(error);
+            catch (err) {
+                console.error(err);
+                return res.json({ error: true, messageError: err });
             }
         });
     }

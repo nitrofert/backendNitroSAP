@@ -30,6 +30,7 @@ class MySQLRoutes {
         this.router.get('/almacenes-usuario', mysqlController_1.default.almacenesUsuario);
         this.router.get('/cuentas-dependencia/:dependencia?', mysqlController_1.default.cuentasDependencia);
         this.router.get('/dependencias', mysqlController_1.default.dependecias);
+        this.router.get('/areas', mysqlController_1.default.areas);
         this.router.get('/autores', mysqlController_1.default.autores);
         this.router.get('/lista-calculos-precios-item', mysqlController_1.default.listaPreciosCalculados);
     }

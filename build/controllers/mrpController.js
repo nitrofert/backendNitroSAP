@@ -754,6 +754,27 @@ class MrpController {
             }
         });
     }
+    getListaPreciosSugeridosItem(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const item = req.params.item;
+                let query = `Select * from ${bdmysql}.lista_precios_sugerida where ItemCode='${item}'`;
+                let listaPreciosSugeridoItem = yield database_1.db.query(query);
+                res.json(listaPreciosSugeridoItem);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
     grabarListaPreciosPT(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -862,6 +883,28 @@ class MrpController {
                 let query = `Select * from ${bdmysql}.lista_precios_pt_zona where semanaAnioLista=${semana}`;
                 let itemsPTSemana = yield database_1.db.query(query);
                 res.json(itemsPTSemana);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    getListaPreciosSugeridos(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                let query = `Select * 
+                         from ${bdmysql}.lista_precios_sugerida t0 
+                         ORDER BY ItemName ASC `;
+                let listaPreciosSugeridos = yield database_1.db.query(query);
+                res.json(listaPreciosSugeridos);
             }
             catch (error) {
                 console.error(error);
@@ -1185,6 +1228,103 @@ class MrpController {
             }
         });
     }
+    cargarLPSugerido(req, res) {
+        var _a, _b, _c;
+        return __awaiter(this, void 0, void 0, function* () {
+            let connection = yield database_1.db.getConnection();
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                let infoFilePresupuesto = req.body;
+                yield connection.beginTransaction();
+                let anexo = {
+                    nombre: (_a = req.file) === null || _a === void 0 ? void 0 : _a.originalname,
+                    size: (_b = req.file) === null || _b === void 0 ? void 0 : _b.size,
+                    ruta: (_c = req.file) === null || _c === void 0 ? void 0 : _c.path
+                };
+                //console.loganexo);
+                //console.logfs.existsSync(anexo.ruta));
+                let msgResult;
+                let mesesAnio = helpers_1.default.mesesAnio;
+                if (fs_1.default.existsSync(anexo.ruta)) {
+                    let results = [];
+                    fs_1.default.createReadStream(anexo.ruta)
+                        .pipe((0, csv_parser_1.default)({ separator: infoFilePresupuesto.separador }))
+                        .on('data', (data) => results.push(data))
+                        .on('end', () => __awaiter(this, void 0, void 0, function* () {
+                        let queryList = "";
+                        let queryRegistro = "";
+                        let lineasActualizadas = 0;
+                        let lineasRegistradas = 0;
+                        let iterador = 1;
+                        console.log(results);
+                        for (let linea of results) {
+                            //console.log(linea);
+                            queryList = `SELECT * 
+                                     FROM ${bdmysql}.lista_precios_sugerida 
+                                     WHERE  ItemCode = '${linea.ITEMCODE}'`;
+                            let result = yield database_1.db.query(queryList);
+                            if (result.length > 0) {
+                                //Actaliza linea
+                                console.log('Update');
+                                queryRegistro = `Update ${bdmysql}.lista_precios_sugerida 
+                                             SET precioGerente = ${linea.PRECIOGERENTE},
+                                                 precioVendedor = ${linea.PRECIOVENDEDOR},
+                                                 precioLista = ${linea.PRECIOLISTA}
+                                             WHERE   ItemCode = '${linea.ITEMCODE}'`;
+                                let resultUpdate = yield connection.query(queryRegistro);
+                                console.log(resultUpdate);
+                                lineasActualizadas++;
+                            }
+                            else {
+                                //Insertar nuevalinea
+                                console.log('Insert');
+                                queryRegistro = `INSERT INTO ${bdmysql}.lista_precios_sugerida (ItemCode,
+                                                                                      ItemName,
+                                                                                      precioGerente,
+                                                                                      precioVendedor,
+                                                                                      precioLista) 
+                                                                            values ('${linea.ITEMCODE}',
+                                                                                    '${linea.ITEMNAME}',
+                                                                                    ${linea.PRECIOGERENTE},
+                                                                                     ${linea.PRECIOVENDEDOR},
+                                                                                     ${linea.PRECIOLISTA})`;
+                                let resultInsert = yield connection.query(queryRegistro);
+                                console.log('resultInsert', resultInsert);
+                                lineasRegistradas++;
+                            }
+                            iterador++;
+                        }
+                        yield connection.commit();
+                        msgResult = {
+                            message: `Se ha realizado el cargue de la lista de precios de productos con sus respectivos valores sugeridos. Se actualizaron ${lineasActualizadas} lineas del listado y se registraron ${lineasRegistradas} lineas nuevas `
+                        };
+                        res.json(msgResult);
+                    }));
+                }
+                else {
+                    msgResult = {
+                        message: `No se ha cargado el archivo de presupuesto`
+                    };
+                    res.json(msgResult);
+                }
+            }
+            catch (error) {
+                console.error('ERROR ------>', error);
+                yield connection.rollback();
+                return res.status(501).json(error);
+            }
+            finally {
+                if (connection)
+                    yield connection.release();
+            }
+        });
+    }
     cargarLPMP(req, res) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
@@ -1384,6 +1524,7 @@ class MrpController {
                     let semanaS0 = line.costosItemMP.semana0.semana;
                     let costoMPS0 = line.costosItemMP.semana0.costoMP;
                     let costoEmpaqueS0 = line.costosItemMP.semana0.empaqueMP;
+                    let merma = line.itemMP.merma;
                     let anioS1 = line.costosItemMP.semana1.anio;
                     let semanaS1 = line.costosItemMP.semana1.semana;
                     let costoMPS1 = line.costosItemMP.semana1.costoMP;
@@ -1396,11 +1537,11 @@ class MrpController {
                     let queryInsertDetalleCalculoMP = `Insert into ${bdmysql}.detalle_calculo_mp (id_calculo,ItemCode,ItemName,empaque,cantidad,
                                                                                               anioS0,semanaS0,costoMPS0,costoEmpaqueS0,
                                                                                               anioS1,semanaS1,costoMPS1,costoEmpaqueS1,
-                                                                                              anioS2,semanaS2,costoMPS2,costoEmpaqueS2,costoSAP)
+                                                                                              anioS2,semanaS2,costoMPS2,costoEmpaqueS2,costoSAP,merma)
                                                                                       values (${id_calculo},'${ItemCode}','${ItemName}','${empaque}',${cantidad},
                                                                                              ${anioS0},${semanaS0},${costoMPS0},${costoEmpaqueS0},
                                                                                              ${anioS1},${semanaS1},${costoMPS1},${costoEmpaqueS1},
-                                                                                             ${anioS2},${semanaS2},${costoMPS2},${costoEmpaqueS2},${costoSAP})`;
+                                                                                             ${anioS2},${semanaS2},${costoMPS2},${costoEmpaqueS2},${costoSAP},${merma})`;
                     let resultInsertDetalleCalculoMP = yield connection.query(queryInsertDetalleCalculoMP);
                 }
                 for (let line of detalle_calculo_precio_item) {

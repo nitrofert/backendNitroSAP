@@ -217,6 +217,8 @@ class MySQLController {
 
             const itemsEmpaque:any[] = await helper.objectToArray( await helper.getItemsMPCP(compania,103));
 
+            
+
             const items = itemsPT.filter(item=>item.INACTIVO=="N");
 
             const itemsMP2 = itemsMP.filter(item=>item.INACTIVO=="N");
@@ -822,6 +824,31 @@ class MySQLController {
             const preciosCalculados = await db.query(query);
             //console.log(dependenciasUsuario);
             res.json(preciosCalculados);
+    
+            }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+            }
+
+    }
+
+    public async areas(req: Request, res: Response) {
+        try {
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+           
+            //******************************************************* */
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const query = `SELECT * FROM ${bdmysql}.areas`;
+    
+            //console.log(query);      
+            const areas = await db.query(query);
+            //console.log(dependenciasUsuario);
+            res.json(areas);
     
             }catch (error: any) {
                 console.error(error);

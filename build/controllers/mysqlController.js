@@ -726,6 +726,28 @@ class MySQLController {
             }
         });
     }
+    areas(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const query = `SELECT * FROM ${bdmysql}.areas`;
+                //console.log(query);      
+                const areas = yield database_1.db.query(query);
+                //console.log(dependenciasUsuario);
+                res.json(areas);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
 }
 const mysqlQueriesController = new MySQLController();
 exports.default = mysqlQueriesController;
