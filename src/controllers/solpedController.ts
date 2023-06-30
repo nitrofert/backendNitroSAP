@@ -972,9 +972,9 @@ class SolpedController {
                     //filtrar los modelos segun el usuario autor y area de la solped
 
                     await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} incio proceso de envio de aprobación de la/s solped ${JSON.stringify(arraySolpedId)}`);
-                    let modeloAprobacionesSAP:any = await helper.modeloAprobacionesMysql(infoUsuario[0],Solped.solped.u_nf_depen_solped);
+                    let modeloAprobacionesSAP:any[] = await helper.modeloAprobacionesMysql(infoUsuario[0],Solped.solped.u_nf_depen_solped);
 
-                    console.log(modeloAprobacionesSAP);
+                    console.log(modeloAprobacionesSAP,Solped.solped.u_nf_depen_solped);
                     
                     /*if(modeloAprobacionesSAP.error){
                         arrayErrors.push({
@@ -990,8 +990,10 @@ class SolpedController {
                                                             modelo.area === Solped.solped.u_nf_depen_solped);*/
 
                     modelos = modeloAprobacionesSAP.filter((modelo: { autorusercode: any; area: any; }) => modelo.area === Solped.solped.u_nf_depen_solped);
+
+                    console.log(modelos);
                     
-                    if(modelos.length ==0){
+                    if(modeloAprobacionesSAP.length ==0){
                         //console.log('validacion de modelos usuario, area');
                         await helper.logaccion(infoUsuario[0],`Solped ${id}: No existen modelos asociados al area ${Solped.solped.u_nf_depen_solped} y/o usuario ${Solped.solped.usersap}`);
                         arrayErrors.push({message:`Solped ${id}: No existen modelos asociados al area ${Solped.solped.u_nf_depen_solped} y/o usuario ${Solped.solped.usersap}`});
@@ -1152,6 +1154,9 @@ class SolpedController {
                                         //error = true;
                                     }
                                     
+                                }else{
+                                    //Error existe una linea de aprobación
+                                    console.log("Error existe una linea de aprobacion");
                                 }
 
                             }
@@ -3967,7 +3972,7 @@ class SolpedController {
         const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
         const bdmysql = infoUsuario[0].bdmysql;
         const infoPedido= req.body;
-        ////////console.log(req.body);
+        //console.log(JSON.stringify(req.body));
         
         let DocEntry = infoPedido.DocEntry;
         let Datapedido = infoPedido.pedidoData;
@@ -3980,9 +3985,18 @@ class SolpedController {
             //actualizar Pedido en SAP
 
             let resultUpdatePedido = await helper.updatePedidoSAP(infoUsuario[0],Datapedido,DocEntry);
-            ////console.log(resultUpdatePedido);
-            await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} actualizao correctamente el pedido ${DocNum} en SAP`);
-            res.json({message:`Se realizo la actualizacon del pedido ${DocNum} en SAP`});
+            //console.log(resultUpdatePedido);
+            if(resultUpdatePedido==""){
+                await helper.logaccion(infoUsuario[0],`El usuario ${infoUsuario[0].username} actualizao correctamente el pedido ${DocNum} en SAP`);
+                res.json({message:`Se realizo la actualizacon del pedido ${DocNum} en SAP`,error:false});
+            }else{
+                console.log(resultUpdatePedido);
+                await helper.logaccion(infoUsuario[0],`Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`);
+                res.json({message:`Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`,error:true});
+                //res.status(400).json({message:`Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`,error:true});
+
+            }
+            
 
         } catch (err) {
             // Print errors

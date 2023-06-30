@@ -37,6 +37,10 @@ class MySQLRoutes{
         this.router.get('/areas', mysqlQueriesController.areas);
         this.router.get('/autores', mysqlQueriesController.autores);
         this.router.get('/lista-calculos-precios-item', mysqlQueriesController.listaPreciosCalculados);
+
+        this.router.get('/receta-item/:item', mysqlQueriesController.recetaItem);
+        this.router.get('/lista-precios-sap-item/:item', mysqlQueriesController.listaPreciosSAPItem);
+        this.router.get('/lista-precios-venta-item/:item', mysqlQueriesController.listaPreciosVentaSAPItem);
         
         
         

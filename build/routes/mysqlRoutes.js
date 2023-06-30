@@ -33,6 +33,9 @@ class MySQLRoutes {
         this.router.get('/areas', mysqlController_1.default.areas);
         this.router.get('/autores', mysqlController_1.default.autores);
         this.router.get('/lista-calculos-precios-item', mysqlController_1.default.listaPreciosCalculados);
+        this.router.get('/receta-item/:item', mysqlController_1.default.recetaItem);
+        this.router.get('/lista-precios-sap-item/:item', mysqlController_1.default.listaPreciosSAPItem);
+        this.router.get('/lista-precios-venta-item/:item', mysqlController_1.default.listaPreciosVentaSAPItem);
     }
 }
 const mysqlRoutes = new MySQLRoutes();

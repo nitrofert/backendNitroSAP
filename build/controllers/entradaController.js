@@ -26,8 +26,9 @@ class EntradaController {
                 const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
                 const bdmysql = infoUsuario[0].bdmysql;
                 const perfilesUsuario = yield helpers_1.default.getPerfilesUsuario(decodedToken.userId);
+                console.log(perfilesUsuario);
                 let where = "";
-                if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
+                if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length === 0) {
                     where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
                 }
                 ////console.log(decodedToken);
@@ -45,7 +46,7 @@ class EntradaController {
             t0.sapdocnum,t0.docdate,t0.docduedate,t0.taxdate,t0.reqdate,
             t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap
             ORDER BY t0.id DESC`;
-                //console.log(queryList);
+                console.log(queryList);
                 const entrada = yield database_1.db.query(queryList);
                 ////console.log(entrada);
                 res.json(entrada);

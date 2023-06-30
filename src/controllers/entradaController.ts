@@ -22,11 +22,12 @@ class EntradaController {
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const perfilesUsuario: PerfilesUsuario[] =  await helper.getPerfilesUsuario(decodedToken.userId);
+            console.log(perfilesUsuario);
             let where = "";
 
           
 
-            if (perfilesUsuario.filter(perfil => perfil.perfil !== 'Administrador').length > 0) {
+            if (perfilesUsuario.filter(perfil => perfil.perfil == 'Administrador').length === 0) {
                 where = ` WHERE t0.id_user=${infoUsuario[0].id} `;
             }
 
@@ -48,7 +49,7 @@ class EntradaController {
             t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap
             ORDER BY t0.id DESC`;
 
-            //console.log(queryList);
+            console.log(queryList);
 
             const entrada = await db.query(queryList);
             ////console.log(entrada);

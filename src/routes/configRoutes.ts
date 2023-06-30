@@ -24,6 +24,12 @@ class ConfigRoutes{
         this.router.get('/udo-dependencias',configController.loadDependenciasSapToMysql);
         this.router.get('/udo-cuentas-dependencias',configController.loadCuentasDependenciasSapToMysql);
         this.router.get('/tasa-cambio/:fechaTrm',configController.loadTasasDeCambio);
+
+        this.router.get('/recetas_item_pt',configController.loadRecetasItemPT);
+        this.router.get('/lista_precios_sap_pt',configController.loadListaPreciosSAPPT);
+        this.router.get('/lista_precio_ventas_l2w',configController.loadListaPrecioVentasSAP);
+
+
         
         
     }

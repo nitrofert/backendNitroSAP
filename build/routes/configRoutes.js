@@ -23,6 +23,9 @@ class ConfigRoutes {
         this.router.get('/udo-dependencias', configController_1.default.loadDependenciasSapToMysql);
         this.router.get('/udo-cuentas-dependencias', configController_1.default.loadCuentasDependenciasSapToMysql);
         this.router.get('/tasa-cambio/:fechaTrm', configController_1.default.loadTasasDeCambio);
+        this.router.get('/recetas_item_pt', configController_1.default.loadRecetasItemPT);
+        this.router.get('/lista_precios_sap_pt', configController_1.default.loadListaPreciosSAPPT);
+        this.router.get('/lista_precio_ventas_l2w', configController_1.default.loadListaPrecioVentasSAP);
     }
 }
 const configRoutes = new ConfigRoutes();

@@ -1677,8 +1677,6 @@ class MrpController {
                     for(let linea of results){
 
                         //console.log(linea);
-                        
-
 
                         let fechasemana = new Date(linea.FECHALISTA);
                         let fechaInicioSemana = await helper.fechaInicioSemana(fechasemana);
@@ -1697,6 +1695,7 @@ class MrpController {
                                             ItemCode = '${linea.ITEMCODE}'`; 
                         
                         let result = await db.query(queryList);
+                        //console.log(queryList);
                         
                         if(result.length>0){
                             //Actaliza linea
@@ -1831,7 +1830,26 @@ class MrpController {
             console.log(infoUsuario);
             const bdmysql = infoUsuario[0].bdmysql;
 
-            const { fecha, semanaAnio, semanaMes,ItemCode, ItemName, trmDia, moneda, trmMoneda,precioRef,precioBase,prcGerente,prcLP,prcVendedor,promAdmin,promRecurso,detalle_calculo_mp,detalle_calculo_precio_item,observacion,costoRecursoSAP} = req.body;
+            const { fecha, 
+                    semanaAnio, 
+                    semanaMes,
+                    ItemCode, 
+                    ItemName, 
+                    trmDia, 
+                    moneda, 
+                    trmMoneda,
+                    categoria,
+                    precioRef,
+                    precioBase,
+                    prcGerente,
+                    prcLP,
+                    prcVendedor,
+                    promAdmin,
+                    promRecurso,
+                    detalle_calculo_mp,
+                    detalle_calculo_precio_item,
+                    observacion,
+                    costoRecursoSAP} = req.body;
 
             //console.log(req.body);
             await connection.beginTransaction();
@@ -1841,7 +1859,7 @@ class MrpController {
             let fechaCalculo = fecha.split("T");
 
             const queryInsertCalculo = `Insert into ${bdmysql}.calculo_precio_item (fecha, userid,semanaAnio, semanaMes,ItemCode, ItemName, trmDia, moneda, trmMoneda,precioRef,
-                                                                                    precioBase,prcGerente,prcLP,promAdmin,promRecurso,observacion,costoRecursoSAP,prcVendedor)
+                                                                                    precioBase,prcGerente,prcLP,promAdmin,promRecurso,observacion,costoRecursoSAP,prcVendedor,categoria)
                                                                             values ('${fechaCalculo[0]}', 
                                                                                     ${infoUsuario[0].id},
                                                                                     ${semanaAnio}, 
@@ -1859,14 +1877,15 @@ class MrpController {
                                                                                     ${promRecurso},
                                                                                     '${observacion}',
                                                                                     ${costoRecursoSAP},
-                                                                                    ${prcVendedor})`;
+                                                                                    ${prcVendedor},
+                                                                                    '${categoria}')`;
             const resultInsert = await connection.query(queryInsertCalculo);
 
             const id_calculo = resultInsert.insertId;
             
             for(let line of detalle_calculo_mp){
 
-                
+                let fatherItemCode = line.itemMP.Father;
                 let ItemCode = line.itemMP.Code;
                 let ItemName  = line.itemMP.ItemName;
                 let empaque = line.itemMP.EMPAQUE; 
@@ -1888,11 +1907,11 @@ class MrpController {
                 let costoEmpaqueS2 = line.costosItemMP.semana2.empaqueMP;
                 let costoSAP = line.itemMP.costoSAP;
 
-                let queryInsertDetalleCalculoMP = `Insert into ${bdmysql}.detalle_calculo_mp (id_calculo,ItemCode,ItemName,empaque,cantidad,
+                let queryInsertDetalleCalculoMP = `Insert into ${bdmysql}.detalle_calculo_mp (id_calculo,fatherItemCode,ItemCode,ItemName,empaque,cantidad,
                                                                                               anioS0,semanaS0,costoMPS0,costoEmpaqueS0,
                                                                                               anioS1,semanaS1,costoMPS1,costoEmpaqueS1,
                                                                                               anioS2,semanaS2,costoMPS2,costoEmpaqueS2,costoSAP,merma)
-                                                                                      values (${id_calculo},'${ItemCode}','${ItemName}','${empaque}',${cantidad},
+                                                                                      values (${id_calculo},'${fatherItemCode}','${ItemCode}','${ItemName}','${empaque}',${cantidad},
                                                                                              ${anioS0},${semanaS0},${costoMPS0},${costoEmpaqueS0},
                                                                                              ${anioS1},${semanaS1},${costoMPS1},${costoEmpaqueS1},
                                                                                              ${anioS2},${semanaS2},${costoMPS2},${costoEmpaqueS2},${costoSAP},${merma})`;

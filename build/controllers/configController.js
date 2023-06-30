@@ -325,6 +325,53 @@ class ConfigController {
             }
         });
     }
+    loadRecetasItemPT(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const recetas_item_pt = yield helpers_1.default.objectToArray(yield helpers_1.default.getItemsMPbyItemPT('NITROFERT_PRD', ''));
+                console.log(recetas_item_pt);
+                const result = yield helpers_1.default.registrarRecetasItemPT(recetas_item_pt, 'nitrosap');
+                console.log(result);
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadListaPreciosSAPPT(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const lista_precios_sap_pt = yield helpers_1.default.objectToArray(yield helpers_1.default.getListaPreciosItemSAP('NITROFERT_PRD', ''));
+                console.log(lista_precios_sap_pt);
+                const result = yield helpers_1.default.registrarListaPreciosSAPPT(lista_precios_sap_pt, 'nitrosap');
+                console.log(result);
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    loadListaPrecioVentasSAP(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                let fechaFin = new Date();
+                let fechaInicio = yield helpers_1.default.sumarDias(fechaFin, -14);
+                const lista_precios_venta = yield helpers_1.default.objectToArray(yield helpers_1.default.getPrecioVentaItemSAP2('NITROFERT_PRD', '', fechaInicio.toISOString(), fechaFin.toISOString()));
+                console.log(lista_precios_venta);
+                const result = yield helpers_1.default.registrarListaPrecioVentaSAP(lista_precios_venta, 'nitrosap');
+                console.log(result);
+                res.json({ ok: 'ok' });
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
 }
 const configController = new ConfigController();
 exports.default = configController;

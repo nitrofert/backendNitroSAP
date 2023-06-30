@@ -1515,10 +1515,10 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 //GrossTotal:item.linegtotal,
                 
                 TaxCode:item.tax,
-                CostingCode:item.ocrcode,
-                CostingCode2:item.ocrcode2,
-                CostingCode3:item.ocrcode3,
-                WarehouseCode:item.whscode!==''?item.whscode:'SM_N300'
+                CostingCode:item.ocrcode.trim(),
+                CostingCode2:item.ocrcode2.trim(),
+                CostingCode3:item.ocrcode3.trim(),
+                WarehouseCode:item.whscode!==''?item.whscode.trim():'SM_N300'
                 
                 
                 
@@ -1538,7 +1538,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                     DocumentLine.WarehouseCode = 'SM_N300';
                 }
             }else{
-                DocumentLine.WarehouseCode = item.whscode;
+                DocumentLine.WarehouseCode = item.whscode.trim();
             }
 
             if(Solped.solped.doctype=='S'){
@@ -3297,9 +3297,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
     async getListaPreciosItemSAP(compania:string, itemCode:any): Promise<any>{
         try {
 
-            
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAPCALCU.xsjs?material=${(itemCode)}&compania=${compania}`;
-            ////console.log(url2);
+            let material = '';
+            if(itemCode!=''){
+                material = `&material=${(itemCode)}`
+            }
+
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAPCALCU.xsjs?compania=${compania}${material}`;
+            console.log(url2);
             
         
                 const response2 = await fetch(url2);
@@ -3318,8 +3322,14 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
     async getItemsMPbyItemPT(compania:string, itemCode:any): Promise<any>{
         try {
 
+
+            let material = '';
+
+            if(itemCode!=''){
+                material = `&material=${(itemCode)}`
+            }
             
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?material=${(itemCode)}&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?compania=${compania}${material}`;
             console.log(url2);
             
         
@@ -3333,6 +3343,32 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             return '';
         }
     }
+
+    async getPrecioVentaItemSAP2(compania:string, itemCode:any, fechaInicio:string, fechaFin:string): Promise<any>{
+        try {
+
+            
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsPrecioUnitarioVentas2.xsjs?pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
+            console.log(url2);
+            
+        
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();   
+                //////console.log(data2);
+                return (data2);  
+
+        } catch (error) {
+            //////////console.log(error);
+            return '';
+        }
+    }
+
+    async sumarDias(fecha:Date, dias:number):Promise<Date>{
+        fecha.setDate(fecha.getDate() + dias);
+        //////console.log(fecha);
+        return fecha;
+      }
+    
 
     async getPrecioVentaItemSAP(compania:string, itemCode:any, fechaInicio:string, fechaFin:string): Promise<any>{
         try {
@@ -3713,6 +3749,11 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 }
 
                 const response2 = await fetch(url2, configWs2);
+                let result = "";
+                if(response2.status !=204){
+                    result = await response2.json();
+                    //console.log(result)
+                }
                 //const data2 = await response2.json();
 
                 
@@ -3720,7 +3761,7 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 //////////console.log(response2);
                 helper.logoutWsSAP(bieSession);
 
-                return response2;
+                return result;
 
             }
 
@@ -3843,57 +3884,29 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         return serie;
     }
 
-    async getInventariosProyectados(infoUsuario: InfoUsuario): Promise<any>{
+    async allItemsCalculadoraPrecios(infoUsuario: InfoUsuario): Promise<any>{
         try {
 
             const bdmysql = infoUsuario.bdmysql;
 
-            /*let serie =0;
-            let seriesDoc = await helper.getSeriesXE(infoUsuario.dbcompanysap,'1470000113');
-            for(let item in seriesDoc) {
-                if(seriesDoc[item].name ==='SPMP'){
-                    serie = seriesDoc[item].code;
-                }
-            }*/
+            const query = `Select * from ${bdmysql}.items_sap where ItmsGrpCod IN (101,102,103)`;
 
-           
 
-            //let proveedores = await helper.objectToArray(await helper.getProveedoresXE(infoUsuario));
-        
-            /*const query = `SELECT 
-            'Proyectado' AS "TIPO",
-            '' AS "CardCode",
-            '' AS "CardName",
-            t0.id AS "DocNum",
-            '' AS "DocCur",
-            '' AS "BaseRef",
-            t0.status AS "DocStatus",
-            '' AS "CANCELED",
-            t0.reqdate AS "FECHANECESIDAD",
-            t0.nf_pedmp AS "U_NF_PEDMP",
-            t0.nf_incoterms AS "U_NT_Incoterms",
-            t0.reqdate AS "ETA", 
-            t0.nf_lastshippping AS "U_NF_LASTSHIPPPING",
-            t0.nf_dateofshipping AS "U_NF_DATEOFSHIPPING",
-            t0.nf_agente AS "U_NF_AGENTE",
-            t0.nf_puertosalida AS "U_NF_PUERTOSALIDA",
-            t0.nf_motonave AS "U_NF_MOTONAVE",
-            t0.u_nf_status AS "U_NF_STATUS",
-            t1.linevendor AS "LineVendor",
-            t1.itemcode AS "ItemCode",
-            t1.whscode AS "WhsCode",
-            t1.zonacode AS "State_Code",
-            '' AS "PENTRADA",
-            t1.quantity AS "Quantity",
-            t1.price AS "Price",
-            t1.trm AS "Rate",
-            '' AS "OpenCreQty",
-            t1.linenum
-            
-            FROM ${bdmysql}.solped t0 
-            INNER JOIN ${bdmysql}.solped_det t1 ON t1.id_solped = t0.id
-            WHERE t0.serie = ${serie} AND 
-            t0.sapdocnum =0 and t0.approved='N'`;*/
+            const items = await db.query(query);
+
+                  
+                return (items);   
+    
+            }catch (error: any) {
+                console.error(error);
+                return (error);
+            } 
+    }
+
+    async getInventariosProyectados(infoUsuario: InfoUsuario): Promise<any>{
+        try {
+
+            const bdmysql = infoUsuario.bdmysql;
 
             const query = `SELECT 
             'Proyectado' AS "TIPO",
@@ -3933,16 +3946,9 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
             WHERE t2.name = 'SPMP' AND 
             t0.sapdocnum =0 and t0.approved='N'`;
 
-            //////console.log(query);
 
             const solpeds = await db.query(query);
 
-            /*for(let solped of solpeds) {
-                if(solped.LineVendor!=''){
-                    solped.CardName = proveedores.filter((data: { CardCode: any; }) =>data.CardCode === solped.LineVendor)[0].CardName;
-                }
-            }*/
-        
                   
                 return (solpeds);   
     
@@ -3951,6 +3957,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 return (error);
             } 
     }
+
+
     async documentsTracking(compania: string): Promise<any>{
         try {
 
@@ -4405,6 +4413,79 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
         }
 
     }
+
+    async registrarRecetasItemPT(arrayRecetas:any[], bdmysql:string):Promise<void>{
+
+        for (let receta of arrayRecetas){
+               
+            let existeReceta = await db.query(`select * 
+                                             from ${bdmysql}.recetas_item_pt t0 
+                                             where t0.Father = '${receta.Father}' and
+                                             t0.Code = '${receta.Code}' `);
+            
+            if(existeReceta.length==0){
+               
+                    ////console.log('Registrar dependencia',dependencia);
+                    await db.query(`insert into ${bdmysql}.recetas_item_pt set ?`, [receta]);
+               
+                
+            }else{
+                //Update
+                
+                await db.query(`update ${bdmysql}.recetas_item_pt set ? where Father = '${receta.Father}' and Code = '${receta.Code}'`, [receta]);
+            }
+        }
+
+    }
+
+    async registrarListaPreciosSAPPT(arrayLP:any[], bdmysql:string):Promise<void>{
+
+        for (let lista_precios of arrayLP){
+               
+            let existeLista = await db.query(`select * 
+                                             from ${bdmysql}.lista_precios_sap_pt t0 
+                                             where t0.ItemCode = '${lista_precios.ItemCode}' `);
+            
+            if(existeLista.length==0){
+               
+                    ////console.log('Registrar dependencia',dependencia);
+                    await db.query(`insert into ${bdmysql}.lista_precios_sap_pt set ?`, [lista_precios]);
+               
+                
+            }else{
+                //Update
+                
+                await db.query(`update ${bdmysql}.lista_precios_sap_pt set ? where ItemCode = '${lista_precios.ItemCode}' `, [lista_precios]);
+            }
+        }
+
+    }
+
+    
+
+    async registrarListaPrecioVentaSAP(arrayLP:any[], bdmysql:string):Promise<void>{
+
+        for (let lista_precios of arrayLP){
+               
+            let existeLista = await db.query(`select * 
+                                             from ${bdmysql}.precio_venta_sap_l2w t0 
+                                             where t0.ItemCode = '${lista_precios.ItemCode}' `);
+            
+            if(existeLista.length==0){
+               
+                    ////console.log('Registrar dependencia',dependencia);
+                    await db.query(`insert into ${bdmysql}.precio_venta_sap_l2w set ?`, [lista_precios]);
+               
+                
+            }else{
+                //Update
+                
+                await db.query(`update ${bdmysql}.precio_venta_sap_l2w set ? where ItemCode = '${lista_precios.ItemCode}' `, [lista_precios]);
+            }
+        }
+
+    }
+
 
     async fechaInicioSemana(fecha:Date):Promise<Date>{
         let fechaTMP:Date = new Date(fecha);

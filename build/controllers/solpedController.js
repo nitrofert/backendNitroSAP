@@ -849,7 +849,7 @@ class SolpedController {
                         //filtrar los modelos segun el usuario autor y area de la solped
                         yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} incio proceso de envio de aprobación de la/s solped ${JSON.stringify(arraySolpedId)}`);
                         let modeloAprobacionesSAP = yield helpers_1.default.modeloAprobacionesMysql(infoUsuario[0], Solped.solped.u_nf_depen_solped);
-                        console.log(modeloAprobacionesSAP);
+                        console.log(modeloAprobacionesSAP, Solped.solped.u_nf_depen_solped);
                         /*if(modeloAprobacionesSAP.error){
                             arrayErrors.push({
                                 message:`Error interno: error al obtener modelos de apobación SAP`
@@ -862,7 +862,8 @@ class SolpedController {
                                                                 modelo.autorusercode === Solped.solped.usersap &&
                                                                 modelo.area === Solped.solped.u_nf_depen_solped);*/
                         modelos = modeloAprobacionesSAP.filter((modelo) => modelo.area === Solped.solped.u_nf_depen_solped);
-                        if (modelos.length == 0) {
+                        console.log(modelos);
+                        if (modeloAprobacionesSAP.length == 0) {
                             //console.log('validacion de modelos usuario, area');
                             yield helpers_1.default.logaccion(infoUsuario[0], `Solped ${id}: No existen modelos asociados al area ${Solped.solped.u_nf_depen_solped} y/o usuario ${Solped.solped.usersap}`);
                             arrayErrors.push({ message: `Solped ${id}: No existen modelos asociados al area ${Solped.solped.u_nf_depen_solped} y/o usuario ${Solped.solped.usersap}` });
@@ -1000,6 +1001,10 @@ class SolpedController {
                                             yield helpers_1.default.logaccion(infoUsuario[0], `Solped ${id}: Error al registrar la linea de aprobación ${JSON.stringify(newAprobacionLine)}`);
                                             //error = true;
                                         }
+                                    }
+                                    else {
+                                        //Error existe una linea de aprobación
+                                        console.log("Error existe una linea de aprobacion");
                                     }
                                 }
                             }
@@ -3342,16 +3347,24 @@ class SolpedController {
             const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const infoPedido = req.body;
-            ////////console.log(req.body);
+            //console.log(JSON.stringify(req.body));
             let DocEntry = infoPedido.DocEntry;
             let Datapedido = infoPedido.pedidoData;
             let DocNum = infoPedido.DocNum;
             try {
                 //actualizar Pedido en SAP
                 let resultUpdatePedido = yield helpers_1.default.updatePedidoSAP(infoUsuario[0], Datapedido, DocEntry);
-                ////console.log(resultUpdatePedido);
-                yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} actualizao correctamente el pedido ${DocNum} en SAP`);
-                res.json({ message: `Se realizo la actualizacon del pedido ${DocNum} en SAP` });
+                //console.log(resultUpdatePedido);
+                if (resultUpdatePedido == "") {
+                    yield helpers_1.default.logaccion(infoUsuario[0], `El usuario ${infoUsuario[0].username} actualizao correctamente el pedido ${DocNum} en SAP`);
+                    res.json({ message: `Se realizo la actualizacon del pedido ${DocNum} en SAP`, error: false });
+                }
+                else {
+                    console.log(resultUpdatePedido);
+                    yield helpers_1.default.logaccion(infoUsuario[0], `Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`);
+                    res.json({ message: `Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`, error: true });
+                    //res.status(400).json({message:`Ocurrio un error al actualizar el pedido ${DocNum} en SAP: ${resultUpdatePedido.error.message.value}`,error:true});
+                }
             }
             catch (err) {
                 // Print errors

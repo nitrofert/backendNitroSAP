@@ -471,6 +471,89 @@ class ConfigController{
          
     }
     
+
+    async loadRecetasItemPT(req: Request, res: Response){
+        
+        
+
+        try {
+
+            const recetas_item_pt =  await helper.objectToArray(await helper.getItemsMPbyItemPT('NITROFERT_PRD',''));
+
+            console.log(recetas_item_pt);
+
+            const result = await  helper.registrarRecetasItemPT(recetas_item_pt,'nitrosap');
+
+            console.log(result);
+
+            res.json({ok:'ok'});
+
+
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+         
+    }
+
+    
+
+    async loadListaPreciosSAPPT(req: Request, res: Response){
+        
+        
+
+        try {
+
+            const lista_precios_sap_pt =  await helper.objectToArray(await helper.getListaPreciosItemSAP('NITROFERT_PRD',''));
+
+            console.log(lista_precios_sap_pt);
+
+            const result = await  helper.registrarListaPreciosSAPPT(lista_precios_sap_pt,'nitrosap');
+
+            console.log(result);
+
+            res.json({ok:'ok'});
+
+
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+         
+    }
+
+
+    
+
+    async loadListaPrecioVentasSAP(req: Request, res: Response){
+        
+        
+
+        try {
+
+            let fechaFin = new Date();
+            let fechaInicio = await helper.sumarDias(fechaFin,-14);
+
+            const lista_precios_venta =  await helper.objectToArray(await helper.getPrecioVentaItemSAP2('NITROFERT_PRD','', fechaInicio.toISOString(), fechaFin.toISOString()));
+
+            console.log(lista_precios_venta);
+
+            const result = await  helper.registrarListaPrecioVentaSAP(lista_precios_venta,'nitrosap');
+
+            console.log(result);
+
+            res.json({ok:'ok'});
+
+
+        
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+         
+    }
 }
 
 const configController = new ConfigController();
