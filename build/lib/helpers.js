@@ -512,6 +512,47 @@ class Helpers {
             return lineAprovedSolped;
         });
     }
+    getNextLineAprovedEntrada(idEntrada, bdmysql, companysap, logo, origin = 'http://localhost:4200', urlbk, idLinea) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let lineAprovedEntrada = "";
+            let condicionLinea = "";
+            if (idLinea)
+                condicionLinea = ` and t0.id!=${idLinea}`;
+            const queryNextApprovedLine = `
+        SELECT *
+        FROM ${bdmysql}.aprobacionentrada t0
+        WHERE t0.id_entrada = ${idEntrada} AND t0.estadoseccion = 'A' AND t0.estadoap='P' ${condicionLinea}
+        ORDER BY nivel ASC`;
+            const nextLineAprovedEntrada = yield database_1.db.query(queryNextApprovedLine);
+            if (nextLineAprovedEntrada.length > 0) {
+                const queryCompania = `SELECT * FROM companies t0 WHERE t0.urlwsmysql = '${bdmysql}'`;
+                const compania = yield database_1.db.query(queryCompania);
+                lineAprovedEntrada = {
+                    autor: {
+                        fullname: nextLineAprovedEntrada[0].nombreautor,
+                        email: nextLineAprovedEntrada[0].emailautor,
+                    },
+                    aprobador: {
+                        fullname: nextLineAprovedEntrada[0].nombreaprobador,
+                        email: nextLineAprovedEntrada[0].emailaprobador,
+                        usersap: nextLineAprovedEntrada[0].usersapaprobador,
+                    },
+                    infoEntrada: {
+                        id_entrada: idEntrada,
+                        idlineap: nextLineAprovedEntrada[0].id,
+                        bdmysql,
+                        companysap,
+                        logo,
+                        origin,
+                        documento: 'entrada',
+                        idCompania: compania[0].id,
+                        urlbk,
+                    }
+                };
+            }
+            return lineAprovedEntrada;
+        });
+    }
     sendNotification(infoEmail) {
         return __awaiter(this, void 0, void 0, function* () {
             ////////////console.log(infoEmail);
@@ -575,6 +616,35 @@ class Helpers {
         ORDER BY nivel ASC`, [idSolped]);
             //////////console.log((detalleAprobacionSolped));
             return detalleAprobacionSolped;
+        });
+    }
+    DetalleAprobacionEntrada(idEntrada, bdmysql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const query = `
+        SELECT t0.id,
+               t0.id_entrada,
+               t0.iduserautor, 
+               t0.usersapautor, 
+               t0.emailautor, 
+               t0.nombreautor,
+               t0.area,
+               t0.condicion,
+               t0.usersapaprobador,
+               t0.emailaprobador,
+               t0.nombreaprobador,
+               t0.nivel,
+               t0.estadoap,
+               t0.estadoseccion,
+               t0.created_at,
+               t0.updated_at,
+               t0.comments
+        FROM ${bdmysql}.aprobacionentrada t0
+        WHERE id_entrada = ${idEntrada} AND estadoseccion = 'A' and estadoap !='P'
+        ORDER BY nivel ASC`;
+            //console.log(query);
+            const detalleAprobacionEntrada = yield database_1.db.query(query);
+            //////////console.log((detalleAprobacionSolped));
+            return detalleAprobacionEntrada;
         });
     }
     loadBodyMailSolpedAp(infoUsuario, LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion, verBotones) {
@@ -882,6 +952,303 @@ class Helpers {
             return html;
         });
     }
+    loadBodyMailEntradaAp(infoUsuario, LineAprovedEntrada, logo, entrada, key, urlbk, accionAprobacion, verBotones) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const entradaDet = entrada.DocumentLines;
+            console.log('LineAprovedEntrada', LineAprovedEntrada);
+            let subtotal = 0;
+            let totalimpuesto = 0;
+            let total = 0;
+            const detalleAprobacionEntrada = yield helper.DetalleAprobacionEntrada(entrada.id, infoUsuario.bdmysql);
+            let htmlDetalleAprobacion = '';
+            let lineaDetalleAprobacion = '';
+            let serieNombre = "";
+            let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '20');
+            for (let item in seriesDoc) {
+                if (seriesDoc[item].code == entrada.series) {
+                    serieNombre = seriesDoc[item].name;
+                }
+            }
+            //////////console.log(infoUsuario,seriesDoc);
+            //if (detalleAprobacionSolped.length > 0) {
+            for (let item of detalleAprobacionEntrada) {
+                lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.estadoap === 'A' ? 'Aprobado' : 'Rechazado'}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${item.updated_at.toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+            }
+            lineaDetalleAprobacion = lineaDetalleAprobacion + `
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${LineAprovedEntrada.aprobador.fullname}</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">Aprobado</span>
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:smaller;padding-left: 3px;">${new Date().toLocaleString()}</span>
+                                                </td>
+                                            </tr>
+                `;
+            if (accionAprobacion) {
+                htmlDetalleAprobacion = `<tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table align="center" style="width: 100%;">
+                                                    <tr>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                                                        </td>
+                                                    </tr>
+                                                    ${lineaDetalleAprobacion}
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            }
+            //}
+            //console.log('lineaDetalleAprobacion',lineaDetalleAprobacion);
+            let lineaDetalleEntrada = ``;
+            for (let item of entradaDet) {
+                console.log(item);
+                subtotal = subtotal + item.LineTotal;
+                totalimpuesto = totalimpuesto + item.TaxTotal;
+                total = total + item.GrossTotal;
+                lineaDetalleEntrada = lineaDetalleEntrada + `
+                                                    <tr>
+                                                        
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.LineNum}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.ItemDescription}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.cantidad}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.Price.toLocaleString()}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm.toLocaleString()}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.LineTotal.toLocaleString()}</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.TaxTotal.toLocaleString()}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-size:smaller;padding-left: 3px;">$ ${item.GrossTotal.toLocaleString()}</span>
+                                                        </td>
+                                                    </tr>
+            `;
+            }
+            //console.log('subtotal totalimpuesto total',subtotal,totalimpuesto,total);
+            let anexos = ``;
+            let detalleEntrada = `
+                                        <tr>
+                                            <td style="border:2px solid #000000; padding: 10px;">
+                                                <table style="width:100%; width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                    <tr style="background-color: #3dae2b; color:#454444;">
+                                                        
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Línea</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Descripción</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Cantidad</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Valor</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">TRM</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Subtotal línea</span>
+                                                        </td> 
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Impuesto</span>
+                                                        </td>
+                                                        <td>
+                                                            <span style="font-weight: bold; font-size: small; padding-left: 2px;">Total línea</span>
+                                                        </td>
+                                                    </tr>
+
+                                                    ${lineaDetalleEntrada}
+
+                                                </table>
+                                            </td>
+                                        </tr>`;
+            let bottonsAproved = "";
+            if (key !== '' && verBotones) {
+                bottonsAproved = `<table>
+                                    <tr>
+                                        <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+                                        <!--<td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUI</a></b></td>-->
+                                        <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://portal.nitrofert.com.co/#/" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUI</a></b></td>
+                                        
+                                        <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+                                        <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
+                                    </tr>
+                                </table>`;
+            }
+            let saludo = "";
+            const html = `<!DOCTYPE html>
+        <html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="x-apple-disable-message-reformatting">
+            <title></title>
+            <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+            <![endif]-->
+            <body style="margin:0;padding:0;">
+                    <table role="presentation" style="width:100%;border-collapse:collapse;border-spacing:0;background:#ffffff;">
+                    <tr>
+                        <td align="center" style="padding:0;">
+                            <table role="presentation"
+                                style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+                                <tr>
+                                    <td align="center" style="padding:40px 0 30px 0;background:#ffffff;border:2px solid #000000">
+                                        <img src="${logo}" alt="" width="50%"  style="height:auto;display:block;" /> 
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:36px 30px 42px 30px;border:2px solid #000000">
+                                        <table
+                                            style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <h1>Solicitud De Aprobación Entrada # ${entrada.id}</h1>
+                                                    <p> Hola ${LineAprovedEntrada.aprobador.fullname} el usuario ${LineAprovedEntrada.autor.fullname}
+                                                        ha solicitado la aprobación de la entrada # ${entrada.id}
+                                                    </p>
+                                                    <p>
+                                                        A continuación podrá ver la información entrada
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000">
+                                                    <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                                        <tr>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Usuario solicitante</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${entrada.fullname}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Area solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${entrada.u_nf_depen_solped}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller;padding-left: 2px;">Clase solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${entrada.doctype === 'S' ? 'Servicio' : 'Articulo'}</span><br />
+                                                                
+                                                            </td>
+                                                            <td style="width:50%;">
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${yield helper.format(entrada.DocDate)} - ${yield helper.format(entrada.DocDueDate)}</span><br />
+                                                                <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${yield helper.format(entrada.TaxDate)} - ${yield helper.format(entrada.reqdate)}</span><br />
+                                                            </td>
+                                                        </tr>
+                                                        
+                                                    </table>
+                                                    <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Comentarios</span><br />
+                                                                <span style="font-size:smaller;padding-left: 3px;">${entrada.Comments}</span>
+                                                </td>
+                                            </tr>
+                                            ${detalleEntrada}
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                        <table align="right">
+                                                            <tr>
+                                                                <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal.toFixed()}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto.toLocaleString()}</span></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
+                                                                <td><span style="font-size:smaller;padding-left: 3px;">$ ${total.toLocaleString()}</span></td>
+                                                            </tr>
+                                                        </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border:2px solid #000000; padding: 10px;">
+                                                    <table align="center" style="width:100%;">
+                                                        <tr>
+                                                            <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                                                            <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                                                        </tr>
+                                                        ${anexos}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            ${htmlDetalleAprobacion}
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:30px;background:url(https://nitrofert.com.co/wp-content/uploads/2022/01/Fondo-home-nitrofert-3-2.jpg) repeat;border:2px solid #000000">
+                                        <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                                            <tr>
+                                                <td style="padding:0;width:50%;" align="left">
+                                                    
+                                                    ${bottonsAproved}
+                                                </td>
+                                                <td style="padding:0;width:50%;" align="right">
+                                                <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            <style>
+                table, td, div, h1, p {font-family: Arial, sans-serif;}
+                
+            </style>
+        </head>
+        </html>`;
+            // console.log('load html',html);
+            return html;
+        });
+    }
     loadBodyMailApprovedSolped(infoUsuario, LineAprovedSolped, logo, solped, key, urlbk, accionAprobacion) {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedDet = solped.solpedDet;
@@ -1181,6 +1548,296 @@ class Helpers {
             </style>
         </head>
         </html>`;
+            return html;
+        });
+    }
+    loadBodyMailApprovedEntrada(infoUsuario, LineAprovedEntrada, logo, entrada, key, urlbk, accionAprobacion) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const entradaDet = entrada.EntradaDet;
+            let subtotal = 0;
+            let totalimpuesto = 0;
+            let total = 0;
+            const detalleAprobacionEntrada = yield helper.DetalleAprobacionEntrada(entrada.entrada.id, LineAprovedEntrada.infoEntrada.bdmysql);
+            let htmlDetalleAprobacion = '';
+            let lineaDetalleAprobacion = '';
+            let serieNombre = "";
+            let seriesDoc = yield helper.getSeriesXE(infoUsuario.dbcompanysap, '20');
+            for (let item in seriesDoc) {
+                if (seriesDoc[item].code == entrada.entrada.serie) {
+                    serieNombre = seriesDoc[item].name;
+                }
+            }
+            //////////console.log(infoUsuario,seriesDoc);
+            //if (detalleAprobacionSolped.length > 0) {
+            for (let item of detalleAprobacionEntrada) {
+                lineaDetalleAprobacion = lineaDetalleAprobacion + `
+               <tr>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">${item.nombreaprobador}</span>
+                   </td>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">${item.estadoap === 'A' ? 'Aprobado' : 'Rechazado'}</span>
+                   </td>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">${item.updated_at.toLocaleString()}</span>
+                   </td>
+               </tr>
+`;
+            }
+            lineaDetalleAprobacion = lineaDetalleAprobacion + `
+               <tr>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">${LineAprovedEntrada.aprobador.fullname}</span>
+                   </td>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">Aprobado</span>
+                   </td>
+                   <td>
+                       <span style="font-size:smaller;padding-left: 3px;">${new Date().toLocaleString()}</span>
+                   </td>
+               </tr>
+`;
+            if (accionAprobacion) {
+                htmlDetalleAprobacion = `<tr>
+               <td style="border:2px solid #000000; padding: 10px;">
+                   <table align="center" style="width: 100%;">
+                       <tr>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Usuario aprobador</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Estado aprobación</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Fecha aprobación</span>
+                           </td>
+                       </tr>
+                       ${lineaDetalleAprobacion}
+                   </table>
+               </td>
+           </tr>`;
+            }
+            //}
+            let lineaDetalleSolped = ``;
+            for (let item of entradaDet) {
+                subtotal = subtotal + item.linetotal;
+                totalimpuesto = totalimpuesto + item.taxvalor;
+                total = total + item.linegtotal;
+                lineaDetalleSolped = lineaDetalleSolped + `
+                       <tr>
+                           
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">${item.linenum}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">${item.dscription}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">${item.quantity}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">${item.moneda} ${item.price}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">$ ${item.trm}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">$ ${item.linetotal}</span>
+                           </td> 
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">$ ${item.taxvalor}</span>
+                           </td>
+                           <td>
+                               <span style="font-size:smaller;padding-left: 3px;">$ ${item.linegtotal}</span>
+                           </td>
+                       </tr>
+`;
+            }
+            let anexos = ``;
+            let detalleSolped = `
+           <tr>
+               <td style="border:2px solid #000000; padding: 10px;">
+                   <table style="width:100%; width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                       <tr style="background-color: #3dae2b; color:#454444;">
+                           
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Línea</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Descripción</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Cantidad</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Valor</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">TRM</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Subtotal línea</span>
+                           </td> 
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Impuesto</span>
+                           </td>
+                           <td>
+                               <span style="font-weight: bold; font-size: small; padding-left: 2px;">Total línea</span>
+                           </td>
+                       </tr>
+
+                       ${lineaDetalleSolped}
+
+                   </table>
+               </td>
+           </tr>`;
+            let bottonsAproved = "";
+            if (key !== '') {
+                bottonsAproved = `<table>
+       <tr>
+           <!--<td><a href="${urlbk}/api/compras/solped/aprobar/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">Aprobar</a></td>-->
+           <!--<td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://aprobaciones.nitrofert.com.co/#/login/${key}" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUÍ</a></b></td>-->
+           <td><b>Para aprobar o rechazar esta solicitud haga clic <a href="https://portal.nitrofert.com.co/#/" style="padding: 10px; background:darkseagreen; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: darkblue;">AQUI</a></b></td>
+           
+           <!--<td><a href="${urlbk}/api/compras/solped/rechazar/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a></td>-->
+           <!--<td><a href="http://localhost:4200/#/login/${key}" style="padding: 10px; background:lightcoral; border-collapse:collapse;border:0;border-spacing:0; margin-right: 50px; color: #ffffff;">Rechazar</a>-->
+       </tr>
+
+   </table>`;
+            }
+            const html = `<!DOCTYPE html>
+<html lang="en" xmlns="https://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<title></title>
+<!--[if mso]>
+<noscript>
+<xml>
+<o:OfficeDocumentSettings>
+<o:PixelsPerInch>96</o:PixelsPerInch>
+</o:OfficeDocumentSettings>
+</xml>
+</noscript>
+<![endif]-->
+<body style="margin:0;padding:0;">
+<table role="presentation" style="width:100%;border-collapse:collapse;border-spacing:0;background:#ffffff;">
+<tr>
+<td align="center" style="padding:0;">
+<table role="presentation"
+   style="width:602px;border-collapse:collapse;border:1px solid #cccccc;border-spacing:0;text-align:left;">
+   <tr>
+       <td align="center" style="padding:40px 0 30px 0;background:#ffffff;border:2px solid #000000">
+           <img src="${logo}" alt="" width="50%"  style="height:auto;display:block;" /> 
+       </td>
+   </tr>
+   <tr>
+       <td style="padding:36px 30px 42px 30px;border:2px solid #000000">
+           <table
+               style="width:100%;border-collapse:collapse;border:0;border-spacing:0;background:#ffffff;">
+               <tr>
+                   <td style="border:2px solid #000000">
+                       <h1>Notificación de aprobación  de entrada # ${entrada.entrada.id}</h1>
+                       <p> Hola ${LineAprovedEntrada.autor.fullname} el usuario ${LineAprovedEntrada.aprobador.fullname}
+                           ha aprobado la solped # ${entrada.entrada.id} y se genero el documento # ${LineAprovedEntrada.infoEntrada.sapdocnum} en SAP
+                       </p>
+                       <p>
+                           A continuación podrá ver la información solped
+                       </p>
+                   </td>
+               </tr>
+               <tr>
+                   <td style="border:2px solid #000000">
+                       <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+                           <tr>
+                               <td style="width:50%;">
+                                   <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Usuario solicitante</span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.fullname}</span><br />
+                                   <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Area solicitud</span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.u_nf_depen_solped}</span><br />
+                                   <span style="font-weight: bold; font-size: smaller;padding-left: 2px;">Calse solicitud</span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.doctype === 'S' ? 'Servicio' : 'Articulo'}</span><br />
+                                   
+                               </td>
+                               <td style="width:50%;">
+                                   <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Tipo solicitud</span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${serieNombre}</span><br />
+                                   <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha contabilización / Fecha expira </span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.docdate.toLocaleString()} - ${entrada.entrada.docduedate.toLocaleString()}</span><br />
+                                   <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Fecha ducumento / Fecha necesaria </span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.taxdate.toLocaleString()} - ${entrada.entrada.reqdate.toLocaleString()}</span><br />
+                               </td>
+                           </tr>
+                           
+                       </table>
+                       <span style="font-weight: bold; font-size: smaller; padding-left: 2px;">Comentarios</span><br />
+                                   <span style="font-size:smaller;padding-left: 3px;">${entrada.entrada.comments}</span>
+                   </td>
+               </tr>
+               ${detalleSolped}
+               <tr>
+                   <td style="border:2px solid #000000; padding: 10px;">
+                           <table align="right">
+                               <tr>
+                                   <td style="width: 60%;"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Subtotal</span></td>
+                                   <td><span style="font-size:smaller;padding-left: 3px;">$ ${subtotal}</span></td>
+                               </tr>
+                               <tr>
+                                   <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total impuestos</span></td>
+                                   <td><span style="font-size:smaller;padding-left: 3px;">$ ${totalimpuesto}</span></td>
+                               </tr>
+                               <tr>
+                                   <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Total solped</span></td>
+                                   <td><span style="font-size:smaller;padding-left: 3px;">$ ${total}</span></td>
+                               </tr>
+                           </table>
+                   </td>
+               </tr>
+               <tr>
+                   <td style="border:2px solid #000000; padding: 10px;">
+                       <table align="center" style="width:100%;">
+                           <tr>
+                               <td colspan="3"><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Anexos</span></td>
+                           </tr>
+                           <tr>
+                               <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Tipo</span></td>
+                               <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;">Nombre anexo</span></td>
+                               <td><span style="font-weight: bold; font-size: samll; padding-left: 2px;"></span></td>
+                           </tr>
+                           ${anexos}
+                       </table>
+                   </td>
+               </tr>
+               ${htmlDetalleAprobacion}
+           </table>
+       </td>
+   </tr>
+   <tr>
+       <td style="padding:30px;background:url(https://nitrofert.com.co/wp-content/uploads/2022/01/Fondo-home-nitrofert-3-2.jpg) repeat;border:2px solid #000000">
+           <table role="presentation" style="width:100%;border-collapse:collapse;border:0;border-spacing:0;">
+               <tr>
+                   <td style="padding:0;width:50%;" align="left">
+                       <p>&reg; Nitro Portal, TI 2022<br/><a href="http://localhost:4200/">Nitroportal</a></p>
+                   </td>
+                   <td style="padding:0;width:50%;" align="right">
+                       ${bottonsAproved}
+                   </td>
+               </tr>
+           </table>
+       </td>
+   </tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+<style>
+table, td, div, h1, p {font-family: Arial, sans-serif;}
+
+</style>
+</head>
+</html>`;
             return html;
         });
     }
@@ -1528,6 +2185,7 @@ class Helpers {
     }
     registerSolpedSAP(infoUsuario, data) {
         return __awaiter(this, void 0, void 0, function* () {
+            data.DocDate = new Date();
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 //console.log(JSON.stringify(data));
@@ -1690,13 +2348,13 @@ class Helpers {
                     };
                     const consultaAprobacionesSolpedSAP = yield (0, node_fetch_1.default)(`${url2}?$filter=U_NF_NUM_SOLPED_WEB eq '${idSolped}'`, configWs2);
                     const aprobacionesSolpedSAP = yield consultaAprobacionesSolpedSAP.json();
-                    //////console.log('aprobacionesSolpedSAP LENGTH',aprobacionesSolpedSAP.value.length);
+                    console.log(aprobacionesSolpedSAP);
                     if (aprobacionesSolpedSAP.value.length > 0) {
                         //Existe proceso de aprobación para la solped
                         //Obtener SapDocNum del proceso de aprobacion y cancelar solped
                         let oldSapDocNum = aprobacionesSolpedSAP.value[0].U_NF_NUM_SOLPED_SAP;
                         let oldDocEntry = yield helper.getSolpedByIdSL(infoUsuario, oldSapDocNum, Solped.solped.serie);
-                        //////console.log('oldDocEntry',oldDocEntry.value[0].DocEntry);
+                        console.log('oldDocEntry', oldDocEntry.value[0].DocEntry, 'oldSapDocNum', oldSapDocNum);
                         const cancelOldSolpedSap = yield helper.CancelSolpedSAP(infoUsuario, oldDocEntry.value[0].DocEntry);
                         if (cancelOldSolpedSap.error) {
                             arrayError.push({
@@ -1854,11 +2512,11 @@ class Helpers {
             }
         });
     }
-    modeloAprobacionesMysql(infoUsuario, area) {
+    modeloAprobacionesMysql(infoUsuario, area, tipo = 'SOL') {
         return __awaiter(this, void 0, void 0, function* () {
             const bdmysql = infoUsuario.bdmysql;
             //const modelos = await db.query(`Select * from ${bdmysql}.modelos_aprobacion `);
-            const modelos = yield database_1.db.query(`SELECT DISTINCT 
+            let query_modelos = `SELECT DISTINCT 
         t0.modeloid, 
         t0.modelo,
         '${infoUsuario.username}' as autorusercode,
@@ -1871,7 +2529,9 @@ class Helpers {
         t0.query,
         t0.nivel 
         FROM ${bdmysql}.modelos_aprobacion t0 
-        WHERE t0.query LIKE '%${area}%'`);
+        WHERE t0.query LIKE '%${area}%' and t0.modelo LIKE '${tipo}%'`;
+            console.log(query_modelos);
+            const modelos = yield database_1.db.query(query_modelos);
             const data2 = modelos;
             let arrayModelos = [];
             for (let item in data2) {
@@ -1918,14 +2578,16 @@ class Helpers {
     }
     getEntradaById(idEntrada, bdmysql) {
         return __awaiter(this, void 0, void 0, function* () {
-            const entradaResult = yield database_1.db.query(`
+            let query = `
       
         SELECT T0.*, T1.*, T2.email 
         FROM ${bdmysql}.entrada T0 
         INNER JOIN ${bdmysql}.entrada_det T1 ON T0.id = T1.id_entrada 
         INNER JOIN users T2 ON T2.id = T0.id_user
-        WHERE T0.id = ?`, [idEntrada]);
-            ////////////console.log((solpedResult));
+        WHERE T0.id = ${idEntrada}`;
+            console.log((query));
+            const entradaResult = yield database_1.db.query(query);
+            console.log((entradaResult));
             let entrada = {
                 id: idEntrada,
                 id_user: entradaResult[0].id_user,
@@ -1944,7 +2606,8 @@ class Helpers {
                 DocNum: entradaResult[0].pedidonumsap,
                 Comments: entradaResult[0].comments,
                 trm: entradaResult[0].trm,
-                currency: entradaResult[0].currency
+                currency: entradaResult[0].currency,
+                u_nf_depen_solped: entradaResult[0].u_nf_depen_solped,
             };
             let entradaDet = [];
             let DocumentLines = [];
@@ -2029,6 +2692,18 @@ class Helpers {
                 Comments: entradaResult[0].comments,
                 trm: entradaResult[0].trm,
                 currency: entradaResult[0].currency,
+                pedidonumsap: entradaResult[0].pedidonumsap,
+                u_nf_depen_solped: entradaResult[0].u_nf_depen_solped,
+                U_NF_BIEN_OPORTUNIDAD: entradaResult[0].U_NF_BIEN_OPORTUNIDAD,
+                U_NF_SERVICIO_CALIDAD: entradaResult[0].U_NF_SERVICIO_CALIDAD,
+                U_NF_SERVICIO_TIEMPO: entradaResult[0].U_NF_SERVICIO_TIEMPO,
+                U_NF_SERVICIO_SEGURIDAD: entradaResult[0].U_NF_SERVICIO_SEGURIDAD,
+                U_NF_SERVICIO_AMBIENTE: entradaResult[0].U_NF_SERVICIO_AMBIENTE,
+                U_NF_TIPO_HE: entradaResult[0].U_NF_TIPO_HE.charAt(0).toUpperCase(),
+                U_NF_PUNTAJE_HE: entradaResult[0].U_NF_PUNTAJE_HE,
+                U_NF_CALIFICACION: entradaResult[0].U_NF_CALIFICACION.charAt(0).toUpperCase(),
+                ClosingRemarks: entradaResult[0].footer,
+                U_NF_MES_REAL: entradaResult[0].U_NF_MES_REAL,
                 DocumentLines
             };
             //////////console.log(entradaObject,infoEntrada);
@@ -2120,6 +2795,7 @@ class Helpers {
     }
     loadInfoEntradaToJSONSAP(Entrada) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(Entrada);
             let dataEntradaJSONSAP;
             let DocumentLines = [];
             let DocumentLine;
@@ -2183,6 +2859,7 @@ class Helpers {
                 U_NF_TIPO_HE: Entrada.entrada.U_NF_TIPO_HE.charAt(0).toUpperCase(),
                 U_NF_PUNTAJE_HE: Entrada.entrada.U_NF_PUNTAJE_HE,
                 U_NF_CALIFICACION: Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
+                U_NF_MES_REAL: Entrada.entrada.U_NF_MES_REAL,
                 ClosingRemarks: Entrada.entrada.footer,
                 DocumentLines
             };

@@ -16,9 +16,10 @@ class EntradaRoutes{
         this.router.get('/impresion/:id',entradaController.getEntradaByIdSL);
         this.router.patch('/cancel/:id', entradaController.cancel);
         this.router.get('/pedido/:id', entradaController.entradasByPedido);
+        this.router.post('/aprobar-entradas',entradaController.aprobarEntradas);
         /*this.router.put('/', entradaController.update);
          
-        this.router.post('/envio-aprobacion',entradaController.envioAprobacionSolped);
+        
         this.router.get('/aprobar/:idcrypt',entradaController.aprovedMail);  
         this.router.get('/rechazar/:idcrypt',entradaController.reject);
         this.router.put('/rechazar',entradaController.rejectSolped);

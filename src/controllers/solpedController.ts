@@ -248,7 +248,7 @@ class SolpedController {
             newSolped.solped.reqdate = await helper.format(newSolped.solped.reqdate);
 
             let resultInsertSolped = await connection.query(querySolped, [newSolped.solped]);
-            //console.log(resultInsertSolped);
+            console.log(resultInsertSolped);
 
             let solpedId = resultInsertSolped.insertId;
             
@@ -362,7 +362,7 @@ class SolpedController {
                  acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
                  ocrcode3,whscode,id_user,proyecto,subproyecto,etapa,actividad) values ?
             `;
-            //console.log(queryInsertDetSolped, newSolpedDet);
+            console.log(queryInsertDetSolped, newSolpedDet);
             const resultInsertSolpedDet = await connection.query(queryInsertDetSolped, [newSolpedDet]);
 
             //console.log('resultInsertSolpedDet ',resultInsertSolpedDet);
@@ -374,7 +374,7 @@ class SolpedController {
 
         } catch (err) {
             // Print errors
-            //////console.log(err);
+            console.log(err);
             // Roll back the transaction
             connection.rollback();
             res.json({ err, status: 501 });
@@ -470,7 +470,7 @@ class SolpedController {
 
         try {
             await connection.beginTransaction();
-            let solpedId = newSolped.solped.id;
+            let solpedId = parseInt(newSolped.solped.id);
             newSolped.solped.docdate = await helper.format(newSolped.solped.docdate);
             newSolped.solped.docduedate = await helper.format(newSolped.solped.docduedate);
             newSolped.solped.taxdate = await helper.format(newSolped.solped.taxdate);
@@ -1156,7 +1156,7 @@ class SolpedController {
                                     
                                 }else{
                                     //Error existe una linea de aprobación
-                                    console.log("Error existe una linea de aprobacion");
+                                    console.log("Error no existe una linea de aprobacion");
                                 }
 
                             }

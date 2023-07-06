@@ -229,7 +229,7 @@ class SolpedController {
                 newSolped.solped.taxdate = yield helpers_1.default.format(newSolped.solped.taxdate);
                 newSolped.solped.reqdate = yield helpers_1.default.format(newSolped.solped.reqdate);
                 let resultInsertSolped = yield connection.query(querySolped, [newSolped.solped]);
-                //console.log(resultInsertSolped);
+                console.log(resultInsertSolped);
                 let solpedId = resultInsertSolped.insertId;
                 /*let newSolpedDet = [];
                 let newSolpedLine = [];
@@ -337,7 +337,7 @@ class SolpedController {
                  acctcode,acctcodename,quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,ocrcode2,
                  ocrcode3,whscode,id_user,proyecto,subproyecto,etapa,actividad) values ?
             `;
-                //console.log(queryInsertDetSolped, newSolpedDet);
+                console.log(queryInsertDetSolped, newSolpedDet);
                 const resultInsertSolpedDet = yield connection.query(queryInsertDetSolped, [newSolpedDet]);
                 //console.log('resultInsertSolpedDet ',resultInsertSolpedDet);
                 connection.commit();
@@ -346,7 +346,7 @@ class SolpedController {
             }
             catch (err) {
                 // Print errors
-                //////console.log(err);
+                console.log(err);
                 // Roll back the transaction
                 connection.rollback();
                 res.json({ err, status: 501 });
@@ -431,7 +431,7 @@ class SolpedController {
             let connection = yield database_1.db.getConnection();
             try {
                 yield connection.beginTransaction();
-                let solpedId = newSolped.solped.id;
+                let solpedId = parseInt(newSolped.solped.id);
                 newSolped.solped.docdate = yield helpers_1.default.format(newSolped.solped.docdate);
                 newSolped.solped.docduedate = yield helpers_1.default.format(newSolped.solped.docduedate);
                 newSolped.solped.taxdate = yield helpers_1.default.format(newSolped.solped.taxdate);
@@ -1004,7 +1004,7 @@ class SolpedController {
                                     }
                                     else {
                                         //Error existe una linea de aprobación
-                                        console.log("Error existe una linea de aprobacion");
+                                        console.log("Error no existe una linea de aprobacion");
                                     }
                                 }
                             }
