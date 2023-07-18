@@ -1740,10 +1740,10 @@ class Helpers {
                    <td style="border:2px solid #000000">
                        <h1>Notificación de aprobación  de entrada # ${entrada.entrada.id}</h1>
                        <p> Hola ${LineAprovedEntrada.autor.fullname} el usuario ${LineAprovedEntrada.aprobador.fullname}
-                           ha aprobado la solped # ${entrada.entrada.id} y se genero el documento # ${LineAprovedEntrada.infoEntrada.sapdocnum} en SAP
+                           ha ${LineAprovedEntrada.infoEntrada.aprobado ? 'aprobado' : 'rechazado'} la entrada # ${entrada.entrada.id} ${LineAprovedEntrada.infoEntrada.aprobado ? ` y se genero el documento # ${LineAprovedEntrada.infoEntrada.sapdocnum} en SAP` : ''} 
                        </p>
                        <p>
-                           A continuación podrá ver la información solped
+                           A continuación podrá ver la información de la entrada
                        </p>
                    </td>
                </tr>
@@ -3253,7 +3253,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocRate,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
                     // ////console.log(url2);
                     let configWs2 = {
                         method: "GET",

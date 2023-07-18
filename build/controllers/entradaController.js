@@ -35,7 +35,7 @@ class EntradaController {
                     where = ` WHERE t0.id in (SELECT tt0.id_entrada FROM ${bdmysql}.aprobacionentrada tt0 WHERE tt0.usersapaprobador = '${infoUsuario[0].codusersap}') and 
                                t2.name!='SPMP' and 
                                t0.approved ='P' and 
-                               t0.status !=''`;
+                               t0.status !='C'`;
                 }
                 ////console.log(decodedToken);
                 let queryList = `SELECT t0.id,t0.id_user,t0.usersap,t0.fullname,t0.serie,t2.name AS "serieStr",
@@ -323,9 +323,10 @@ class EntradaController {
                             //RequiredDate:item.reqdatedet,
                             //Quantity:item.cantidad,
                             //Price:item.precio,
-                            precio: linea.Price,
-                            //LineTotal:item.linetotal,
-                            //GrossTotal:item.linegtotal,
+                            price: linea.Price,
+                            linetotal: linea.LineTotal,
+                            linegtotal: linea.GrossTotal,
+                            taxvalor: linea.TaxTotal,
                             tax: linea.TaxCode,
                             ocrcode: linea.CostingCode,
                             ocrcode2: linea.CostingCode2,
@@ -335,8 +336,9 @@ class EntradaController {
                             BaseEntry: linea.BaseEntry,
                             linenum: linea.LineNum,
                             itemcode: linea.ItemCode,
-                            cantidad: linea.cantidad,
+                            quantity: linea.cantidad,
                             acctcode: linea.AccountCode,
+                            trm: linea.trm,
                         };
                     });
                     let entradaSAP = {
@@ -460,7 +462,8 @@ class EntradaController {
                                         companysap: compania,
                                         logo,
                                         origin: req.headers.origin,
-                                        sapdocnum: resultResgisterSAP.DocNum
+                                        sapdocnum: resultResgisterSAP.DocNum,
+                                        aprobado: true
                                     }
                                 };
                                 let aprobadorCrypt = '';
@@ -586,6 +589,145 @@ class EntradaController {
                     //console.log(resultUpdateEntrada);
                     res.json({ status: 200, message: `Se realizo correctamente la anulación de la entrada ${data.sapdocnum} generando el documento de cancelación SAP numero ${entradaCancel.value[0].PurchaseDeliveryNotes.DocNum}` });
                 }
+            }
+            catch (err) {
+                // Print errors
+                console.log(err);
+                res.json({ err, status: 501 });
+            }
+        });
+    }
+    rechazar(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const compania = infoUsuario[0].dbcompanysap;
+            const logo = infoUsuario[0].logoempresa;
+            const origin = req.headers.origin;
+            let urlbk = req.protocol + '://' + req.get('host');
+            const { id } = req.params;
+            const data = req.body;
+            //console.log(data);
+            try {
+                //const entrada = await helper.getEntradaById(id, bdmysql);
+                //Actualizar  sapdocnum, entrada
+                let queryLineaAprobacion = `Select * 
+                                                from ${bdmysql}.aprobacionentrada t0 
+                                                where t0.id_entrada = ${id} and 
+                                                    t0.usersapaprobador ='${infoUsuario[0].codusersap}' and 
+                                                    t0.estadoseccion='A' and
+                                                    estadoap='P'`;
+                let resultLineaAprobacion = yield database_1.db.query(queryLineaAprobacion);
+                //Actualiza estado de linea de aprobacion
+                let queryUpdateAprobacion = `Update ${bdmysql}.aprobacionentrada SET estadoap='R', estadoseccion='I', comments='${data.comment}' where id=${resultLineaAprobacion[0].id}`;
+                let resultUpdateAprobacion = yield database_1.db.query(queryUpdateAprobacion);
+                //Cancelar las lineas de aprobacion pertenecientes a la entrada diferentes a la linea de aprobacion actual
+                queryUpdateAprobacion = `Update ${bdmysql}.aprobacionentrada SET estadoseccion='I' where id!=${resultLineaAprobacion[0].id} and id_entrada=${id} and estadoseccion='A'`;
+                resultUpdateAprobacion = yield database_1.db.query(queryUpdateAprobacion);
+                //Actualizar estado de entrada a cancelada
+                let queryUpdateEntrada = `Update ${bdmysql}.entrada t0 Set t0.status='C', approved='R', t0.commentCancelSAP ='${data.comment}'  where t0.id = ?`;
+                let resultUpdateEntrada = yield database_1.db.query(queryUpdateEntrada, [id]);
+                //console.log(resultUpdateEntrada);
+                //Obtener infirmacion de la entrada
+                let entradaNotificacion = yield helpers_1.default.getEntradaById(id, bdmysql);
+                let EntradaDet = entradaNotificacion.DocumentLines.map((linea) => {
+                    return {
+                        moneda: linea.Currency,
+                        //Rate: Entrada.entrada.trm, //item.trm,
+                        dscription: linea.ItemDescription,
+                        //RequiredDate:item.reqdatedet,
+                        //Quantity:item.cantidad,
+                        //Price:item.precio,
+                        price: linea.Price,
+                        linetotal: linea.linetotal,
+                        linegtotal: linea.linegtotal,
+                        taxvalor: linea.taxvalor,
+                        tax: linea.TaxCode,
+                        ocrcode: linea.CostingCode,
+                        ocrcode2: linea.CostingCode2,
+                        ocrcode3: linea.CostingCode3,
+                        whscode: linea.WarehouseCode,
+                        BaseType: linea.BaseType,
+                        BaseEntry: linea.BaseEntry,
+                        linenum: linea.LineNum,
+                        itemcode: linea.ItemCode,
+                        quantity: linea.cantidad,
+                        acctcode: linea.AccountCode,
+                        trm: linea.trm,
+                    };
+                });
+                let entradaSAP = {
+                    entrada: {
+                        id: entradaNotificacion.id,
+                        id_user: entradaNotificacion.id_user,
+                        usersap: entradaNotificacion.usersap,
+                        fullname: entradaNotificacion.fullname,
+                        serie: entradaNotificacion.Series,
+                        doctype: entradaNotificacion.DocType,
+                        docdate: entradaNotificacion.DocDate,
+                        docduedate: entradaNotificacion.DocDueDate,
+                        taxdate: entradaNotificacion.TaxDate,
+                        reqdate: entradaNotificacion.reqdate,
+                        sapdocnum: entradaNotificacion.sapdocnum,
+                        codigoproveedor: entradaNotificacion.CardCode,
+                        nombreproveedor: entradaNotificacion.CardName,
+                        comments: entradaNotificacion.Comments,
+                        trm: entradaNotificacion.trm,
+                        //currency:this.moneda==='COP'?'$':this.moneda,
+                        currency: entradaNotificacion.currency,
+                        pedidonumsap: entradaNotificacion.pedidonumsap,
+                        u_nf_depen_solped: entradaNotificacion.u_nf_depen_solped,
+                        U_NF_BIEN_OPORTUNIDAD: entradaNotificacion.U_NF_BIEN_OPORTUNIDAD,
+                        U_NF_SERVICIO_CALIDAD: entradaNotificacion.U_NF_SERVICIO_CALIDAD,
+                        U_NF_SERVICIO_TIEMPO: entradaNotificacion.U_NF_SERVICIO_TIEMPO,
+                        U_NF_SERVICIO_SEGURIDAD: entradaNotificacion.U_NF_SERVICIO_SEGURIDAD,
+                        U_NF_SERVICIO_AMBIENTE: entradaNotificacion.U_NF_SERVICIO_AMBIENTE,
+                        U_NF_TIPO_HE: entradaNotificacion.U_NF_TIPO_HE,
+                        U_NF_PUNTAJE_HE: entradaNotificacion.U_NF_PUNTAJE_HE,
+                        U_NF_CALIFICACION: entradaNotificacion.U_NF_CALIFICACION,
+                        footer: entradaNotificacion.footer,
+                        U_NF_MES_REAL: entradaNotificacion.U_NF_MES_REAL
+                    },
+                    EntradaDet
+                };
+                let LineAprovedEntrada = {
+                    autor: {
+                        fullname: resultLineaAprobacion[0].nombreautor,
+                        email: resultLineaAprobacion[0].emailautor,
+                    },
+                    aprobador: {
+                        fullname: resultLineaAprobacion[0].nombreaprobador,
+                        email: resultLineaAprobacion[0].emailaprobador,
+                        usersap: resultLineaAprobacion[0].usersapaprobador,
+                    },
+                    infoEntrada: {
+                        id_entrada: id,
+                        idlineap: resultLineaAprobacion[0].id,
+                        bdmysql,
+                        companysap: compania,
+                        logo,
+                        origin: req.headers.origin,
+                        sapdocnum: 0,
+                        aprobado: false
+                    }
+                };
+                let aprobadorCrypt = '';
+                let html = yield helpers_1.default.loadBodyMailApprovedEntrada(infoUsuario[0], LineAprovedEntrada, logo, entradaSAP, aprobadorCrypt, urlbk, false);
+                //console.log('html',html);
+                //enviar Autorizacion al autor de la solped
+                let infoEmail = {
+                    to: (urlbk.includes('localhost') == true || urlbk.includes('-dev.') == true) ? 'ralbor@nitrofert.com.co' : LineAprovedEntrada.autor.email,
+                    subject: `Aprobación entrada ${id}`,
+                    html
+                };
+                yield helpers_1.default.sendNotification(infoEmail);
+                yield helpers_1.default.logaccion(infoUsuario[0], `Entrada:${id}  Se realizo correctamente el rechazo y cancelación de la entrada ${data.sapdocnum}`);
+                res.json({ status: 200, message: `Se realizo correctamente el rechazo y cancelación de la entrada ${data.sapdocnum}` });
             }
             catch (err) {
                 // Print errors
