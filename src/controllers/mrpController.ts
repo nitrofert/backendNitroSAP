@@ -69,6 +69,7 @@ class MrpController {
             //Obtener inventarios de SAP  de Materia prima a granel y en producto terminado Simple
             //let inventarios = await helper.getInventariosMPXE(infoUsuario[0]);
             let inventarios = await helper.getInventariosItemMPXE(infoUsuario[0],item,zona);
+            //console.log(inventarios);
             /*
             let inventariosItem = await helper.getInventariosItemMPXE(infoUsuario[0],item,zona);
             let array_inventariosItem :any[] =  [];
@@ -97,8 +98,10 @@ class MrpController {
             //console.loginventarioMP);
                                                               
             let totalInvMP:number = 0;
+            let totalCostoMP:number = 0;
             for(let item of inventarioMP){
                 totalInvMP = totalInvMP+eval(item.OnHand);
+                totalCostoMP+=eval(item.Costototal);
             }                                
             
             //Inventario de Materia prima en producto terminado simple            
@@ -121,11 +124,13 @@ class MrpController {
             let totalInventario = {
                 inventarioMP: totalInvMP,
                 ubicacionInvetarioMP:inventarioMP,
+                costoTotalMP:totalCostoMP/totalInvMP,
                 inventarioPT: totalInvPT,
-                ubicacionInvetarioPT:inventarioPT
+                ubicacionInvetarioPT:inventarioPT,
+                costoTotalPT:0
             }
 
-            //console.logtotalInventario);
+            console.log(totalInventario);
 
             res.json(totalInventario);
         
@@ -249,7 +254,7 @@ class MrpController {
             let consolidadoInventarios = {
                 inventarioItemTransito,
                 inventarioItemTransitoPreFecha,
-                totalInventarioItemZF,
+                totalInventarioItemZF, 
                 inventarioItenSolicitado,
                 inventarioItenSolicitadoPreFecha,
                 inventarioItemZF,
@@ -409,7 +414,7 @@ class MrpController {
 
             let data = req.body;
 
-           ////console.logdata);
+           //console.log(data);
            let itemcode = data.simulacionConProyeciones[0].itemcode;
            let codigozona = data.simulacionConProyeciones[0].codigozona;
            let zona = data.simulacionConProyeciones[0].zona;
@@ -467,6 +472,10 @@ class MrpController {
                 lineaSimulacion.push(data.simulacionSinProyeciones[item].tipo);
                 lineaSimulacion.push(data.simulacionSinProyeciones[item].tolerancia);
                 lineaSimulacion.push(data.simulacionSinProyeciones[item].bodega);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].costoUnitarioInicialMP);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].costoUnitarioInventarioTRMPP);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].costoUnitarioInventarioComprasSol);
+                lineaSimulacion.push(data.simulacionSinProyeciones[item].costoUnitarioInventarioMPSemana);
                 simulacionDet.push(lineaSimulacion);
                 lineaSimulacion = [];
                 lineaSimulacion.push(data.simulacionSinTransitoMP[item].itemcode);
@@ -490,31 +499,44 @@ class MrpController {
                 lineaSimulacion.push(data.simulacionSinTransitoMP[item].tipo);
                 lineaSimulacion.push(data.simulacionSinTransitoMP[item].tolerancia);
                 lineaSimulacion.push(data.simulacionSinTransitoMP[item].bodega);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].costoUnitarioInicialMP);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].costoUnitarioInventarioTRMPP);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].costoUnitarioInventarioComprasSol);
+                lineaSimulacion.push(data.simulacionSinTransitoMP[item].costoUnitarioInventarioMPSemana);
                 simulacionDet.push(lineaSimulacion);
                 lineaSimulacion = [];
-                lineaSimulacion.push(data.simulacionSinSolped[item].itemcode);
-                lineaSimulacion.push(data.simulacionSinSolped[item].codigozona);
-                lineaSimulacion.push(data.simulacionSinSolped[item].itemname);
-                lineaSimulacion.push(data.simulacionSinSolped[item].zona);
-                lineaSimulacion.push(new Date(data.simulacionSinSolped[item].fecha));
-                lineaSimulacion.push(data.simulacionSinSolped[item].semana);
-                lineaSimulacion.push(data.simulacionSinSolped[item].semanames);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMP);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMPPT);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMPZF);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioTransito);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioSolped);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioProyecciones);
-                lineaSimulacion.push(data.simulacionSinSolped[item].presupuestoConsumo);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioFinal);
-                lineaSimulacion.push(data.simulacionSinSolped[item].necesidadCompra);
-                lineaSimulacion.push(data.simulacionSinSolped[item].cantidadSugerida);
-                lineaSimulacion.push(data.simulacionSinSolped[item].inventarioFinalSugerido);
-                lineaSimulacion.push(data.simulacionSinSolped[item].tipo);
-                lineaSimulacion.push(data.simulacionSinSolped[item].tolerancia);
-                lineaSimulacion.push(data.simulacionSinSolped[item].bodega);
-                simulacionDet.push(lineaSimulacion);
-                lineaSimulacion = [];
+
+                if(data.simulacionSinSolped.length > 0) {
+                    lineaSimulacion.push(data.simulacionSinSolped[item].itemcode);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].codigozona);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].itemname);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].zona);
+                    lineaSimulacion.push(new Date(data.simulacionSinSolped[item].fecha));
+                    lineaSimulacion.push(data.simulacionSinSolped[item].semana);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].semanames);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMP);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMPPT);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioMPZF);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioTransito);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioSolped);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioProyecciones);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].presupuestoConsumo);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioFinal);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].necesidadCompra);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].cantidadSugerida);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].inventarioFinalSugerido);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].tipo);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].tolerancia);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].bodega);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].costoUnitarioInicialMP);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].costoUnitarioInventarioTRMPP);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].costoUnitarioInventarioComprasSol);
+                    lineaSimulacion.push(data.simulacionSinSolped[item].costoUnitarioInventarioMPSemana);
+                    simulacionDet.push(lineaSimulacion);
+                    lineaSimulacion = [];
+
+                }
+                
 
            }
 
@@ -541,7 +563,11 @@ class MrpController {
                                                                                          inventarioFinalSugerido,
                                                                                          tipo,
                                                                                          tolerancia,
-                                                                                         bodega) values ?`;
+                                                                                         bodega,
+                                                                                         costoUnitarioInicialMP,
+                                                                                         costoUnitarioInventarioTRMPP,
+                                                                                         costoUnitarioInventarioComprasSol,
+                                                                                         costoUnitarioInventarioMPSemana) values ?`;
                                                                                          
             let resultInsert = await db.query(queryInsertSimulaciones,[simulacionDet]);
             
@@ -1851,7 +1877,7 @@ class MrpController {
                     observacion,
                     costoRecursoSAP} = req.body;
 
-            //console.log(req.body);
+            console.log(detalle_calculo_precio_item);
             await connection.beginTransaction();
 
             let error:boolean = false;

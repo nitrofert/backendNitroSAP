@@ -8,7 +8,7 @@
 // match the expected interface, even if the JSON is valid.
 
 export interface PurchaseRequestsInterface {
-    DocDate:                                   Date;
+    DocDate?:                                   Date;
     DocDueDate:                                Date;
     TaxDate:                                   Date;
     RequriedDate?:                              Date;
@@ -355,6 +355,7 @@ export interface PurchaseRequestsInterface {
     U_NF_MOTONAVE?:string;
     U_NF_PEDMP?:string;
     U_NF_MES_REAL?:string;
+    U_NF_SOL_ANT_SIN_OC?:string; 
 }
 
 export interface AddressExtension {

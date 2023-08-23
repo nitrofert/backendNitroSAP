@@ -23,6 +23,7 @@ import authRoutesLQ from './routes/authRoutesLQ';
 import mrpRoutes from './routes/mrpRoutes';
 import reportesRoutes from './routes/reportesRoutes';
 import mysqlRoutes from './routes/mysqlRoutes';
+import mysqlWsRoutes from './routes/mysqlWsRoutes';
 
 
 class Server{
@@ -81,6 +82,7 @@ class Server{
         this.app.use('/api/shared/functions',sharedFunctionsRoutes);
         this.app.use('/api/nitroLQ',authRoutesLQ);
         this.app.use('/api/mysql/query',mysqlRoutes);
+        this.app.use('/api/mysql/ws/v1',mysqlWsRoutes);
 
         
         //console.log('Routes');

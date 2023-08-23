@@ -137,7 +137,7 @@ class MySQLController {
                                                 INNER JOIN companies t1 ON t0.companyid = t1.id
                                                 where t1.status ='A' and
                                                     t1.urlwsmysql = '${bdmysql}' and
-                                                    t0.codusersap = '${infoUsuario[0].codusersap}'`);
+                                                    t0.codusersap = '${infoUsuario[0].codusersap}'`); 
 
              
             const dependenciasUsuario = await db.query(`SELECT dependence, location, vicepresidency  

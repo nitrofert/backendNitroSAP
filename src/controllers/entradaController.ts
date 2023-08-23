@@ -57,9 +57,13 @@ class EntradaController {
             t0.comments,t0.trm,t0.codigoproveedor, t0.nombreproveedor,pedidonumsap,t0.approved
             ORDER BY t0.id DESC`;
 
+           
+
             console.log(queryList);
 
             const entrada = await db.query(queryList);
+           
+            //db.release();
             ////console.log(entrada);
             res.json(entrada);     
 
@@ -148,7 +152,7 @@ class EntradaController {
             //const resultInsertSolpedDet = await db.query(queryInsertDetSolped, [newEntradaDet]);
 
             //console.log(resultInsertSolpedDet);
-
+           
             if(resultInsertSolpedDet.affectedRows){
 
                 //Validar modelos de aprobacion para entradas
@@ -406,7 +410,7 @@ class EntradaController {
                     trm:any;
                     ItemDescription: any; Currency: string; 
 })=>{
-                    return {
+                    let detalle_linea =  {
                         moneda:linea.Currency,
                         //Rate: Entrada.entrada.trm, //item.trm,
                         dscription:linea.ItemDescription,
@@ -429,8 +433,12 @@ class EntradaController {
                         quantity:linea.cantidad,
                         acctcode:linea.AccountCode,
                         trm:linea.trm,
+                        cantidad:linea.cantidad
 
                     }
+
+
+                    return detalle_linea;
                 })
 
                 let entradaSAP:any = {
@@ -733,7 +741,8 @@ class EntradaController {
                 const dataCancel:any = {
                     "Document": {
                         "Comments": data.comment,
-                        "DocEntry": DocEntry
+                        "DocEntry": DocEntry,
+                        "DocDate": new Date().toISOString().split("T")[0]
                     }
                 }
                 const resultCancelEntradaSAP = await helper.cancelarEntrada(infoUsuario[0],dataCancel);

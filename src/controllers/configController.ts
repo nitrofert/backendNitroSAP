@@ -497,8 +497,6 @@ class ConfigController{
          
     }
 
-    
-
     async loadListaPreciosSAPPT(req: Request, res: Response){
         
         
@@ -523,9 +521,6 @@ class ConfigController{
         }
          
     }
-
-
-    
 
     async loadListaPrecioVentasSAP(req: Request, res: Response){
         

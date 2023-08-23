@@ -54,6 +54,7 @@ class EntradaController {
             ORDER BY t0.id DESC`;
                 console.log(queryList);
                 const entrada = yield database_1.db.query(queryList);
+                //db.release();
                 ////console.log(entrada);
                 res.json(entrada);
             }
@@ -316,7 +317,7 @@ class EntradaController {
                     //Obtener infirmacion de la entrada
                     let entradaNotificacion = yield helpers_1.default.getEntradaById(entradaId, bdmysql);
                     let EntradaDet = entradaNotificacion.DocumentLines.map((linea) => {
-                        return {
+                        let detalle_linea = {
                             moneda: linea.Currency,
                             //Rate: Entrada.entrada.trm, //item.trm,
                             dscription: linea.ItemDescription,
@@ -339,7 +340,9 @@ class EntradaController {
                             quantity: linea.cantidad,
                             acctcode: linea.AccountCode,
                             trm: linea.trm,
+                            cantidad: linea.cantidad
                         };
+                        return detalle_linea;
                     });
                     let entradaSAP = {
                         entrada: {
@@ -569,7 +572,8 @@ class EntradaController {
                 const dataCancel = {
                     "Document": {
                         "Comments": data.comment,
-                        "DocEntry": DocEntry
+                        "DocEntry": DocEntry,
+                        "DocDate": new Date().toISOString().split("T")[0]
                     }
                 };
                 const resultCancelEntradaSAP = yield helpers_1.default.cancelarEntrada(infoUsuario[0], dataCancel);

@@ -119,7 +119,8 @@ class Helpers {
                 '/api/nitroLQ/titulos',
                 '/api/nitroLQ/titulos/pagos',
                 '/uploads/solped/',
-                '/api/config/'
+                '/api/config/',
+                '/api/mysql/ws/v1'
             ];
             let result = false;
             for (let item of routesAllowWithoutToken) {
@@ -2138,7 +2139,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 U_NF_DEPEN_SOLPED: Solped.solped.u_nf_depen_solped,
                 DocType: Solped.solped.doctype,
                 Series: Solped.solped.serie,
-                DocDate: Solped.solped.docdate,
+                //DocDate: Solped.solped.docdate,
                 DocDueDate: Solped.solped.docduedate,
                 TaxDate: Solped.solped.taxdate,
                 RequriedDate: Solped.solped.reqdate,
@@ -2179,6 +2180,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             if (Solped.solped.nf_Incoterms != null) {
                 dataSolopedJSONSAP.U_NT_Incoterms = Solped.solped.nf_Incoterms;
             }
+            dataSolopedJSONSAP.U_NF_SOL_ANT_SIN_OC = "N";
             ////console.log(JSON.stringify(dataSolopedJSONSAP));
             return dataSolopedJSONSAP;
         });
@@ -2826,6 +2828,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 }
                 if (Entrada.entrada.doctype == 'I') {
                     DocumentLine.Quantity = item.cantidad;
+                    //DocumentLine.Quantity=item.quantity;
                 }
                 if (item.acctcode !== '') {
                     DocumentLine.AccountCode = item.acctcode;
@@ -3919,7 +3922,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
-                ////console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
@@ -3951,7 +3954,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const compania = infoUsuario.dbcompanysap;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
-                ////console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2);
                 const data2 = yield response2.json();
                 return (data2);
