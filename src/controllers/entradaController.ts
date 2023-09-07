@@ -137,6 +137,7 @@ class EntradaController {
                 newEntradaLine.push(newEntrada.EntradaDet[item].BaseEntry);
                 newEntradaLine.push(newEntrada.EntradaDet[item].BaseLine);
                 newEntradaLine.push(newEntrada.EntradaDet[item].BaseType);
+                newEntradaLine.push(newEntrada.EntradaDet[item].DiscountPercent);
                 newEntradaDet.push(newEntradaLine);
                 newEntradaLine = [];
             }
@@ -146,7 +147,7 @@ class EntradaController {
                 Insert into ${bdmysql}.entrada_det (id_entrada,linenum,itemcode,dscription,acctcode,
                                                     quantity,price,moneda,trm,linetotal,tax,taxvalor,linegtotal,ocrcode,
                                                     ocrcode2,ocrcode3,whscode,id_user,cantidad_pedido,
-                                                    cantidad_pendiente,basedocnum,baseentry,baseline,basetype) values ?
+                                                    cantidad_pendiente,basedocnum,baseentry,baseline,basetype,DiscountPercent) values ?
             `;
             const resultInsertSolpedDet = await connection.query(queryInsertDetSolped, [newEntradaDet]);
             //const resultInsertSolpedDet = await db.query(queryInsertDetSolped, [newEntradaDet]);
@@ -409,6 +410,7 @@ class EntradaController {
                     Price: any;
                     trm:any;
                     ItemDescription: any; Currency: string; 
+                    DiscountPercent:number;
 })=>{
                     let detalle_linea =  {
                         moneda:linea.Currency,
@@ -433,7 +435,8 @@ class EntradaController {
                         quantity:linea.cantidad,
                         acctcode:linea.AccountCode,
                         trm:linea.trm,
-                        cantidad:linea.cantidad
+                        cantidad:linea.cantidad,
+                        DiscountPercent:linea.DiscountPercent
 
                     }
 
@@ -471,7 +474,9 @@ class EntradaController {
                         U_NF_PUNTAJE_HE:entradaNotificacion.U_NF_PUNTAJE_HE,
                         U_NF_CALIFICACION:entradaNotificacion.U_NF_CALIFICACION,
                         footer:entradaNotificacion.footer,
-                        U_NF_MES_REAL:entradaNotificacion.U_NF_MES_REAL
+                        U_NF_MES_REAL:entradaNotificacion.U_NF_MES_REAL,
+                        DiscountPercent:entradaNotificacion.DiscountPercent
+
                     },
                     EntradaDet
                 }

@@ -588,7 +588,10 @@ class MySQLController {
                 if (dependencia) {
                     where = ` Where t0.Code='${dependencia}' `;
                 }
+                let sql = `Select * From ${bdmysql}.cuentas_dependencias t0 ${where} Order by t0.Code ASC`;
+                console.log(sql);
                 const cuentas = yield database_1.db.query(`Select * From ${bdmysql}.cuentas_dependencias t0 ${where} Order by t0.Code ASC`);
+                console.log(cuentas);
                 return res.json(cuentas);
             }
             catch (error) {

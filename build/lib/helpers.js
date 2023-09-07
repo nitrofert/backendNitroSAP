@@ -2610,6 +2610,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 trm: entradaResult[0].trm,
                 currency: entradaResult[0].currency,
                 u_nf_depen_solped: entradaResult[0].u_nf_depen_solped,
+                DiscountPercent: entradaResult[0].DiscountPercent == null ? 0 : entradaResult[0].DiscountPercent
             };
             let entradaDet = [];
             let DocumentLines = [];
@@ -2640,7 +2641,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     BaseDocNum: item.basedocnum,
                     BaseEntry: item.baseentry,
                     BaseLine: item.baseline,
-                    BaseType: item.basetype
+                    BaseType: item.basetype,
+                    DiscountPercent: item.DiscountPercent == null ? 0 : item.DiscountPercent
                 });
                 DocumentLines.push({
                     id_entrada: item.id_entrada,
@@ -2668,7 +2670,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     BaseDocNum: item.basedocnum,
                     BaseEntry: item.baseentry,
                     BaseLine: item.baseline,
-                    BaseType: item.basetype
+                    BaseType: item.basetype,
+                    DiscountPercent: item.DiscountPercent == null ? 0 : item.DiscountPercent
                 });
             }
             let entradaObject = {
@@ -2706,6 +2709,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 U_NF_CALIFICACION: entradaResult[0].U_NF_CALIFICACION.charAt(0).toUpperCase(),
                 ClosingRemarks: entradaResult[0].footer,
                 U_NF_MES_REAL: entradaResult[0].U_NF_MES_REAL,
+                DiscountPercent: entradaResult[0].DiscountPercent == null ? 0 : entradaResult[0].DiscountPercent,
                 DocumentLines
             };
             //////////console.log(entradaObject,infoEntrada);
@@ -2821,7 +2825,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     WarehouseCode: item.whscode !== '' ? item.whscode : 'SM_N300',
                     BaseType: item.BaseType,
                     BaseEntry: item.BaseEntry,
-                    BaseLine: item.linenum
+                    BaseLine: item.linenum,
+                    DiscountPercent: item.DiscountPercent
                 };
                 if (item.itemcode !== '' && Entrada.entrada.doctype == 'I') {
                     DocumentLine.ItemCode = item.itemcode;
@@ -2864,6 +2869,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 U_NF_CALIFICACION: Entrada.entrada.U_NF_CALIFICACION.charAt(0).toUpperCase(),
                 U_NF_MES_REAL: Entrada.entrada.U_NF_MES_REAL,
                 ClosingRemarks: Entrada.entrada.footer,
+                DiscountPercent: Entrada.entrada.DiscountPercent,
                 DocumentLines
             };
             ////////console.log(JSON.stringify(dataEntradaJSONSAP));
@@ -3256,7 +3262,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocRate,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocRate,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION,DiscountPercent,TotalDiscount),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,UnitPrice,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3,DiscountPercent),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
                     // ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
