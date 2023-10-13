@@ -264,7 +264,7 @@ class MySQLController {
 
             const tabla_costos_localidad = await db.query(`Select * from ${bdmysql}.costos_localidad`);
 
-            const tabla_promedios_localidad = await db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad`);
+            const tabla_promedios_localidad = await db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL'`);
 
             const tabla_presentacion_items = await db.query(`Select * from ${bdmysql}.presentacion_item_pt`);
 
@@ -727,6 +727,30 @@ class MySQLController {
             }
     }
 
+    public async historial_trm_monedas(req: Request, res: Response) {
+        try {
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+           
+            //******************************************************* */
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+            const query = `SELECT t0.*, t1.Code FROM trm_dia_monedas t0 INNER JOIN monedas t1 ON t0.monedaid = t1.id`;
+    
+            //console.log(query);      
+            const monedas = await db.query(query);
+            //console.log(dependenciasUsuario);
+            res.json(monedas);
+    
+            }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+            }
+    }
+
     public async dependecias(req: Request, res: Response) {
         try {
 
@@ -816,11 +840,57 @@ class MySQLController {
                             CASE WHEN t0.categoria ='' THEN t1.precioGerente ELSE 0 END AS "precioGerente",
                             CASE WHEN t0.categoria ='' THEN t1.precioVendedor ELSE 0 END AS "precioVendedor",
                             CASE WHEN t0.categoria ='' THEN t1.precioLP ELSE 0 END AS "precioLP",
-                            t0.observacion
+                            CASE WHEN t0.categoria ='' THEN t1.brutoS0SAP ELSE 0 END AS "brutoS0SAP",
+                            CASE WHEN t0.categoria ='' THEN t1.totalS0SAP ELSE 0 END AS "totalS0SAP",
+
+                            CASE WHEN t0.categoria ='' THEN t1.costoVentaPTsemana0 ELSE 0 END AS "costoVentaPTsemana0",
+                            CASE WHEN t0.categoria ='' THEN t1.costoTotalPTsemana0 ELSE 0 END AS "costoTotalPTsemana0",
+
+                            CASE WHEN t0.categoria ='' THEN t1.costoVentaPTSAP ELSE 0 END AS "costoVentaPTSAP",
+                            CASE WHEN t0.categoria ='' THEN t1.costoTotalPTSAP ELSE 0 END AS "costoTotalPTSAP",
+                            t0.observacion,
+
+                            CASE WHEN (CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END) ='-' THEN 0 
+                            ELSE
+                            ((CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END)/t0.trmMoneda)*(1-(CASE WHEN t0.categoria ='' THEN t1.brutoS0 ELSE 0 END))
+                            END AS costoBrutoS0,
+                            
+                            CASE WHEN (CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END) ='-' THEN 0 
+                            ELSE
+                            ((CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END)/t0.trmMoneda)*(1-(CASE WHEN t0.categoria ='' THEN t1.netoS0 ELSE 0 END))
+                            END AS costoNetoS0
                                 
                             FROM ${bdmysql}.calculo_precio_item t0
                             INNER JOIN ${bdmysql}.detalle_precio_calculo_item t1 ON t1.id_calculo = t0.id
-                            WHERE t1.linea=2`;
+                            WHERE t1.linea=2 and estado='ACTIVO'`;
 
             //console.log(query);
 
@@ -949,6 +1019,37 @@ class MySQLController {
             }
 
     }
+
+    public async listaAgentesAduana(req: Request, res: Response) {
+
+
+        try{
+
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+           
+            //******************************************************* */
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            const query = `SELECT * FROM ${bdmysql}.agentesaduana `;
+    
+            console.log(query);      
+            const agentes = await db.query(query);
+            //console.log(dependenciasUsuario);
+            res.json(agentes);
+    
+
+
+        }catch (error: any) {
+            console.error(error);
+            return res.json(error);
+        }
+    }
+
+    
     
     
     

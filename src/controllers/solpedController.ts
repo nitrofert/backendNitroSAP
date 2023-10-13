@@ -24,6 +24,9 @@ class SolpedController {
             const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
             const bdmysql = infoUsuario[0].bdmysql;
             const perfilesUsuario:any[] = await helper.getPerfilesUsuario(decodedToken.userId);
+            console.log(new Date());
+            console.log(new Date().toLocaleString("en-US", { hour12: true }));
+            console.log(new Date(new Date().toLocaleString("en-US", { hour12: true })));
        
             let where = "";
 
@@ -1151,7 +1154,7 @@ class SolpedController {
                                 }
 
                             }else{
-                                arrayResultEvalModelos.push({ status: "error", message:`El modelo ${JSON.stringify(modelo)} no es valido para la solped ${id}`})
+                                //arrayResultEvalModelos.push({ status: "error", message:`El modelo ${JSON.stringify(modelo)} no es valido para la solped ${id}`})
                                 console.log(`El modelo ${modelo} no es valido para la solped ${id}`);
                             }
                             
@@ -1668,148 +1671,158 @@ class SolpedController {
                                     await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Error en registro solped SAP: ${infoUsuario[0].fullname} ${resultResgisterSAP.error.message.value.replace(/['"]+/g, '')}`);
                                     error = true;
                                     ////////console.log(resultResgisterSAP.error.message.value);
-        const compania = infoUsuario[0].dbcompanysap;
+                                    const compania = infoUsuario[0].dbcompanysap;
                                     arrayErrors.push({message:`Solped ${idSolped} - ${compania}: Error en registro solped SAP ${resultResgisterSAP.error.message.value} ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`});
                                     
                                 }else{
                                     DocNumSAP = resultResgisterSAP.DocNum;
                                     DocEntrySAP = resultResgisterSAP.DocEntry; 
 
-                                    //Registra proceso de aprobación en SAP
-                                    ////console.log(`Registra proces de aprobacion: ${infoUsuario[0].fullname} ${DocNumSAP} ${DocEntrySAP}`);
-                                    await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Registra proceso de aprobacion: ${infoUsuario[0].fullname} ${DocNumSAP} ${DocEntrySAP}`);
-                                    //Registrar proceso de aprobacion solped en SAP
+                                    if(resultResgisterSAP.DocNum!='undefined'){
+                                        //Registra proceso de aprobación en SAP
+                                        ////console.log(`Registra proces de aprobacion: ${infoUsuario[0].fullname} ${DocNumSAP} ${DocEntrySAP}`);
+                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Registra proceso de aprobacion: ${infoUsuario[0].fullname} ${DocNumSAP} ${DocEntrySAP}`);
+                                        //Registrar proceso de aprobacion solped en SAP
 
-                                    let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario[0],bdmysql,idSolped,resultResgisterSAP.DocNum);
-                                    
-                                    ////console.log(resultResgisterProcApSA);
-                                    if(resultResgisterProcApSA.length>0){
-                                        ////console.log('Error en registro proceso de aprobacion SAP',resultResgisterProcApSA);
-                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Error en registro proceso de aprobacion SAP ${JSON.stringify(resultResgisterProcApSA).replace(/['"]+/g, '')}`);
-                                        error = true;
-                                        arrayErrors.push({message:`Solped ${idSolped}: Error en registro proceso de aprobacion SAP ${JSON.stringify(resultResgisterProcApSA)}`})
-                                        //Anular Solped de SAP por falla en registro de aprobación
-                                        let cancelSolpedSAP = await helper.CancelSolpedSAP(infoUsuario[0],DocEntrySAP);
-                                    }else{
+                                        let resultResgisterProcApSA = await  helper.registerProcApSolpedSAP(infoUsuario[0],bdmysql,idSolped,resultResgisterSAP.DocNum);
+                                        
+                                        ////console.log(resultResgisterProcApSA);
+                                        if(resultResgisterProcApSA.length>0){
+                                            ////console.log('Error en registro proceso de aprobacion SAP',resultResgisterProcApSA);
+                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Error en registro proceso de aprobacion SAP ${JSON.stringify(resultResgisterProcApSA).replace(/['"]+/g, '')}`);
+                                            error = true;
+                                            arrayErrors.push({message:`Solped ${idSolped}: Error en registro proceso de aprobacion SAP ${JSON.stringify(resultResgisterProcApSA)}`})
+                                            //Anular Solped de SAP por falla en registro de aprobación
+                                            let cancelSolpedSAP = await helper.CancelSolpedSAP(infoUsuario[0],DocEntrySAP);
+                                        }else{
 
-                                        //asociar solped a proyecto seleccionado
+                                            //asociar solped a proyecto seleccionado
 
-                                        let proyectosSolped = await helper.ProyectosSolped(idSolped, bdmysql);
+                                            let proyectosSolped = await helper.ProyectosSolped(idSolped, bdmysql);
 
-                                        //console.log(proyectosSolped);
-                                       
-                                        if(proyectosSolped.length>0){
-                                            let result= await helper.registrarProyectosSolped(infoUsuario[0],DocEntrySAP,proyectosSolped);
-                                        }
+                                            //console.log(proyectosSolped);
+                                        
+                                            if(proyectosSolped.length>0){
+                                                let result= await helper.registrarProyectosSolped(infoUsuario[0],DocEntrySAP,proyectosSolped);
+                                            }
 
-                                        //Anula solped en base de datos de presupuesto
-                            
-                                        if(validaPresupuesto == 'S'){
-                                            ////console.log(`Cancela solped SAP en presupuesto: ${infoUsuario[0].fullname}`);
-                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Cancela solped SAP en presupuesto: ${infoUsuario[0].fullname} `);
-                                            //Cancelar solped en base de datos de Presupuesto SAP con el docentrySP obenido de la solped
-                                            let docEntrySP = Solped.solped.docentrySP;
-                                            if(docEntrySP!=0){
-                                                let infoUsuarioPresupuesto:any = [{dbcompanysap:bdPresupuesto}]
-                                                //let resultCancelSolpedPresupuesto = await helper.anularSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
-                                                let solpedPresupuesto = await helper.consultarSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
-                                                ////console.log(solpedPresupuesto.DocumentStatus)
-                                                if(solpedPresupuesto.DocumentStatus=="bost_Open"){
-                                                    let resultCancelSolpedPresupuesto = await helper.cerrarSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
-                                                    ////console.log(resultCancelSolpedPresupuesto);
-                                                    if (resultCancelSolpedPresupuesto.error) {
-                                                        ////console.log(`Error al cancelar solped SAP Presupueso: ${infoUsuario[0].fullname} error: ${resultCancelSolpedPresupuesto.error.message.value} `);
-                                                        error = true;
-                                                        arrayErrors.push({message:`Solped ${idSolped}: Error al cancelar solped SAP Presupueso ${resultCancelSolpedPresupuesto.error.message.value}`})
-                                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Error al cancelar solped SAP Presupueso ${resultCancelSolpedPresupuesto.error.message.value.replace(/['"]+/g, '')} `);
+                                            //Anula solped en base de datos de presupuesto
+                                
+                                            if(validaPresupuesto == 'S'){
+                                                ////console.log(`Cancela solped SAP en presupuesto: ${infoUsuario[0].fullname}`);
+                                                await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Cancela solped SAP en presupuesto: ${infoUsuario[0].fullname} `);
+                                                //Cancelar solped en base de datos de Presupuesto SAP con el docentrySP obenido de la solped
+                                                let docEntrySP = Solped.solped.docentrySP;
+                                                if(docEntrySP!=0){
+                                                    let infoUsuarioPresupuesto:any = [{dbcompanysap:bdPresupuesto}]
+                                                    //let resultCancelSolpedPresupuesto = await helper.anularSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
+                                                    let solpedPresupuesto = await helper.consultarSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
+                                                    ////console.log(solpedPresupuesto.DocumentStatus)
+                                                    if(solpedPresupuesto.DocumentStatus=="bost_Open"){
+                                                        let resultCancelSolpedPresupuesto = await helper.cerrarSolpedByIdSL(infoUsuarioPresupuesto[0],docEntrySP);
+                                                        ////console.log(resultCancelSolpedPresupuesto);
+                                                        if (resultCancelSolpedPresupuesto.error) {
+                                                            ////console.log(`Error al cancelar solped SAP Presupueso: ${infoUsuario[0].fullname} error: ${resultCancelSolpedPresupuesto.error.message.value} `);
+                                                            error = true;
+                                                            arrayErrors.push({message:`Solped ${idSolped}: Error al cancelar solped SAP Presupueso ${resultCancelSolpedPresupuesto.error.message.value}`})
+                                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Error al cancelar solped SAP Presupueso ${resultCancelSolpedPresupuesto.error.message.value.replace(/['"]+/g, '')} `);
+                                                        }
+                                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Se cancelo correctamente la solped de presupuesto`);     
                                                     }
-                                                    await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Se cancelo correctamente la solped de presupuesto`);     
-                                                }
-                                                                                                            
-                                            }else{
-                                                error = true;
-                                                ////console.log('No se encontro docentry asociado a la solped');
-                                                arrayErrors.push({message:`Solped ${idSolped}: No se encontro DocEntry asociado a la solped de presupuesto`})
-                                                await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  No se encontro DocEntry asociado a la solped de presupuesto`);
-                                            }
-                                        }
-                                        //Actualizar solped en mysql
-
-
-                                        let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 
-                                                                               Set t0.approved = 'A', 
-                                                                                   t0.sapdocnum ='${DocNumSAP}', 
-                                                                                   t0.status='C'  
-                                                                               where t0.id = ?`;
-
-                                        let resultUpdateSolpedAproved = await db.query(queryUpdateSolpedAproved,[idSolped]);
-                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Actualiza estado de solped a C y asigna el DocNum de SAP ${DocNumSAP}`);
-                                        //Envia notificacion de  aprobación de solped al usuario autor y a los compradores del area
-                                        //Obtenerr Emial de compradores segun la compañia, y area de la solped para colocarlos en copia del mail
-                                        let arrayMailsCompradoresSL = await helper.getUsuariosComprasAreaSL(infoUsuario[0],Solped.solped.u_nf_depen_solped);
-                                        let emailCompradores = "";
-                                        if(!arrayMailsCompradoresSL.error){
-                                            ////console.log(arrayMailsCompradoresSL);
-                                        
-                                            if(arrayMailsCompradoresSL.value.length>0){
-                                                for(let item of arrayMailsCompradoresSL.value){
-                                                    emailCompradores+=`${item.Users.eMail},`;
+                                                                                                                
+                                                }else{
+                                                    error = true;
+                                                    ////console.log('No se encontro docentry asociado a la solped');
+                                                    arrayErrors.push({message:`Solped ${idSolped}: No se encontro DocEntry asociado a la solped de presupuesto`})
+                                                    await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  No se encontro DocEntry asociado a la solped de presupuesto`);
                                                 }
                                             }
-                                        }
-                                        
-                                        //Obtener datos para envio de notificación de aprobación solped
-                                        LineAprovedSolped =  {
-                                            autor: {
-                                                fullname: resultLineaAprobacion[0].nombreautor,
-                                                email: resultLineaAprobacion[0].emailautor,
-                                            },
-                                            aprobador: {
-                                                fullname: resultLineaAprobacion[0].nombreaprobador,
-                                                email: resultLineaAprobacion[0].emailaprobador,
-                                                usersap: resultLineaAprobacion[0].usersapaprobador,
-                            
-                                            },
-                                            infoSolped: {
-                                                id_solped: idSolped,
-                                                idlineap: resultLineaAprobacion[0].id,
-                                                bdmysql,
-                                                companysap:compania,
-                                                logo,
-                                                origin:req.headers.origin,
-                                                sapdocnum:DocNumSAP
+                                            //Actualizar solped en mysql
+
+
+                                            let queryUpdateSolpedAproved = `Update ${bdmysql}.solped t0 
+                                                                                Set t0.approved = 'A', 
+                                                                                    t0.sapdocnum ='${DocNumSAP}', 
+                                                                                    t0.status='C'  
+                                                                                where t0.id = ?`;
+
+                                            let resultUpdateSolpedAproved = await db.query(queryUpdateSolpedAproved,[idSolped]);
+                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Actualiza estado de solped a C y asigna el DocNum de SAP ${DocNumSAP}`);
+                                            //Envia notificacion de  aprobación de solped al usuario autor y a los compradores del area
+                                            //Obtenerr Emial de compradores segun la compañia, y area de la solped para colocarlos en copia del mail
+                                            let arrayMailsCompradoresSL = await helper.getUsuariosComprasAreaSL(infoUsuario[0],Solped.solped.u_nf_depen_solped);
+                                            let emailCompradores = "";
+                                            if(!arrayMailsCompradoresSL.error){
+                                                ////console.log(arrayMailsCompradoresSL);
+                                            
+                                                if(arrayMailsCompradoresSL.value.length>0){
+                                                    for(let item of arrayMailsCompradoresSL.value){
+                                                        emailCompradores+=`${item.Users.eMail},`;
+                                                    }
+                                                }
                                             }
-                                        };
-                                        const html:string = await helper.loadBodyMailApprovedSolped(infoUsuario[0],
-                                                                                                    LineAprovedSolped,
-                                                                                                    logo,
-                                                                                                    Solped,
-                                                                                                    '',
-                                                                                                    urlbk,
-                                                                                                    true);
-                                        
-                                        let infoEmail:any = {
-                                            to:(urlbk.includes('localhost')==true || 
-                                                urlbk.includes('-dev.')==true)?
-                                                'ralbor@nitrofert.com.co': 
-                                                LineAprovedSolped.autor.email,
-                                            cc: (urlbk.includes('localhost')==true || 
-                                                 urlbk.includes('-dev.')==true)?
-                                                 'ralbor@nitrofert.com.co': 
-                                                 emailCompradores,
-                                            subject: `Aprobación Solped ${idSolped}`,
-                                            html
+                                            
+                                            //Obtener datos para envio de notificación de aprobación solped
+                                            LineAprovedSolped =  {
+                                                autor: {
+                                                    fullname: resultLineaAprobacion[0].nombreautor,
+                                                    email: resultLineaAprobacion[0].emailautor,
+                                                },
+                                                aprobador: {
+                                                    fullname: resultLineaAprobacion[0].nombreaprobador,
+                                                    email: resultLineaAprobacion[0].emailaprobador,
+                                                    usersap: resultLineaAprobacion[0].usersapaprobador,
+                                
+                                                },
+                                                infoSolped: {
+                                                    id_solped: idSolped,
+                                                    idlineap: resultLineaAprobacion[0].id,
+                                                    bdmysql,
+                                                    companysap:compania,
+                                                    logo,
+                                                    origin:req.headers.origin,
+                                                    sapdocnum:DocNumSAP
+                                                }
+                                            };
+                                            const html:string = await helper.loadBodyMailApprovedSolped(infoUsuario[0],
+                                                                                                        LineAprovedSolped,
+                                                                                                        logo,
+                                                                                                        Solped,
+                                                                                                        '',
+                                                                                                        urlbk,
+                                                                                                        true);
+                                            
+                                            let infoEmail:any = {
+                                                to:(urlbk.includes('localhost')==true || 
+                                                    urlbk.includes('-dev.')==true)?
+                                                    'ralbor@nitrofert.com.co': 
+                                                    LineAprovedSolped.autor.email,
+                                                cc: (urlbk.includes('localhost')==true || 
+                                                    urlbk.includes('-dev.')==true)?
+                                                    'ralbor@nitrofert.com.co': 
+                                                    emailCompradores,
+                                                subject: `Aprobación Solped ${idSolped}`,
+                                                html
+                                            }
+                                            //Envio de notificación dfe aprobacion al autor aprobador con copia al aprobador
+                                            await helper.sendNotification(infoEmail);
+                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Envio de notificacion a los siguientes destinatarios ${LineAprovedSolped.autor.email}, ${emailCompradores}`);
+                                            messageSolped = `La solped fue aprobada y registrada en SAP satisfactoriamente con el numero ${DocNumSAP}`;
+                                            await helper.logaccion(infoUsuario[0],`Solped:${idSolped} La solped fue aprobada y registrada en SAP satisfactoriamente con el numero ${DocNumSAP}`);
+                                            ////////console.log(messageSolped);
+                                            arrayAproved.push({message:`Solped ${idSolped} ${messageSolped}`});
+                                                                            
+                                
                                         }
-                                        //Envio de notificación dfe aprobacion al autor aprobador con copia al aprobador
-                                        await helper.sendNotification(infoEmail);
-                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped} Envio de notificacion a los siguientes destinatarios ${LineAprovedSolped.autor.email}, ${emailCompradores}`);
-                                        messageSolped = `La solped fue aprobada y registrada en SAP satisfactoriamente con el numero ${DocNumSAP}`;
-                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped} La solped fue aprobada y registrada en SAP satisfactoriamente con el numero ${DocNumSAP}`);
-                                        ////////console.log(messageSolped);
-                                        arrayAproved.push({message:`Solped ${idSolped} ${messageSolped}`});
-                                                                        
-                            
+                                    }else{
+                                        await helper.logaccion(infoUsuario[0],`Solped:${idSolped}  Error en registro solped SAP: ${infoUsuario[0].fullname} ${JSON.stringify(resultResgisterSAP)}`);
+                                        error = true;
+                                        ////////console.log(resultResgisterSAP.error.message.value);
+                                        //const compania = infoUsuario[0].dbcompanysap;
+                                        arrayErrors.push({message:`Solped ${idSolped} - ${compania}: Error en registro solped SAP: ${JSON.stringify(resultResgisterSAP)}`});
                                     }
+
+                                    
                                 }
                             }
                             

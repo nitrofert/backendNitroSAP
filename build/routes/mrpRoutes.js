@@ -43,6 +43,7 @@ class MrpRoutes {
         this.router.post('/cargar-lp-mp', multer_1.default.single('myFileMP'), mrpController_1.default.cargarLPMP);
         this.router.post('/cargar-lp-sugerido', multer_1.default.single('myFileLPSugerido'), mrpController_1.default.cargarLPSugerido);
         this.router.post('/grabar-calculo-precios-item', mrpController_1.default.grabarCalculoPreciosItem);
+        this.router.post('/anular-calculo-precios-item', mrpController_1.default.anularCalculoPreciosItem);
         this.router.get('/consulta-calculos-item', mrpController_1.default.getInfoCalculoItem);
         this.router.get('/precio-venta-item', mrpController_1.default.getPrecioVentaItemSAP);
     }

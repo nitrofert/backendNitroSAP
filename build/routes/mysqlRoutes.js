@@ -24,6 +24,7 @@ class MySQLRoutes {
         this.router.get('/almacenes', mysqlController_1.default.almacenes);
         this.router.get('/zonas', mysqlController_1.default.zonas);
         this.router.get('/monedas', mysqlController_1.default.monedas);
+        this.router.get('/historial-trm-monedas', mysqlController_1.default.historial_trm_monedas);
         this.router.get('/socios-negocio', mysqlController_1.default.sociosNegocio);
         this.router.get('/areas-usuario', mysqlController_1.default.areasUsuario);
         this.router.get('/dependencias-usuario', mysqlController_1.default.dependeciasUsuario);
@@ -36,6 +37,7 @@ class MySQLRoutes {
         this.router.get('/receta-item/:item', mysqlController_1.default.recetaItem);
         this.router.get('/lista-precios-sap-item/:item', mysqlController_1.default.listaPreciosSAPItem);
         this.router.get('/lista-precios-venta-item/:item', mysqlController_1.default.listaPreciosVentaSAPItem);
+        this.router.get('/agentes-aduana', mysqlController_1.default.listaAgentesAduana);
     }
 }
 const mysqlRoutes = new MySQLRoutes();

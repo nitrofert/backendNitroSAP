@@ -217,7 +217,7 @@ class MySQLController {
                                               Where State_Code !=''`);
                 const parametros_calculadora_precio = yield database_1.db.query(`Select * from ${bdmysql}.parametros_calc`);
                 const tabla_costos_localidad = yield database_1.db.query(`Select * from ${bdmysql}.costos_localidad`);
-                const tabla_promedios_localidad = yield database_1.db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad`);
+                const tabla_promedios_localidad = yield database_1.db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL'`);
                 const tabla_presentacion_items = yield database_1.db.query(`Select * from ${bdmysql}.presentacion_item_pt`);
                 const tabla_precios_sugeridos = yield database_1.db.query(`Select * from ${bdmysql}.lista_precios_sugerida`);
                 const tabla_precios_venta_sap = yield database_1.db.query(`Select * from ${bdmysql}.precio_venta_sap_l2w`);
@@ -622,6 +622,28 @@ class MySQLController {
             }
         });
     }
+    historial_trm_monedas(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const query = `SELECT t0.*, t1.Code FROM trm_dia_monedas t0 INNER JOIN monedas t1 ON t0.monedaid = t1.id`;
+                //console.log(query);      
+                const monedas = yield database_1.db.query(query);
+                //console.log(dependenciasUsuario);
+                res.json(monedas);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
     dependecias(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -704,11 +726,57 @@ class MySQLController {
                             CASE WHEN t0.categoria ='' THEN t1.precioGerente ELSE 0 END AS "precioGerente",
                             CASE WHEN t0.categoria ='' THEN t1.precioVendedor ELSE 0 END AS "precioVendedor",
                             CASE WHEN t0.categoria ='' THEN t1.precioLP ELSE 0 END AS "precioLP",
-                            t0.observacion
+                            CASE WHEN t0.categoria ='' THEN t1.brutoS0SAP ELSE 0 END AS "brutoS0SAP",
+                            CASE WHEN t0.categoria ='' THEN t1.totalS0SAP ELSE 0 END AS "totalS0SAP",
+
+                            CASE WHEN t0.categoria ='' THEN t1.costoVentaPTsemana0 ELSE 0 END AS "costoVentaPTsemana0",
+                            CASE WHEN t0.categoria ='' THEN t1.costoTotalPTsemana0 ELSE 0 END AS "costoTotalPTsemana0",
+
+                            CASE WHEN t0.categoria ='' THEN t1.costoVentaPTSAP ELSE 0 END AS "costoVentaPTSAP",
+                            CASE WHEN t0.categoria ='' THEN t1.costoTotalPTSAP ELSE 0 END AS "costoTotalPTSAP",
+                            t0.observacion,
+
+                            CASE WHEN (CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END) ='-' THEN 0 
+                            ELSE
+                            ((CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END)/t0.trmMoneda)*(1-(CASE WHEN t0.categoria ='' THEN t1.brutoS0 ELSE 0 END))
+                            END AS costoBrutoS0,
+                            
+                            CASE WHEN (CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END) ='-' THEN 0 
+                            ELSE
+                            ((CASE WHEN t0.categoria ='' THEN
+                            CASE WHEN t0.precioRef ='LPGERENTE' THEN t1.precioGerente 
+                            WHEN t0.precioRef ='LPVENDEDOR' THEN t1.precioVendedor
+                            WHEN t0.precioRef ='LP' THEN t1.precioLP
+                            END 
+                            ELSE
+                            '-'
+                            END)/t0.trmMoneda)*(1-(CASE WHEN t0.categoria ='' THEN t1.netoS0 ELSE 0 END))
+                            END AS costoNetoS0
                                 
                             FROM ${bdmysql}.calculo_precio_item t0
                             INNER JOIN ${bdmysql}.detalle_precio_calculo_item t1 ON t1.id_calculo = t0.id
-                            WHERE t1.linea=2`;
+                            WHERE t1.linea=2 and estado='ACTIVO'`;
                 //console.log(query);
                 //console.log(query);      
                 const preciosCalculados = yield database_1.db.query(query);
@@ -805,6 +873,28 @@ class MySQLController {
                 const listaPreciosVentasSAPItem = yield database_1.db.query(query);
                 //console.log(dependenciasUsuario);
                 res.json(listaPreciosVentasSAPItem);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    listaAgentesAduana(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Obtener datos del usurio logueado que realizo la petición
+                let jwt = req.headers.authorization || '';
+                jwt = jwt.slice('bearer'.length).trim();
+                const decodedToken = yield helpers_1.default.validateToken(jwt);
+                //******************************************************* */
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                const bdmysql = infoUsuario[0].bdmysql;
+                const query = `SELECT * FROM ${bdmysql}.agentesaduana `;
+                console.log(query);
+                const agentes = yield database_1.db.query(query);
+                //console.log(dependenciasUsuario);
+                res.json(agentes);
             }
             catch (error) {
                 console.error(error);

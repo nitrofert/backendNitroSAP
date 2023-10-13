@@ -278,11 +278,12 @@ class AuthLQController{
         console.log(infoLog.data.access_token);
 
         
-        let result_titulos = await helper.cunsumirTitulosLQ(infoLog.data.access_token);
+        //let result_titulos = await helper.cunsumirTitulosLQ(infoLog.data.access_token);
         let result_pagos = await helper.cunsumirPagosLQ(infoLog.data.access_token);
         
 
-        res.json({result_titulos,result_pagos});
+        res.json({//result_titulos,
+            result_pagos});
         
 
         }catch (error: any) {

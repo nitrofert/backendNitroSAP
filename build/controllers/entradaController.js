@@ -139,6 +139,7 @@ class EntradaController {
                     //console.log('modeloAprobacionesSAP',modeloAprobacionesSAP);
                     if (modeloAprobacionesSAP.length > 0) {
                         //validar modelo segun area
+                        console.log('Validando modelos HE');
                         let newAprobacionLine = [];
                         let arrayResultEvalModelos = [];
                         //Recorrer los modelos filtrados para evaluar las condiciones en la solped
@@ -248,18 +249,19 @@ class EntradaController {
                         }
                     }
                     else {
+                        console.log('no se encontro modelos HE');
                         //Registrar entrada en SAP
                         let dataForSAP = yield helpers_1.default.loadInfoEntradaToJSONSAP(newEntrada);
                         console.log(dataForSAP);
                         //registrar Entrada en SAP
                         const resultResgisterSAP = yield helpers_1.default.registerEntradaSAP(infoUsuario[0], dataForSAP);
                         if (resultResgisterSAP.error) {
-                            //console.log(resultResgisterSAP.error.message.value);
+                            console.log(resultResgisterSAP.error.message.value);
                             connection.rollback();
                             res.json({ status: 501, err: `Ocurrio un error en el registro de la entrada ${entradaId} ${resultResgisterSAP.error.message.value}` });
                         }
                         else {
-                            //console.log(resultResgisterSAP.DocNum);
+                            console.log(resultResgisterSAP);
                             //Actualizar  sapdocnum, entrada
                             connection.commit();
                             let queryUpdateEntrada = `Update ${bdmysql}.entrada t0 Set t0.sapdocnum ='${resultResgisterSAP.DocNum}'  where t0.id = ?`;

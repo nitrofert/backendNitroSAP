@@ -384,9 +384,10 @@ class Helpers {
         return __awaiter(this, void 0, void 0, function* () {
             const solpedResult = yield database_1.db.query(`
       
-        SELECT T0.*, T1.*, T2.email 
+        SELECT T0.*, T1.*, T2.email , IFNULL(T3.BuyUnitMsr,'') AS BuyUnitMsr
         FROM ${bdmysql}.solped T0 
-        INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
+        INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped
+        LEFT JOIN ${bdmysql}.items_sap T3 ON T3.ItemCode = T1.itemcode 
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idSolped]);
             ////////////console.log((solpedResult));
@@ -421,6 +422,7 @@ class Helpers {
                 U_NF_MES_REAL: solpedResult[0].U_NF_MES_REAL == null ? '' : solpedResult[0].U_NF_MES_REAL,
             };
             let solpedDet = [];
+            console.log(new Date(solped.docduedate).toLocaleString("en-US", { hour12: true }));
             for (let item of solpedResult) {
                 solpedDet.push({
                     id_solped: item.id_solped,
@@ -445,12 +447,13 @@ class Helpers {
                     ocrcode3: item.ocrcode3,
                     whscode: item.whscode,
                     id_user: item.id_user,
-                    unidad: item.unidad,
+                    unidad: item.BuyUnitMsr,
+                    //unidad:item.unidad,
                     zonacode: item.zonacode,
                     proyecto: item.proyecto,
                     subproyecto: item.subproyecto,
                     etapa: item.etapa,
-                    actividad: item.actividad
+                    actividad: item.actividad,
                 });
             }
             const anexosSolpedResult = yield database_1.db.query(`SELECT * FROM ${bdmysql}.anexos t0 WHERE t0.id_solped =  ?`, [idSolped]);
@@ -2893,7 +2896,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    ////////////console.log(data2);
+                    console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
@@ -4802,7 +4805,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     /************** Seccion Liquitech *****************/
     loginWsLQ() {
         return __awaiter(this, void 0, void 0, function* () {
-            const jsonLog = { "username": "NITROFERTSAS", "password": "Nitrocredit2023*" };
+            const jsonLog = { "username": "NITROFERTSAS", "password": "Liquitech2023#" };
             const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
             let configWs = {
                 method: "POST",
@@ -4811,12 +4814,13 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 },
                 body: JSON.stringify(jsonLog)
             };
-            ////////////console.log(configWs);
+            //console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
                 const data = yield response.json();
+                //console.log(data);
                 if (response.ok) {
-                    ////////////console.log('successfully logged  Liquitech');
+                    console.log('successfully logged  Liquitech');
                     return data;
                 }
                 else {
@@ -4824,7 +4828,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 }
             }
             catch (error) {
-                //////////console.log(error);
+                console.log(error);
                 return '';
             }
         });
@@ -4916,7 +4920,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    ////////////console.log(data2);
+                    //console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
@@ -4947,6 +4951,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
                     const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Invoices,BusinessPartners)?$expand=Invoices($select=DocEntry,DocNum),BusinessPartners($select=CardCode,FederalTaxID)&$filter=Invoices/CardCode eq BusinessPartners/CardCode and Invoices/DocNum eq ${titulo}`;
+                    console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
@@ -4956,7 +4961,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
-                    ////////////console.log(data2);
+                    console.log(data2);
                     helper.logoutWsSAP(bieSession);
                     return data2;
                 }
@@ -5107,68 +5112,70 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let fechaEjecucion = new Date();
                 ////console.log('Inicio Titulos: ');
                 while (nextPage != null) {
-                    ////console.log(nextPage);
+                    console.log(nextPage);
                     titulosPage = yield helper.getTitulosLQ(token, nextPage);
                     //////console.log(titulosPage);
                     if (titulosPage.results) {
                         for (let titulo of titulosPage.results) {
-                            //////console.log('Titulo: ',titulo.no_titulo);
-                            //////console.log('Estado titulo: ',titulo.estado);
-                            if (titulo.no_titulo == 12879) {
-                                ////console.log('Titulo: ',titulo.no_titulo);
-                                ////console.log('Estado titulo: ',titulo.estado);
-                            }
+                            let result = yield database_1.db.query(`insert into nitrosap.titulosLQ (no_operacion,id_operacion,id_titulo,no_titulo) values ('${titulo.no_operacion}','${titulo.id_operacion}',${titulo.id_titulo},'${titulo.no_titulo}')`);
+                            console.log('Titulo: ', titulo.no_titulo);
                             if (titulo.estado == 'aprobado' || titulo.estado == 'desembolsado' || titulo.estado == 'abonado' || titulo.estado == 'pagado') {
-                                no_titulo = titulo.no_titulo;
-                                //Parcialmente comentado para pureba de webservice 
-                                /*
-                                tituloSap = await helper.getTituloById(no_titulo);
-        
-                                ////////////console.log(titulo);
-                                if(tituloSap.value.length==0){
-                                    //Insertar factura en udo
-                                
-                                    let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
-                                    
-                                    dataNewTitulo = {
-                                        U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
-                                        U_FECHA_FACT: titulo.fecha_emision,
-                                        U_TOTAL:titulo.valor_titulo,
-                                        U_FACTURA:titulo.no_titulo,
-                                        U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                                        U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                                        U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                                        U_NF_CUFE_FV:titulo.cufe,
-                                        U_NF_FECHA_PAGO:titulo.fecha_pago,
-                                        U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                                        U_NF_VALOR_GIRO:titulo.valor_giro
-                                    }
-                
-                                    //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
-                
-                                    titulos.push(titulo)
-                    
-                                }else{
-                                    //Update estado cabecera titulo
-                                    dataUpdateTitulo={
-                                        U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                                        U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                                        U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                                        U_NF_CUFE_FV:titulo.cufe,
-                                        U_NF_FECHA_PAGO:titulo.fecha_pago,
-                                        U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                                        U_NF_VALOR_GIRO:titulo.valor_giro
-                                    };
-                
-                                    //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
-                                    ////////////console.log(resultUpdateTitulo);
-                
-                                    titulosUpdate.push(titulo);
+                                if (titulo.no_titulo.includes('-')) {
+                                    console.log("incluye -");
+                                    no_titulo = titulo.no_titulo.split('-')[1];
                                 }
-        
-                                */
+                                else {
+                                    console.log("No incluye -");
+                                    no_titulo = titulo.no_titulo;
+                                }
+                                //Parcialmente comentado para pureba de webservice 
+                                if (!isNaN(no_titulo)) {
+                                    tituloSap = yield helper.getTituloById(no_titulo);
+                                    ////////////console.log(titulo);
+                                    if (tituloSap.value.length == 0) {
+                                        //Insertar factura en udo
+                                        let nit_pagador_sap = yield helper.getNitProveedorByTitulo(no_titulo);
+                                        if (nit_pagador_sap.value.length == 0) {
+                                            console.log(`No existe cliente asociado al titulo ${no_titulo}`);
+                                        }
+                                        else {
+                                            dataNewTitulo = {
+                                                U_NIT: nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                                U_FECHA_FACT: titulo.fecha_emision,
+                                                U_TOTAL: titulo.valor_titulo,
+                                                U_FACTURA: titulo.no_titulo,
+                                                U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                                U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                                U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                                U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                                U_NF_CUFE_FV: titulo.cufe,
+                                                U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                                U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                                U_NF_VALOR_GIRO: titulo.valor_giro
+                                            };
+                                            console.log(JSON.stringify(dataNewTitulo));
+                                            //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
+                                            titulos.push(titulo);
+                                        }
+                                    }
+                                    else {
+                                        //Update estado cabecera titulo
+                                        dataUpdateTitulo = {
+                                            U_NF_ESTADO_APROBADO: titulo.estado == 'aprobado' ? 'SI' : 'NO',
+                                            U_NF_ESTADO_DESEMBOLSADO: titulo.estado == 'desembolsado' ? 'SI' : 'NO',
+                                            U_NF_ESTADO_ABONADO: titulo.estado == 'abonado' ? 'SI' : 'NO',
+                                            U_NF_ESTADO_PAGADO: titulo.estado == 'pagado' ? 'SI' : 'NO',
+                                            U_NF_CUFE_FV: titulo.cufe,
+                                            U_NF_FECHA_PAGO: titulo.fecha_pago,
+                                            U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
+                                            U_NF_VALOR_GIRO: titulo.valor_giro
+                                        };
+                                        //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
+                                        ////////////console.log(resultUpdateTitulo);
+                                        console.log(JSON.stringify(dataUpdateTitulo));
+                                        titulosUpdate.push(titulo);
+                                    }
+                                }
                             }
                         }
                         nextPage = titulosPage.next;
@@ -5180,33 +5187,26 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let fechaFinalizacion = new Date();
                 //Envio Notificcación registros 
                 //Parcialmente comentado para pureba de webservice
-                /*
                 let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
-                            <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
-        
-                if(titulos.length>0){
-                    html = html+`<h4>Títulos registrados</h4><br>${JSON.stringify(titulos)}<br>`;
+                    <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
+                if (titulos.length > 0) {
+                    html = html + `<h4>Títulos registrados</h4><br>${JSON.stringify(titulos)}<br>`;
                 }
-        
-                if(titulosUpdate.length>0){
-                    html = html+`<h4>Títulos actualizados</h4><br>${JSON.stringify(titulosUpdate)}<br>`;
+                if (titulosUpdate.length > 0) {
+                    html = html + `<h4>Títulos actualizados</h4><br>${JSON.stringify(titulosUpdate)}<br>`;
                 }
-        
-                if(titulos.length == titulosUpdate.length && titulosUpdate.length ==0){
-                    html = html+`<h4>No se encontraron títulos a registrar</h4><br>`;
+                if (titulos.length == titulosUpdate.length && titulosUpdate.length == 0) {
+                    html = html + `<h4>No se encontraron títulos a registrar</h4><br>`;
                 }
-        
-                let infoEmail:any = {
+                let infoEmail = {
                     //to: LineAprovedSolped.aprobador.email,
-                    to:'ralbor@nitrofert.com.co',
-                    cc:'aballesteros@nitrofert.com.co',
+                    to: 'ralbor@nitrofert.com.co',
+                    // cc:'aballesteros@nitrofert.com.co',
                     subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
                     html
-                }
+                };
                 //Envio de notificación al siguiente aprobador con copia al autor
-                await helper.sendNotification(infoEmail);
-                
-                */
+                yield helper.sendNotification(infoEmail);
                 return ({ 'Titulos registrados': titulos, 'Titulos actualizados': titulosUpdate });
             }
             catch (error) {
@@ -5214,7 +5214,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let infoEmail = {
                     //to: LineAprovedSolped.aprobador.email,
                     to: 'ralbor@nitrofert.com.co',
-                    cc: 'aballesteros@nitrofert.com.co',
+                    // cc:'aballesteros@nitrofert.com.co',
                     subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
                     html: error
                 };
@@ -5235,8 +5235,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 //////////console.log(fechaFinPagoFormat,fechaInicioPagoFormat);
                 //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
                 let nextPage = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+                //console.log(nextPage);
                 //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
-                //////////console.log(nextPage); 
+                console.log(nextPage);
                 let pagos = [];
                 let pagosPage;
                 let refPago;
@@ -5246,18 +5247,21 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let DocEntry;
                 ////console.log('Inicio Pagos: ');
                 while (nextPage != null) {
-                    //////console.log(nextPage);
+                    console.log(nextPage);
                     pagosPage = yield helper.getPagosLQ(token, nextPage);
                     ////console.log(pagosPage);
                     if (pagosPage.results) {
                         for (let pago of pagosPage.results) {
                             ////////////console.log(pago);
                             //////console.log('Pago: ',pago.referencia_pago);
-                            //////console.log('Pago titulo: ',pago.no_titulo);
-                            if (pago.valor_pagado != 0 && pago.referencia_pago != '') {
+                            console.log('Pago titulo: ', pago.no_titulo);
+                            /*
+                            if(pago.valor_pagado!=0 && pago.referencia_pago!=''){
                                 //Buscar titulo en SAP
+    
                                 //Parcialmente comentado para pureba de webservice
-                                /*
+    
+                                
                                 tituloSap = await helper.getTituloById(pago.no_titulo);
                                 if(tituloSap.value.length>0){
                                     
@@ -5287,8 +5291,10 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                     }
             
                                 }
-                                */
+                                
+                              
                             }
+                            */
                         }
                         nextPage = pagosPage.next === undefined ? null : pagosPage.next;
                     }
@@ -5297,31 +5303,26 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     }
                 }
                 //Parcialmente comentado para pureba de webservice
-                /*
                 let fechaFinalizacion = new Date();
                 let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
-                <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
-                <h4>Fecha de incio pagos:</h4> ${fechaInicioPago.toLocaleDateString().toString()}<br>
-                <h4>Fecha de fin pagos:</h4> ${fechaFinPago.toLocaleDateString().toString()}<br>`;
-        
-                if(pagos.length>0){
-                html = html+`<h4>Pagos registrados</h4><br>${JSON.stringify(pagos)}<br>`;
-                }else{
-                    html = html+`<h4>No se encontraron pagos a registrar</h4><br>`;
+            <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
+            <h4>Fecha de incio pagos:</h4> ${fechaInicioPago.toLocaleDateString().toString()}<br>
+            <h4>Fecha de fin pagos:</h4> ${fechaFinPago.toLocaleDateString().toString()}<br>`;
+                if (pagos.length > 0) {
+                    html = html + `<h4>Pagos registrados</h4><br>${JSON.stringify(pagos)}<br>`;
                 }
-        
-               
-        
-                let infoEmail:any = {
-                //to: LineAprovedSolped.aprobador.email,
-                to:'ralbor@nitrofert.com.co',
-                cc:'aballesteros@nitrofert.com.co',
-                subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
-                html
+                else {
+                    html = html + `<h4>No se encontraron pagos a registrar</h4><br>`;
                 }
+                let infoEmail = {
+                    //to: LineAprovedSolped.aprobador.email,
+                    to: 'ralbor@nitrofert.com.co',
+                    //  cc:'aballesteros@nitrofert.com.co',
+                    subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
+                    html
+                };
                 //Envio de notificación al siguiente aprobador con copia al autor
-                await helper.sendNotification(infoEmail);
-                */
+                yield helper.sendNotification(infoEmail);
                 return (pagos);
             }
             catch (error) {
@@ -5329,7 +5330,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let infoEmail = {
                     //to: LineAprovedSolped.aprobador.email,
                     to: 'ralbor@nitrofert.com.co',
-                    cc: 'aballesteros@nitrofert.com.co',
+                    //    cc:'aballesteros@nitrofert.com.co',
                     subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
                     html: error
                 };

@@ -389,9 +389,10 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
         const solpedResult: any[] = await db.query(`
       
-        SELECT T0.*, T1.*, T2.email 
+        SELECT T0.*, T1.*, T2.email , IFNULL(T3.BuyUnitMsr,'') AS BuyUnitMsr
         FROM ${bdmysql}.solped T0 
-        INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped 
+        INNER JOIN ${bdmysql}.solped_det T1 ON T0.id = T1.id_solped
+        LEFT JOIN ${bdmysql}.items_sap T3 ON T3.ItemCode = T1.itemcode 
         INNER JOIN users T2 ON T2.id = T0.id_user
         WHERE T0.id = ?`, [idSolped]);
 
@@ -429,6 +430,8 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
 
         }
         let solpedDet: any[] = [];
+
+        console.log(new Date(solped.docduedate).toLocaleString("en-US", { hour12: true }));
         
         for (let item of solpedResult) {
 
@@ -455,12 +458,13 @@ const opcionesSubMenu = await db.query(`SELECT DISTINCT t0.*
                 ocrcode3: item.ocrcode3,
                 whscode: item.whscode,
                 id_user: item.id_user,
-                unidad:item.unidad,
+                unidad:item.BuyUnitMsr,
+                //unidad:item.unidad,
                 zonacode:item.zonacode,
                 proyecto:item.proyecto,
                 subproyecto:item.subproyecto,
                 etapa:item.etapa,
-                actividad:item.actividad
+                actividad:item.actividad,
             });
 
         }
@@ -3180,7 +3184,7 @@ return html;
                 const data2 = await response2.json();
 
                 
-                ////////////console.log(data2);
+                console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -5663,7 +5667,7 @@ return html;
 
     async loginWsLQ(): Promise<any> {
 
-        const jsonLog = {"username": "NITROFERTSAS", "password": "Nitrocredit2023*"};
+        const jsonLog = {"username": "NITROFERTSAS", "password": "Liquitech2023#"};
         const url = `https://app.liquitech.co/api_urls/app_usuarios/usuario/login_user/`;
 
         let configWs = {
@@ -5674,14 +5678,14 @@ return html;
             body: JSON.stringify(jsonLog)
         }
 
-        ////////////console.log(configWs);
+        //console.log(configWs);
         try {
 
             const response = await fetch(url, configWs);
             const data = await response.json();
-
+            //console.log(data);
             if (response.ok) {
-                ////////////console.log('successfully logged  Liquitech');
+                console.log('successfully logged  Liquitech');
                 return  data;
                 
             } else {
@@ -5690,7 +5694,7 @@ return html;
 
             }
         } catch (error) {
-            //////////console.log(error);
+            console.log(error);
             return '';
         }
 
@@ -5814,7 +5818,7 @@ return html;
                 const data2 = await response2.json();
 
                 
-                ////////////console.log(data2);
+                //console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -5854,7 +5858,7 @@ return html;
 
             if (bieSession != '') {
                 const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Invoices,BusinessPartners)?$expand=Invoices($select=DocEntry,DocNum),BusinessPartners($select=CardCode,FederalTaxID)&$filter=Invoices/CardCode eq BusinessPartners/CardCode and Invoices/DocNum eq ${titulo}`;
-
+                console.log(url2);
                 let configWs2 = {
                     method: "GET",
                     headers: {
@@ -5868,7 +5872,7 @@ return html;
                 const data2 = await response2.json();
 
                 
-                ////////////console.log(data2);
+                console.log(data2);
                 helper.logoutWsSAP(bieSession);
 
                 return data2;
@@ -6061,73 +6065,95 @@ return html;
         let fechaEjecucion = new Date();
         ////console.log('Inicio Titulos: ');
         while(nextPage!=null){
-             ////console.log(nextPage);
+             console.log(nextPage);
              titulosPage = await helper.getTitulosLQ(token,nextPage);
              
              //////console.log(titulosPage);
 
              if(titulosPage.results){
                 for(let titulo of titulosPage.results){
-                    //////console.log('Titulo: ',titulo.no_titulo);
-                    //////console.log('Estado titulo: ',titulo.estado);
-                    if(titulo.no_titulo==12879){
-                        ////console.log('Titulo: ',titulo.no_titulo);
-                        ////console.log('Estado titulo: ',titulo.estado);
-                    }
+
+                    let result = await db.query(`insert into nitrosap.titulosLQ (no_operacion,id_operacion,id_titulo,no_titulo) values ('${titulo.no_operacion}','${titulo.id_operacion}',${titulo.id_titulo},'${titulo.no_titulo}')`);
+
+                    console.log('Titulo: ',titulo.no_titulo);
+                   
 
                     if(titulo.estado=='aprobado' || titulo.estado=='desembolsado' || titulo.estado=='abonado' || titulo.estado=='pagado'){
-                        no_titulo = titulo.no_titulo;
+                        
+                        if(titulo.no_titulo.includes('-')){
+                            console.log("incluye -");
+                            no_titulo = titulo.no_titulo.split('-')[1];  
+                        }else{
+                            console.log("No incluye -");
+                            no_titulo = titulo.no_titulo;
+                        }
+                        
+                        
 
                         //Parcialmente comentado para pureba de webservice 
 
-                        /*
-                        tituloSap = await helper.getTituloById(no_titulo);  
+                        if(!isNaN(no_titulo)){
+                            tituloSap = await helper.getTituloById(no_titulo);  
 
-                        ////////////console.log(titulo);
-                        if(tituloSap.value.length==0){
-                            //Insertar factura en udo
-                        
-                            let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
+                            ////////////console.log(titulo);
+                            if(tituloSap.value.length==0){
+                                //Insertar factura en udo
                             
-                            dataNewTitulo = {
-                                U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
-                                U_FECHA_FACT: titulo.fecha_emision,
-                                U_TOTAL:titulo.valor_titulo,
-                                U_FACTURA:titulo.no_titulo,
-                                U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                                U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                                U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                                U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                                U_NF_CUFE_FV:titulo.cufe,
-                                U_NF_FECHA_PAGO:titulo.fecha_pago,
-                                U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                                U_NF_VALOR_GIRO:titulo.valor_giro
-                            }
+                                let nit_pagador_sap = await helper.getNitProveedorByTitulo(no_titulo);
+
+                                if(nit_pagador_sap.value.length==0){
+                                    console.log(`No existe cliente asociado al titulo ${no_titulo}`);
+                                }else{
+                                    dataNewTitulo = {
+                                        U_NIT:nit_pagador_sap.value[0].BusinessPartners.FederalTaxID,
+                                        U_FECHA_FACT: titulo.fecha_emision,
+                                        U_TOTAL:titulo.valor_titulo,
+                                        U_FACTURA:titulo.no_titulo,
+                                        U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                        U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                        U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                        U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                        U_NF_CUFE_FV:titulo.cufe,
+                                        U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                        U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                        U_NF_VALOR_GIRO:titulo.valor_giro
+                                    }
         
-                            //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
-        
-                            titulos.push(titulo)
+                                    console.log(JSON.stringify(dataNewTitulo))
+                
+                                    //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
+                
+                                    titulos.push(titulo)
+                                }
+                                
+                            
+                
+                            }else{
+                                //Update estado cabecera titulo
+                                dataUpdateTitulo={
+                                    U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
+                                    U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
+                                    U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
+                                    U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
+                                    U_NF_CUFE_FV:titulo.cufe,
+                                    U_NF_FECHA_PAGO:titulo.fecha_pago,
+                                    U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
+                                    U_NF_VALOR_GIRO:titulo.valor_giro
+                                };
             
-                        }else{
-                            //Update estado cabecera titulo
-                            dataUpdateTitulo={
-                                U_NF_ESTADO_APROBADO: titulo.estado=='aprobado'?'SI':'NO',
-                                U_NF_ESTADO_DESEMBOLSADO: titulo.estado=='desembolsado'?'SI':'NO',
-                                U_NF_ESTADO_ABONADO: titulo.estado=='abonado'?'SI':'NO',
-                                U_NF_ESTADO_PAGADO: titulo.estado=='pagado'?'SI':'NO',
-                                U_NF_CUFE_FV:titulo.cufe,
-                                U_NF_FECHA_PAGO:titulo.fecha_pago,
-                                U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                                U_NF_VALOR_GIRO:titulo.valor_giro
-                            };
-        
-                            //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
-                            ////////////console.log(resultUpdateTitulo);
-        
-                            titulosUpdate.push(titulo);
+                                //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
+                                ////////////console.log(resultUpdateTitulo);
+
+                                console.log(JSON.stringify(dataUpdateTitulo))
+            
+                                titulosUpdate.push(titulo);
+                            }
                         }
 
-                        */
+                        
+                        
+
+                        
                     }
                     
                  }
@@ -6145,7 +6171,7 @@ return html;
         //Envio Notificcación registros 
 
         //Parcialmente comentado para pureba de webservice
-        /*
+        
         let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
                     <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>`;
 
@@ -6164,14 +6190,14 @@ return html;
         let infoEmail:any = {
             //to: LineAprovedSolped.aprobador.email,
             to:'ralbor@nitrofert.com.co',
-            cc:'aballesteros@nitrofert.com.co',
+           // cc:'aballesteros@nitrofert.com.co',
             subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
             html
         }
         //Envio de notificación al siguiente aprobador con copia al autor
         await helper.sendNotification(infoEmail);
         
-        */
+        
 
         return ({'Titulos registrados':titulos,'Titulos actualizados':titulosUpdate}); 
 
@@ -6181,7 +6207,7 @@ return html;
             let infoEmail:any = {
                 //to: LineAprovedSolped.aprobador.email,
                 to:'ralbor@nitrofert.com.co',
-                cc:'aballesteros@nitrofert.com.co',
+               // cc:'aballesteros@nitrofert.com.co',
                 subject: `Notificación de ejecución interfaz de titulos Liquitech - Ntrocredit`,
                 html:error
             }
@@ -6211,9 +6237,11 @@ return html;
             //?fecha_pago_i=2022-09-01&fecha_pago_f=2022-11-30
     
             let nextPage:any = `https://app.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/?fecha_pago_i=${fechaInicioPagoFormat}&fecha_pago_f=${fechaFinPagoFormat}`;
+
+            //console.log(nextPage);
         
             //let nextPage:any = `https://dev.liquitech.co/api_urls/app_operaciones/titulos_negociacion/listar_pagos/`;
-            //////////console.log(nextPage); 
+            console.log(nextPage); 
             let pagos:any[] = [];
             let pagosPage:any;
             let refPago:any;
@@ -6223,21 +6251,21 @@ return html;
             let DocEntry:any;
             ////console.log('Inicio Pagos: ');
             while(nextPage!=null){
-                //////console.log(nextPage);
+                console.log(nextPage);
                 pagosPage = await helper.getPagosLQ(token,nextPage);
                 ////console.log(pagosPage);
                 if(pagosPage.results){
                     for(let pago of pagosPage.results){
                         ////////////console.log(pago);
                         //////console.log('Pago: ',pago.referencia_pago);
-                        //////console.log('Pago titulo: ',pago.no_titulo);
-                        
+                       console.log('Pago titulo: ',pago.no_titulo);
+                        /*
                         if(pago.valor_pagado!=0 && pago.referencia_pago!=''){
                             //Buscar titulo en SAP
 
                             //Parcialmente comentado para pureba de webservice
 
-                            /*
+                            
                             tituloSap = await helper.getTituloById(pago.no_titulo);
                             if(tituloSap.value.length>0){
                                 
@@ -6267,9 +6295,10 @@ return html;
                                 }
         
                             }
-                            */
+                            
                           
                         }
+                        */
                     }
         
                     nextPage = pagosPage.next===undefined?null:pagosPage.next;
@@ -6281,7 +6310,7 @@ return html;
             
             //Parcialmente comentado para pureba de webservice
 
-            /*
+            
             let fechaFinalizacion = new Date();
             let html = `<h4>Fecha de ejecución:</h4> ${fechaEjecucion}<br>
             <h4>Fecha de finalización:</h4> ${fechaFinalizacion}<br>
@@ -6299,13 +6328,13 @@ return html;
             let infoEmail:any = {
             //to: LineAprovedSolped.aprobador.email,
             to:'ralbor@nitrofert.com.co',
-            cc:'aballesteros@nitrofert.com.co',
+          //  cc:'aballesteros@nitrofert.com.co',
             subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
             html
             }
             //Envio de notificación al siguiente aprobador con copia al autor
             await helper.sendNotification(infoEmail);
-            */
+            
     
             return (pagos);
 
@@ -6315,7 +6344,7 @@ return html;
             let infoEmail:any = {
                 //to: LineAprovedSolped.aprobador.email,
                 to:'ralbor@nitrofert.com.co',
-                cc:'aballesteros@nitrofert.com.co',
+            //    cc:'aballesteros@nitrofert.com.co',
                 subject: `Notificación de ejecución interfaz de pagos Liquitech - Ntrocredit`,
                 html:error
             }

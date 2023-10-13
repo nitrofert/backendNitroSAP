@@ -1963,12 +1963,24 @@ class MrpController {
                 let netoS2 = line.totalS2;
                 let promVentaSap = line.precioVentaPT;
 
-
+                let costoVentaPTsemana0 = line.costoVentaPTsemana0;
+                let costoTotalPTsemana0 = line.costoTotalPTsemana0;
+                let recurso = line.recurso;
+                let costoRecurso = line.costoRecurso;
+                let brutoS0SAP = line.brutoS0SAP;
+                let totalS0SAP = line.totalS0SAP;
+                let costoVentaPTSAP = line.costoVentaPTSAP;
+                let costoTotalPTSAP = line.costoTotalPTSAP;
+                let otrosCostos = line.otrosCostos;
+                
                 
                 let queryInsertDetalleCalculoMP = `Insert into ${bdmysql}.detalle_precio_calculo_item (id_calculo,linea,ItemCode,ItemName,precioGerente,precioVendedor,
-                                                                                                       precioLP,promMercado,brutoS0,netoS0,brutoS1,netoS1,brutoS2,netoS2, promVentaSap)
+                                                                                                       precioLP,promMercado,brutoS0,netoS0,brutoS1,netoS1,brutoS2,netoS2, promVentaSap,
+                                                                                                       costoVentaPTsemana0,costoTotalPTsemana0,recurso,costoRecurso,brutoS0SAP,totalS0SAP,costoVentaPTSAP,costoTotalPTSAP,otrosCostos)
                                                                                       values (${id_calculo},${linea},'${ItemCode}','${ItemName}',${precioGerente},${precioVendedor},
-                                                                                              ${precioLP},${promMercado},${brutoS0},${netoS0},${brutoS1},${netoS1},${brutoS2},${netoS2},${promVentaSap})`;
+                                                                                              ${precioLP},${promMercado},${brutoS0},${netoS0},${brutoS1},${netoS1},${brutoS2},${netoS2},${promVentaSap},
+                                                                                              ${costoVentaPTsemana0},${costoTotalPTsemana0}, '${recurso}',${costoRecurso},${brutoS0SAP},${totalS0SAP},
+                                                                                              ${costoVentaPTSAP},${costoTotalPTSAP},'${JSON.stringify(otrosCostos)}')`;
 
                 let resultInsertDetalleCalculoMP = await connection.query(queryInsertDetalleCalculoMP);
                 
@@ -1988,6 +2000,50 @@ class MrpController {
         }
     }
 
+    
+    async anularCalculoPreciosItem(req: Request, res: Response) {
+        
+        let connection = await db.getConnection();
+
+        try {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+            //******************************************************* */
+
+            const infoUsuario= await helper.getInfoUsuario(decodedToken.userId,decodedToken.company);
+            //console.log(infoUsuario);
+            const bdmysql = infoUsuario[0].bdmysql;
+
+            const idCalculo = req.body;
+
+            console.log(idCalculo);
+
+            let queryAnularCalculo = `Update ${bdmysql}.calculo_precio_item SET estado ='INACTIVO' where id in (${idCalculo})`;
+            console.log(queryAnularCalculo);
+
+            const resultInsert = await connection.query(queryAnularCalculo);
+
+            console.log(resultInsert);
+            let message = '';
+            if(resultInsert.affectedRows>0){
+                message = `Se realizo correctamente la anulación de ${resultInsert.affectedRows>1?'los calculos seleccionados':'el calculo seleccionado'}`;
+            }
+
+            await connection.commit();
+
+            res.json({message});
+        
+        }catch (error: any) {
+            console.error('ERROR ------>',error);
+            await connection.rollback();
+            return res.status(501).json(error);
+             
+        }finally {
+            if (connection) await connection.release();
+        }
+    }
     
 
     async getInfoCalculoItem(req: Request, res: Response) {
