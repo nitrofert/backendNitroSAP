@@ -309,6 +309,8 @@ class EntradaController {
                     
                     const resultResgisterSAP = await helper.registerEntradaSAP(infoUsuario[0],dataForSAP);
 
+                    console.log(resultResgisterSAP);
+
                     if (resultResgisterSAP.error) {
                         console.log(resultResgisterSAP.error.message.value);
                         connection.rollback();

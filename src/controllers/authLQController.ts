@@ -64,7 +64,8 @@ class AuthLQController{
                             U_NF_CUFE_FV:titulo.cufe,
                             U_NF_FECHA_PAGO:titulo.fecha_pago,
                             U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                            U_NF_VALOR_GIRO:titulo.valor_giro
+                            U_NF_VALOR_GIRO:titulo.valor_giro,
+                            U_NF_ID_OPERACION:titulo.id_operacion
                         }
     
                         resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);
@@ -81,7 +82,8 @@ class AuthLQController{
                             U_NF_CUFE_FV:titulo.cufe,
                             U_NF_FECHA_PAGO:titulo.fecha_pago,
                             U_NF_FECHA_NEGOCIACION:titulo.fecha_negociacion,
-                            U_NF_VALOR_GIRO:titulo.valor_giro
+                            U_NF_VALOR_GIRO:titulo.valor_giro,
+                            U_NF_ID_OPERACION:titulo.id_operacion
                         };
     
                         resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);

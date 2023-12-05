@@ -38,6 +38,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
+const https_1 = __importDefault(require("https"));
 const database_1 = require("../database");
 const mailer_1 = __importDefault(require("./mailer"));
 class Helpers {
@@ -138,19 +139,22 @@ class Helpers {
                 "Password": "Nitro123",
                 "Language": "25" };
             ////console.log(jsonLog);
-            const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Login`;
+            //const url = `https://137.116.33.72:50000/b1s/v1/Login`;
+            const url = `https://137.116.33.72:50000/b1s/v1/Login`;
             const configWs = {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(jsonLog)
+                body: JSON.stringify(jsonLog),
+                agent: new https_1.default.Agent({ rejectUnauthorized: false, })
             };
             //////console.log(configWs);
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
+                console.log(response);
                 const data = yield response.json();
-                //////console.log(response);
+                console.log(data);
                 if (response.ok) {
                     //////////console.log('successfully logged SAP');
                     return response.headers.get('set-cookie');
@@ -168,13 +172,14 @@ class Helpers {
     }
     logoutWsSAP(bieSession) {
         return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Logout`;
+            const url = `https://137.116.33.72:50000/b1s/v1/Logout`;
             const configWs = {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
                     'Cookie': `${bieSession}`
-                }
+                },
+                agent: new https_1.default.Agent({ rejectUnauthorized: false, })
             };
             try {
                 const response = yield (0, node_fetch_1.default)(url, configWs);
@@ -2195,7 +2200,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 //console.log(JSON.stringify(data));
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests`;
                     ////////console.log(url2,JSON.stringify(data));
                     let configWs2 = {
                         method: "POST",
@@ -2203,7 +2208,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     //////console.log(configWs2);
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
@@ -2248,7 +2254,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                 }
                             ]
                         };
-                        const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/ProjectManagements(${proyecto.subproyecto})`;
+                        const url2 = `https://137.116.33.72:50000/b1s/v1/ProjectManagements(${proyecto.subproyecto})`;
                         ////////console.log(url2,JSON.stringify(data));
                         configWs2 = {
                             method: "PATCH",
@@ -2256,7 +2262,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                 'Content-Type': 'application/json',
                                 'cookie': bieSession || ''
                             },
-                            body: JSON.stringify(data)
+                            body: JSON.stringify(data),
+                            agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                         };
                         response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                         console.log(data, response2);
@@ -2277,13 +2284,14 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${docEntry})/Cancel`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${docEntry})/Cancel`;
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     helper.logoutWsSAP(bieSession);
@@ -2305,14 +2313,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${docEntry})`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${docEntry})`;
                     let configWs2 = {
                         method: "PATCH",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     //const data2 = await response2.json();
@@ -2341,7 +2350,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 let arrayError = [];
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/U_NF_APRO_SOLPED_WEB`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/U_NF_APRO_SOLPED_WEB`;
                     //let data ;
                     //Buscar id solped del portal en tabla de aprobaciones de SAP
                     let configWs2 = {
@@ -2349,7 +2358,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const consultaAprobacionesSolpedSAP = yield (0, node_fetch_1.default)(`${url2}?$filter=U_NF_NUM_SOLPED_WEB eq '${idSolped}'`, configWs2);
                     const aprobacionesSolpedSAP = yield consultaAprobacionesSolpedSAP.json();
@@ -2557,9 +2567,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     modeloAprobacionesSAP(infoUsuario) {
         return __awaiter(this, void 0, void 0, function* () {
             const compania = infoUsuario.dbcompanysap;
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
             ////console.log(url2);
-            const response2 = yield (0, node_fetch_1.default)(url2);
+            const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
             //////console.log(response2.status)
             if (response2.status != 200) {
                 return { error: response2.statusText };
@@ -2885,14 +2895,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseDeliveryNotes`;
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -2912,14 +2923,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${Serie} and DocNum eq ${DocNum}&$select=DocEntry, DocNum`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${Serie} and DocNum eq ${DocNum}&$select=DocEntry, DocNum`;
                     ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -2939,14 +2951,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${DocEntry})`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -2967,14 +2980,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${DocEntry})/Cancel`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -2995,14 +3009,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Close`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${DocEntry})/Close`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -3023,14 +3038,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests(${DocEntry})/Reopen`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests(${DocEntry})/Reopen`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -3052,14 +3068,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 const userSAP = infoUsuario.codusersap;
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users?$filter=UserCode eq '${userSAP}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/Users?$filter=UserCode eq '${userSAP}'`;
                     ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3086,7 +3103,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     "eMail": infoUsuario.email,
                 };
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/Users`;
                     ////console.log(url2);
                     let configWs2 = {
                         method: "POST",
@@ -3094,7 +3111,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3112,10 +3130,10 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     itemsSolpedXengine(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+                //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
                 //////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 ////console.log(response2.status);
                 if (response2.status == 200) {
                     const data2 = yield response2.json();
@@ -3162,9 +3180,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     validaPresupuestoCuenta(compania, cuenta) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
                 //////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('validaPresupuestoCuenta',data2);
                 return (data2[0].Budget);
@@ -3208,9 +3226,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNFPPTO.xsjs?pCompania=${bdPresupuesto}&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNFPPTO.xsjs?pCompania=${bdPresupuesto}&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getPresupuestoXE',data2);
                 return (data2[0].Disponible);
@@ -3226,7 +3244,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotesService_Cancel2`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseDeliveryNotesService_Cancel2`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "POST",
@@ -3234,7 +3252,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(dataCancel)
+                        body: JSON.stringify(dataCancel),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     let data2;
@@ -3265,14 +3284,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocRate,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION,DiscountPercent,TotalDiscount),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,UnitPrice,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3,DiscountPercent),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,BusinessPartners,PurchaseDeliveryNotes/DocumentLines,Users)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocDate,NumAtCard,DocCurrency,DocRate,DocTotal,VatSum,Comments,ClosingRemarks,U_NF_PUNTAJE_HE,U_NF_CALIFICACION,DiscountPercent,TotalDiscount),BusinessPartners($select=CardCode,CardName,FederalTaxID,City,ContactPerson,Phone1,EmailAddress,MailAddress),PurchaseDeliveryNotes/DocumentLines($select=LineNum,ItemCode,ItemDescription,Quantity,Price,UnitPrice,Currency,Rate,TaxCode,TaxPercentagePerRow,TaxTotal,LineTotal,GrossTotal,WarehouseCode,CostingCode,CostingCode2,CostingCode3,DiscountPercent),Users($select=UserCode,UserName)&$filter=PurchaseDeliveryNotes/CardCode eq BusinessPartners/CardCode and PurchaseDeliveryNotes/DocNum eq ${DocNum} and PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and PurchaseDeliveryNotes/UserSign eq Users/InternalKey`;
                     // ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////console.log(response2.status);
@@ -3294,15 +3314,16 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq ${BaseType} and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${BaseEntry} `;
+                    //const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq ${BaseType} and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${BaseEntry} `;
                     ////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////console.log(response2.status);
@@ -3324,15 +3345,16 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/CancelStatus eq 'csNo'`;
+                    //const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/DocumentStatus eq 'O'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(PurchaseDeliveryNotes,PurchaseDeliveryNotes/DocumentLines)?$expand=PurchaseDeliveryNotes($select=DocEntry,DocNum,DocType,DocumentStatus),PurchaseDeliveryNotes/DocumentLines($select=LineNum,LineStatus,BaseLine,ItemCode,ItemDescription,Quantity,UnitPrice,LineTotal,GrossTotal)&$filter=PurchaseDeliveryNotes/DocEntry eq PurchaseDeliveryNotes/DocumentLines/DocEntry and  PurchaseDeliveryNotes/DocumentLines/BaseType eq 22 and PurchaseDeliveryNotes/DocumentLines/BaseEntry eq ${DocEntry} and PurchaseDeliveryNotes/CancelStatus eq 'csNo'`;
                     ////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////console.log(response2.status);
@@ -3351,9 +3373,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getCuentasXE(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return data2;
             }
@@ -3366,9 +3388,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getAreasUserXE(compania, codusersap) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3385,9 +3407,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 let filtroObjtype = "";
                 if (objtype)
                     filtroObjtype = `&tipodoc=${objtype}`;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
                 //////////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3401,9 +3423,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getTaxesXE(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3417,9 +3439,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getTrmDiaXE(compania, fechaTrm) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${(fechaTrm)}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsMonedas.xsjs?fecha=${(fechaTrm)}&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////console.log(data2);
                 return (data2);
@@ -3433,9 +3455,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getModelosAPXE(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ///////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3449,9 +3471,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getProveedores2XE(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 if (response2.status === 200) {
                     const data2 = yield response2.json();
                     return (data2);
@@ -3473,13 +3495,14 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             };
             const bieSession = yield helper.loginWsSAP(infoUsuario);
             if (bieSession != '') {
-                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/RECC`;
+                const url2 = `https://137.116.33.72:50000/b1s/v1/RECC`;
                 let configWs2 = {
                     method: "GET",
                     headers: {
                         'Content-Type': 'application/json',
                         'cookie': bieSession || ''
-                    }
+                    },
+                    agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                 };
                 const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                 const data2 = yield response2.json();
@@ -3492,9 +3515,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getAlmacenes(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MT_ALMACENES.xsjs?&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_MT_ALMACENES.xsjs?&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3512,13 +3535,14 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             };
             const bieSession = yield helper.loginWsSAP(infoUsuario);
             if (bieSession != '') {
-                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CDI2`;
+                const url2 = `https://137.116.33.72:50000/b1s/v1/CDI2`;
                 let configWs2 = {
                     method: "GET",
                     headers: {
                         'Content-Type': 'application/json',
                         'cookie': bieSession || ''
-                    }
+                    },
+                    agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                 };
                 const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                 const data2 = yield response2.json();
@@ -3531,9 +3555,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getStoresUserXE(compania, codusersap) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
                 ////console.log(url2); 
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3547,9 +3571,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getDependenciasUserXE(compania, codusersap) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${codusersap}&compania=${compania}`;
                 ////console.log(url2); 
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getSeriesXE',data2);
                 return (data2);
@@ -3567,9 +3591,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 if (itemCode != '') {
                     material = `&material=${(itemCode)}`;
                 }
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAPCALCU.xsjs?compania=${compania}${material}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_LISTAPCALCU.xsjs?compania=${compania}${material}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //////console.log(data2);
                 return (data2);
@@ -3587,9 +3611,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 if (itemCode != '') {
                     material = `&material=${(itemCode)}`;
                 }
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?compania=${compania}${material}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_LISTAMATCALCU.xsjs?compania=${compania}${material}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //////console.log(data2);
                 return (data2);
@@ -3603,9 +3627,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getPrecioVentaItemSAP2(compania, itemCode, fechaInicio, fechaFin) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsPrecioUnitarioVentas2.xsjs?pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsPrecioUnitarioVentas2.xsjs?pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //////console.log(data2);
                 return (data2);
@@ -3626,9 +3650,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getPrecioVentaItemSAP(compania, itemCode, fechaInicio, fechaFin) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsPrecioUnitarioVentas.xsjs?pItem=${(itemCode)}&pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsPrecioUnitarioVentas.xsjs?pItem=${(itemCode)}&pCompania=${compania}&pfini=${fechaInicio.split("T")[0]}&pffin=${fechaFin.split("T")[0]}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //////console.log(data2);
                 return (data2);
@@ -3642,9 +3666,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getProyectosXE(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_VISTAPROYECTOSPORTAL.xsjs?Compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_VISTAPROYECTOSPORTAL.xsjs?Compania=${compania}`;
                 //console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //////console.log(data2);
                 return (data2);
@@ -3658,9 +3682,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     getItemsMPCP(compania, tipo) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_MATERIALES.xsjs?tipo=${(tipo)}&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_MATERIALES.xsjs?tipo=${(tipo)}&compania=${compania}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////console.log(data2);
                 return (data2);
@@ -3675,15 +3699,16 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
-                //https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq 'TECNOLOG' and Users/InternalKey eq USU/Code
+                //https://137.116.33.72:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq 'TECNOLOG' and Users/InternalKey eq USU/Code
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq '${area}' and Users/InternalKey eq USU/Code`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(Users,USU,USU/NF_ALM_USUARIO_ACOMCollection)?$expand=Users($select=eMail)&$filter=USU/Code eq USU/NF_ALM_USUARIO_ACOMCollection/Code and USU/NF_ALM_USUARIO_ACOMCollection/U_NF_DIM_AREACOMP eq '${area}' and Users/InternalKey eq USU/Code`;
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3703,13 +3728,14 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' &$select=DocNum`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' &$select=DocNum`;
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3729,14 +3755,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open'`;
                     ////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3756,14 +3783,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series ne ${serie} and DocumentStatus eq 'bost_Open' and U_AUTOR_PORTAL ne null`;
                     //////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3804,14 +3832,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 serie = seriesDoc[0].code;
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseOrders?$filter=Series eq ${serie} and DocumentStatus eq 'bost_Open' and U_NF_STATUS eq '${status}'`;
                     //////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3831,14 +3860,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseDeliveryNotes?$filter=U_NF_PEDMP eq 'S' and DocumentStatus eq 'bost_Open'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseDeliveryNotes?$filter=U_NF_PEDMP eq 'S' and DocumentStatus eq 'bost_Open'`;
                     //////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -3866,9 +3896,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                     }
                 }*/
                 serie = seriesDoc[0].code;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}&serie=${serie}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsEntradasOpenMP.xsjs?compania=${compania}&serie=${serie}`;
                 //////////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -3883,14 +3913,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${docEntry})`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseOrders(${docEntry})`;
                     let configWs2 = {
                         method: "PATCH",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     let result = "";
@@ -3914,9 +3945,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -3930,9 +3961,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_INV_CALCU.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -3946,9 +3977,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -3962,9 +3993,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_SOLPED_PEDIDOSMP.xsjs?compania=${compania}&material=${item}&zona=${zona}`;
                 console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -3978,9 +4009,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const compania = infoUsuario.dbcompanysap;
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -4070,9 +4101,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
     documentsTracking(compania) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsVistaCalculadora.xsjs?&compania=${compania}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsVistaCalculadora.xsjs?&compania=${compania}`;
                 ////console.log(url2);
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 return (data2);
             }
@@ -4569,14 +4600,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Users,USU)?$expand=Users($select=UserCode,UserName,InternalKey),USU($select=Code,DocEntry)&$filter=Users/InternalKey eq USU/Code and UserCode eq '${codusersap}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(Users,USU)?$expand=Users($select=UserCode,UserName,InternalKey),USU($select=Code,DocEntry)&$filter=Users/InternalKey eq USU/Code and UserCode eq '${codusersap}'`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -4597,14 +4629,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU('${idUsuarioSAP}')`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/USU('${idUsuarioSAP}')`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -4625,14 +4658,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Users?$filter=UserCode eq '${codusersap}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/Users?$filter=UserCode eq '${codusersap}'`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     ////////////console.log(response2);
@@ -4653,7 +4687,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/USU`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: "POST",
@@ -4661,7 +4695,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     console.log(response2);
@@ -4682,7 +4717,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU('${docEntry}')`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/USU('${docEntry}')`;
                     //////console.log(url2);
                     let configWs2 = {
                         method: tipoUpdate,
@@ -4690,7 +4725,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     console.log(response2.status);
@@ -4812,7 +4848,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(jsonLog)
+                body: JSON.stringify(jsonLog),
+                agent: new https_1.default.Agent({ rejectUnauthorized: false, })
             };
             //console.log(configWs);
             try {
@@ -4841,7 +4878,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
-                }
+                },
+                agent: new https_1.default.Agent({ rejectUnauthorized: false, })
             };
             ////////////console.log(configWs);
             try {
@@ -4870,7 +4908,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
-                }
+                },
+                agent: new https_1.default.Agent({ rejectUnauthorized: false, })
             };
             ////////////console.log(configWs);
             try {
@@ -4909,14 +4948,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL?$filter=U_FACTURA eq '${no_titulo}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/CXXL?$filter=U_FACTURA eq '${no_titulo}'`;
                     //////////console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -4950,14 +4990,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(Invoices,BusinessPartners)?$expand=Invoices($select=DocEntry,DocNum),BusinessPartners($select=CardCode,FederalTaxID)&$filter=Invoices/CardCode eq BusinessPartners/CardCode and Invoices/DocNum eq ${titulo}`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(Invoices,BusinessPartners)?$expand=Invoices($select=DocEntry,DocNum),BusinessPartners($select=CardCode,FederalTaxID)&$filter=Invoices/CardCode eq BusinessPartners/CardCode and Invoices/DocNum eq ${titulo}`;
                     console.log(url2);
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -4991,14 +5032,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/CXXL`;
                     let configWs2 = {
                         method: "POST",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -5032,14 +5074,15 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/CXXL(${DocEntry})`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/CXXL(${DocEntry})`;
                     let configWs2 = {
                         method: "PATCH",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(data),
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     //const data2 = await response2.json();
@@ -5073,13 +5116,14 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                 };
                 const bieSession = yield helper.loginWsSAP(infoUsuario);
                 if (bieSession != '') {
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(CXXL,CXXL/NF_CXC_LIQUITEC_DETCollection)?$expand=CXXL($select=DocEntry,DocNum,U_FACTURA),CXXL/NF_CXC_LIQUITEC_DETCollection($select=DocEntry,U_NF_REF_PAGO)&$filter=CXXL/DocEntry eq CXXL/NF_CXC_LIQUITEC_DETCollection/DocEntry and CXXL/U_FACTURA eq '${titulo}' and CXXL/NF_CXC_LIQUITEC_DETCollection/U_NF_REF_PAGO eq '${refPago}'`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(CXXL,CXXL/NF_CXC_LIQUITEC_DETCollection)?$expand=CXXL($select=DocEntry,DocNum,U_FACTURA),CXXL/NF_CXC_LIQUITEC_DETCollection($select=DocEntry,U_NF_REF_PAGO)&$filter=CXXL/DocEntry eq CXXL/NF_CXC_LIQUITEC_DETCollection/DocEntry and CXXL/U_FACTURA eq '${titulo}' and CXXL/NF_CXC_LIQUITEC_DETCollection/U_NF_REF_PAGO eq '${refPago}'`;
                     let configWs2 = {
                         method: "GET",
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
@@ -5151,7 +5195,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                                 U_NF_CUFE_FV: titulo.cufe,
                                                 U_NF_FECHA_PAGO: titulo.fecha_pago,
                                                 U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                                U_NF_VALOR_GIRO: titulo.valor_giro
+                                                U_NF_VALOR_GIRO: titulo.valor_giro,
+                                                U_NF_ID_OPERACION: titulo.id_operacion
                                             };
                                             console.log(JSON.stringify(dataNewTitulo));
                                             //resultInsertTitulo = await helper.InsertTituloSL(dataNewTitulo);  //Parcialmente comentado para pureba de webservice
@@ -5168,7 +5213,8 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                             U_NF_CUFE_FV: titulo.cufe,
                                             U_NF_FECHA_PAGO: titulo.fecha_pago,
                                             U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                            U_NF_VALOR_GIRO: titulo.valor_giro
+                                            U_NF_VALOR_GIRO: titulo.valor_giro,
+                                            U_NF_ID_OPERACION: titulo.id_operacion
                                         };
                                         //resultUpdateTitulo = await helper.UpdateTituloSL(dataUpdateTitulo,tituloSap.value[0].DocEntry);  //Parcialmente comentado para pureba de webservice
                                         ////////////console.log(resultUpdateTitulo);

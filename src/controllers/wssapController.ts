@@ -1,5 +1,6 @@
 import { Application, Request, Response } from "express";
 import http from 'http';
+import https from 'https';
 
 import {db }from "../database";
 //import { CompanyInterface } from "../interfaces/company.interface";
@@ -10,8 +11,11 @@ import fetch from 'node-fetch';
 
 class WssapController {
 
-    public url_sap_xe = 'https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/';
-    public url_sap_sl = 'https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/';
+    public url_sap_xe = 'https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/';
+    public url_sap_sl = 'https://137.116.33.72:50000/b1s/v1/';
+    public ip_nitrofert_hbt = '137.116.33.72';
+
+   
 
     public async BusinessPartners(req: Request, res: Response) {
 
@@ -29,8 +33,8 @@ class WssapController {
         //console.log("BusinessPartners ",bieSession);
 
         if(bieSession!=''){
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/BusinessPartners?$filter=startswith(CardCode,'P'), CardType eq 'cSupplier'&$select=CardCode,CardName`;
-            //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/BusinessPartners?$filter=CardCode eq 'PN830511745'&$select=CardCode,CardName`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/BusinessPartners?$filter=startswith(CardCode,'P'), CardType eq 'cSupplier'&$select=CardCode,CardName`;
+            //const url2 = `https://137.116.33.72:50000/b1s/v1/BusinessPartners?$filter=CardCode eq 'PN830511745'&$select=CardCode,CardName`;
         
         
             const configWs2 = {
@@ -39,9 +43,12 @@ class WssapController {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''
                     
-                }
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})
                 
             }
+
+            
 
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -84,10 +91,12 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }      
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})      
+
             }
     
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Items?$select=ItemCode,ItemName,ApTaxCode&$orderby=ItemCode`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/Items?$select=ItemCode,ItemName,ApTaxCode&$orderby=ItemCode`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -128,10 +137,11 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }      
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})   
             }
     
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/ChartOfAccounts?$select=Code,Name&$orderby=Code`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/ChartOfAccounts?$select=Code,Name&$orderby=Code`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -163,11 +173,11 @@ class WssapController {
             const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
             const compania = infoUsuario[0].dbcompanysap;
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsCuentasContables.xsjs?compania=${compania}`;
             console.log(url2);
             
         
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();   
                 return res.json(data2);   
     
@@ -195,10 +205,10 @@ class WssapController {
             //const data = await helper.itemsSolpedXengine(compania);
             
             //return res.json(data);  
-            //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
             console.log(url2);
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();   
             return res.json(data2);   
             
@@ -224,15 +234,15 @@ class WssapController {
             const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
             const compania = infoUsuario[0].dbcompanysap;
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
-            //const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItems.xsjs?compania=${compania}`;
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsItemsSolped.xsjs?compania=${compania}`;
             
  
 
             console.log(url2);
             
          
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();   
                 return res.json(data2);   
     
@@ -261,11 +271,11 @@ class WssapController {
             
             //console.log(await helper.format(fechaTrm));
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsMonedas.xsjs?fecha=${await helper.format(fechaTrm)}&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsMonedas.xsjs?fecha=${await helper.format(fechaTrm)}&compania=${compania}`;
             console.log(url2);
             
         
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();   
                 return res.json(data2);   
     
@@ -296,11 +306,11 @@ class WssapController {
             
             //console.log(await helper.format(fechaTrm));
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
             console.log(url2);
             
         
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();   
                 return res.json(data2);   
     
@@ -332,7 +342,7 @@ class WssapController {
             
             //console.log(await helper.format(fechaTrm));
             /*
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsSeries.xsjs?compania=${compania}${filtroObjtype}`;
             console.log(url2);
             
         
@@ -371,7 +381,7 @@ class WssapController {
 
         let proveedores = await helper.getProveedoresXE(infoUsuario[0]);
     
-        /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
+        /*const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsConsultaTodosProveedores.xsjs?&compania=${compania}${proveedor}`;
         const response2 = await fetch(url2);
         const data2 = await response2.json();*/   
         return res.json(proveedores);   
@@ -429,12 +439,12 @@ class WssapController {
         let querys = `SELECT * FROM "PRUEBAS_NITROFERT_PRD"."OITM"`;
         //console.log(querys);
     
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&querys=${querys}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAprobaciones.xsjs?&querys=${querys}`;
         
 
         
         
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();   
             return res.json(data2);   
 
@@ -462,17 +472,16 @@ class WssapController {
         const userSap = infoUsuario[0].codusersap;
 
         const area = req.params.area;
-
-            
+       
             
             //console.log(await helper.format(fechaTrm));
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
             console.log(url2);
         
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2, { agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();
-                //console.log(data2);   
+                console.log(response2,data2);   
                 return res.json(data2);   
     
             }catch (error: any) {
@@ -503,10 +512,10 @@ class WssapController {
             
             //console.log(await helper.format(fechaTrm));
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasPorUsuario.xsjs?compania=${compania}&usuario=${userSap}`;
             console.log(url2);
         
-                const response2 = await fetch(url2);
+                const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();
                 //console.log(data2);   
                 return res.json(data2);   
@@ -576,10 +585,11 @@ class WssapController {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
                 },
-                body: JSON.stringify(data)      
+                body: JSON.stringify(data),
+                agent:new https.Agent({rejectUnauthorized: false,})      
             }
     
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/QueryService_PostQuery`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/QueryService_PostQuery`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -626,10 +636,11 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }    
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})    
             }
     
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseOrders(${pedido})`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseOrders(${pedido})`;
             console.log(url2);
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -673,11 +684,12 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }    
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})    
             }
     
-            //const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/USU?$select=NF_ALM_USUARIOS_SOLCollection`;
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/$crossjoin(USU,USU/NF_ALM_USUARIOS_SOLCollection)?$expand=USU/NF_ALM_USUARIOS_SOLCollection($select=U_NF_DIM2_DEP)&$filter=USU/Code eq USU/NF_ALM_USUARIOS_SOLCollection/Code and USU/NF_ALM_USUARIOS_SOLCollection/U_NF_DIM2_DEP ne null`;
+            //const url2 = `https://137.116.33.72:50000/b1s/v1/USU?$select=NF_ALM_USUARIOS_SOLCollection`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/$crossjoin(USU,USU/NF_ALM_USUARIOS_SOLCollection)?$expand=USU/NF_ALM_USUARIOS_SOLCollection($select=U_NF_DIM2_DEP)&$filter=USU/Code eq USU/NF_ALM_USUARIOS_SOLCollection/Code and USU/NF_ALM_USUARIOS_SOLCollection/U_NF_DIM2_DEP ne null`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -724,11 +736,12 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }    
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})    
             } 
     
             
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Items?$filter=ItemCode eq '${ItemCode}'&$select=PurchaseUnit`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/Items?$filter=ItemCode eq '${ItemCode}'&$select=PurchaseUnit`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();
@@ -773,11 +786,12 @@ class WssapController {
                 headers: {
                     'Content-Type': 'application/json',
                     'cookie': bieSession || ''   
-                }    
+                },
+                agent:new https.Agent({rejectUnauthorized: false,})    
             }
     
             
-            const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/Warehouses?$filter=Inactive eq 'N' and startswith(WarehouseCode,'AD') or   startswith(WarehouseCode,'TR')&$select=State,WarehouseCode,WarehouseName`;
+            const url2 = `https://137.116.33.72:50000/b1s/v1/Warehouses?$filter=Inactive eq 'N' and startswith(WarehouseCode,'AD') or   startswith(WarehouseCode,'TR')&$select=State,WarehouseCode,WarehouseName`;
     
             const response2 = await fetch(url2, configWs2);
             const data2 = await response2.json();

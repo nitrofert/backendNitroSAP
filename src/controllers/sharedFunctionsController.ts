@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import {db }from "../database";
+import https from 'https';
 import { CompanyInterface } from "../interfaces/company.interface";
 import { DecodeTokenInterface, InfoUsuario } from "../interfaces/decodedToken.interface";
 import helper from "../lib/helpers";
@@ -53,11 +54,11 @@ class SharedFunctionsController {
         const compania = infoUsuario[0].dbcompanysap;
        
         
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsImpuestosCompras.xsjs?compania=${compania}`;
         console.log(url2);
         
         
-            const response2 = await fetch(url2); 
+            const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})}); 
             const data2 = await response2.json();  
             return res.json(data2);  
 
@@ -85,12 +86,12 @@ class SharedFunctionsController {
         let dependencia = req.params.dependencia;
         //console.log(dependencia);
         
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsCuentasXDependencia.xsjs?compania=${compania}&dependencia=${dependencia}`;
         console.log(url2);
 
        
         
-            const response2 = await fetch(url2); 
+            const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})}); 
             const data2 = await response2.json();  
             return res.json(data2);  
 

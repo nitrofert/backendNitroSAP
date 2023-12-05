@@ -1,5 +1,6 @@
 import {  NextFunction, Request, Response } from "express";
 import {db} from "../database";
+import https from 'https';
 import { UserInterface } from "../interfaces/user.interface";
 import  helper  from "../lib/helpers";
 import jwt, { SignOptions } from 'jsonwebtoken';
@@ -458,10 +459,10 @@ class AuthController{
         const compania = infoUsuario[0].dbcompanysap;
        
         
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAlmacenXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
         console.log(url2);
 
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();  
             return res.json(data2); 
 
@@ -486,15 +487,15 @@ class AuthController{
 
 
         //const url2 = `http://UBINITROFERT:nFtHOkay345$@vm-hbt-hm33.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
-        //const url2 = `http://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`; 
+        //const url2 = `http://UBINITROFERT:nFtHOkay345$@137.116.33.72:8000/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsDependenciaXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`; 
         console.log(url2);
-        //https://nitrofert-hbt.heinsohncloud.com.co:4300/
+        //https://137.116.33.72:4300/
 
         
        
 
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2, {agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();  
             //console.log(data2);
             return res.json(data2); 
@@ -518,11 +519,11 @@ class AuthController{
         const compania = infoUsuario[0].dbcompanysap;
 
 
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
         console.log(url2);
         
 
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();  
             return res.json(data2); 
 
@@ -547,7 +548,7 @@ class AuthController{
             const bdmysql = infoUsuario[0].bdmysql;
 
 
-            /*const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
+            /*const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAreasSolpedXUsuario.xsjs?usuario=${infoUsuario[0].codusersap}&compania=${compania}`;
             console.log(url2);
             const response2 = await fetch(url2);
             const data2 = await response2.json();  

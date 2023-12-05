@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../database";
+import https from 'https';
 import { CompanyInterface } from "../interfaces/company.interface";
 import { DecodeTokenInterface, InfoUsuario, PerfilesUsuario } from "../interfaces/decodedToken.interface";
 import helper from "../lib/helpers";
@@ -643,7 +644,7 @@ class SolpedController {
         
         //Obtener aray de modelos de autorización para la aprobacion de la solped SAP
 
-        const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+        const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
         
         //////////console.log(url2);
         let connection = await db.getConnection();
@@ -651,7 +652,7 @@ class SolpedController {
 
         try {
             
-            const response2 = await fetch(url2);
+            const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();
             //Covertir en array el objeto obtenido desde el ws Xengine de SAP y parsear el area y la condición del query de SAP
             let arrayModelos: any[] = [];
@@ -3003,10 +3004,11 @@ class SolpedController {
                     headers: {
                         'Content-Type': 'application/json',
                         'cookie': bieSession || ''   
-                    }    
+                    },
+                    agent:new https.Agent({rejectUnauthorized: false,})    
                 }
         
-                const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
+                const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
         
                 const response2 = await fetch(url2, configWs2);
                 const data2 = await response2.json();

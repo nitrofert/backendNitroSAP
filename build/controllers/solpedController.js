@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const database_1 = require("../database");
+const https_1 = __importDefault(require("https"));
 const helpers_1 = __importDefault(require("../lib/helpers"));
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const path_1 = __importDefault(require("path"));
@@ -586,12 +587,12 @@ class SolpedController {
             const arraySolpedId = req.body;
             let validaPresupuesto = yield helpers_1.default.permisoValidacionPresupuesto(compania);
             //Obtener aray de modelos de autorización para la aprobacion de la solped SAP
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsAprobaciones.xsjs?&compania=${compania}`;
             //////////console.log(url2);
             let connection = yield database_1.db.getConnection();
             yield connection.beginTransaction();
             try {
-                const response2 = yield (0, node_fetch_1.default)(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 //Covertir en array el objeto obtenido desde el ws Xengine de SAP y parsear el area y la condición del query de SAP
                 let arrayModelos = [];
@@ -2550,9 +2551,10 @@ class SolpedController {
                         headers: {
                             'Content-Type': 'application/json',
                             'cookie': bieSession || ''
-                        }
+                        },
+                        agent: new https_1.default.Agent({ rejectUnauthorized: false, })
                     };
-                    const url2 = `https://nitrofert-hbt.heinsohncloud.com.co:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
+                    const url2 = `https://137.116.33.72:50000/b1s/v1/PurchaseRequests?$filter=Series eq 189`;
                     const response2 = yield (0, node_fetch_1.default)(url2, configWs2);
                     const data2 = yield response2.json();
                     //////////console.log(data2.value);

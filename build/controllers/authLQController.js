@@ -56,7 +56,8 @@ class AuthLQController {
                                     U_NF_CUFE_FV: titulo.cufe,
                                     U_NF_FECHA_PAGO: titulo.fecha_pago,
                                     U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                    U_NF_VALOR_GIRO: titulo.valor_giro
+                                    U_NF_VALOR_GIRO: titulo.valor_giro,
+                                    U_NF_ID_OPERACION: titulo.id_operacion
                                 };
                                 resultInsertTitulo = yield helpers_1.default.InsertTituloSL(dataNewTitulo);
                                 titulos.push(titulo);
@@ -71,7 +72,8 @@ class AuthLQController {
                                     U_NF_CUFE_FV: titulo.cufe,
                                     U_NF_FECHA_PAGO: titulo.fecha_pago,
                                     U_NF_FECHA_NEGOCIACION: titulo.fecha_negociacion,
-                                    U_NF_VALOR_GIRO: titulo.valor_giro
+                                    U_NF_VALOR_GIRO: titulo.valor_giro,
+                                    U_NF_ID_OPERACION: titulo.id_operacion
                                 };
                                 resultUpdateTitulo = yield helpers_1.default.UpdateTituloSL(dataUpdateTitulo, tituloSap.value[0].DocEntry);
                                 //console.log(resultUpdateTitulo);
