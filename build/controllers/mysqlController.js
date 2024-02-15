@@ -217,14 +217,16 @@ class MySQLController {
                                               Where State_Code !=''`);
                 const parametros_calculadora_precio = yield database_1.db.query(`Select * from ${bdmysql}.parametros_calc`);
                 const tabla_costos_localidad = yield database_1.db.query(`Select * from ${bdmysql}.costos_localidad`);
-                const tabla_promedios_localidad = yield database_1.db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL'`);
+                console.log(tabla_costos_localidad);
+                const tabla_promedios_localidad = yield database_1.db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL' AND localidad!='Granulación_Minerval' AND localidad!='Granulación_Nitrocaribe'`);
+                console.log(tabla_promedios_localidad);
                 const tabla_presentacion_items = yield database_1.db.query(`Select * from ${bdmysql}.presentacion_item_pt`);
                 const tabla_precios_sugeridos = yield database_1.db.query(`Select * from ${bdmysql}.lista_precios_sugerida`);
                 const tabla_precios_venta_sap = yield database_1.db.query(`Select * from ${bdmysql}.precio_venta_sap_l2w`);
                 const tabla_recetas_items_pt = yield database_1.db.query(`Select * from ${bdmysql}.recetas_item_pt`);
                 const tabla_lista_precios_sap = yield database_1.db.query(`Select * from ${bdmysql}.lista_precios_sap_pt`);
                 const tabla_precios_pt_zona = yield database_1.db.query(`Select * from ${bdmysql}.lista_precios_pt_zona`);
-                const tabla_lista_precios_mp = yield database_1.db.query(`SELECT anio, semanaAnioLista, precioNac, ItemCode FROM ${bdmysql}.lista_precios_mp GROUP BY anio, semanaAnioLista, precioNac,ItemCode ORDER BY anio, semanaAnioLista DESC`);
+                const tabla_lista_precios_mp = yield database_1.db.query(`SELECT anio, semanaAnioLista, precioNac, ItemCode FROM ${bdmysql}.lista_precios_mp GROUP BY anio, semanaAnioLista, precioNac,ItemCode ORDER BY anio DESC, semanaAnioLista DESC`);
                 const configuracionSolped = {
                     //series,
                     items,

@@ -606,8 +606,8 @@ class MrpController {
                             else {
                                 //Insertar nuevalinea
                                 let fechasemanaFormat = yield helpers_1.default.format(linea.FECHASEMANA);
-                                queryRegistro = `INSERT INTO ${bdmysql}.presupuestoventa (fechasemana,semana,itemcode,codigozona,cantidad) 
-                                                                            values ('${linea.FECHASEMANA}',${linea.SEMANA},'${linea.ITEM}','${linea.CODIGOZONA}',${linea.CANTIDAD.replace(',', '.')})`;
+                                queryRegistro = `INSERT INTO ${bdmysql}.presupuestoventa (fechasemana,semana,itemcode,codigozona,cantidad,ano) 
+                                                                            values ('${linea.FECHASEMANA}',${linea.SEMANA},'${linea.ITEM}','${linea.CODIGOZONA}',${linea.CANTIDAD.replace(',', '.')},${fechasemana.getFullYear()})`;
                                 lineasRegistradas++;
                             }
                             ////console.logqueryRegistro);

@@ -3574,7 +3574,7 @@ return html;
         try {
 
             const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
-            //////console.log(url2);
+            console.log(url2);
             const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
             const data2 = await response2.json();   
             ////////console.log('validaPresupuestoCuenta',data2);
@@ -3625,7 +3625,7 @@ return html;
             const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNFPPTO.xsjs?pCompania=${bdPresupuesto}&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
             
 
-            ////console.log(url2);
+            console.log(url2);
             
         
                 const response2 = await fetch(url2,{agent:new https.Agent({rejectUnauthorized: false,})});
@@ -6128,6 +6128,8 @@ return html;
                         if(titulo.no_titulo.includes('-')){
                             console.log("incluye -");
                             no_titulo = titulo.no_titulo.split('-')[1];  
+                        }else if(titulo.no_titulo.includes('NITR')){
+                            no_titulo = titulo.no_titulo.split('NITR')[1];  
                         }else{
                             console.log("No incluye -");
                             no_titulo = titulo.no_titulo;

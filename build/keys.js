@@ -4,10 +4,10 @@ exports.default = {
     database: {
         dev: {
             host: 'localhost',
-            user: 'admusersportals',
+            user: 'admindb',
             password: '$d3v3l0pT3st*',
             database: 'usuariosportal',
-            port: 3309
+            port: 3306
         },
         prod: {
             host: '10.238.95.2',

@@ -455,6 +455,150 @@ class WssapController {
         
     }
 
+    
+
+    public async EntradasUsuarioAreaXE(req: Request, res: Response) {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = await helper.validateToken(jwt);
+           
+            //******************************************************* */
+    
+            try {
+    
+            const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+            //console.log(infoUsuario);
+            const compania = infoUsuario[0].dbcompanysap;
+            const userSap = infoUsuario[0].codusersap;
+    
+            const area = req.params.area;
+           
+                
+                //console.log(await helper.format(fechaTrm));
+            
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}`;
+                console.log(url2);
+            
+                    const response2 = await fetch(url2, { agent:new https.Agent({rejectUnauthorized: false,})});
+                    const data2 = await response2.json();
+                    //console.log(response2,data2);   
+                    return res.json(data2);   
+        
+                }catch (error: any) {
+                    console.error(error);
+                    return res.json(error);
+                }
+    
+    }
+
+    
+
+    public async InfoDocumentoMR(req: Request, res: Response) {
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        //console.log(infoUsuario);
+        const compania = infoUsuario[0].dbcompanysap;
+        const userSap = infoUsuario[0].codusersap;
+
+        //const area = req.query.area;
+       
+            
+            console.log('Parametros',req.params);
+            console.log('Query',req.query);
+            console.log('Body',req.body);
+            
+            let docNumParam:string = "";
+
+            if(req.query.SP){
+                docNumParam+= `&SP=${req.query.SP}`;
+            }
+            if(req.query.OC){
+                docNumParam+= `&OC=${req.query.OC}`;
+            }
+            if(req.query.HE){
+                docNumParam+= `&HE=${req.query.HE}`;
+            }
+
+            if(req.query.FA){
+                docNumParam+= `&FA=${req.query.FA}`;
+            }
+        
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}${docNumParam}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDocsCompras.xsjs?compania=${compania}${docNumParam}`;
+            console.log(url2);
+        
+                const response2 = await fetch(url2, { agent:new https.Agent({rejectUnauthorized: false,})});
+                const data2 = await response2.json();
+                //console.log(response2,data2);   
+                return res.json(data2);
+    
+            }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+            }
+
+    }
+
+
+    public async TrazabilidadDocumentoXE(req: Request, res: Response) {
+        //Obtener datos del usurio logueado que realizo la petición
+        let jwt = req.headers.authorization || '';
+        jwt = jwt.slice('bearer'.length).trim();
+        const decodedToken = await helper.validateToken(jwt);
+       
+        //******************************************************* */
+
+        try {
+
+        const infoUsuario = await helper.getInfoUsuario(decodedToken.userId, decodedToken.company);
+        //console.log(infoUsuario);
+        const compania = infoUsuario[0].dbcompanysap;
+        const userSap = infoUsuario[0].codusersap;
+
+        const area = req.query.area;
+       
+            
+            console.log('Parametros',req.params);
+            console.log('Query',req.query);
+            console.log('Body',req.body);
+            
+            let docNumParam:string = "";
+
+            if(req.query.SP){
+                docNumParam = `&SP=${req.query.SP}`;
+            }
+            if(req.query.OC){
+                docNumParam = `&OC=${req.query.OC}`;
+            }
+            if(req.query.HE){
+                docNumParam = `&HE=${req.query.HE}`;
+            }
+        
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}${docNumParam}`;
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}${docNumParam}`;
+            console.log(url2);
+        
+                const response2 = await fetch(url2, { agent:new https.Agent({rejectUnauthorized: false,})});
+                const data2 = await response2.json();
+                //console.log(response2,data2);   
+                return res.json(data2);
+    
+            }catch (error: any) {
+                console.error(error);
+                return res.json(error);
+            }
+
+    }
+
     public async OrdenesUsuarioAreaXE(req: Request, res: Response) {
 
         //Obtener datos del usurio logueado que realizo la petición
@@ -475,13 +619,15 @@ class WssapController {
        
             
             //console.log(await helper.format(fechaTrm));
+
+            const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_ENTRADASPORTAL.xsjs?compania=${compania}&area=${area}&status=O`;
         
-            const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
+            //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
             console.log(url2);
         
                 const response2 = await fetch(url2, { agent:new https.Agent({rejectUnauthorized: false,})});
                 const data2 = await response2.json();
-                console.log(response2,data2);   
+                //console.log(response2,data2);   
                 return res.json(data2);   
     
             }catch (error: any) {

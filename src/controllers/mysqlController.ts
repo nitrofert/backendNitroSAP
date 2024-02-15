@@ -264,7 +264,11 @@ class MySQLController {
 
             const tabla_costos_localidad = await db.query(`Select * from ${bdmysql}.costos_localidad`);
 
-            const tabla_promedios_localidad = await db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL'`);
+            console.log(tabla_costos_localidad);
+
+            const tabla_promedios_localidad = await db.query(`Select AVG(costo_admin) AS promedio_administracion, AVG(costo_recurso) AS promedio_recurso from ${bdmysql}.costos_localidad where localidad!='ESPLACOL' AND localidad!='Granulación_Minerval' AND localidad!='Granulación_Nitrocaribe'`);
+
+            console.log(tabla_promedios_localidad);
 
             const tabla_presentacion_items = await db.query(`Select * from ${bdmysql}.presentacion_item_pt`);
 
@@ -278,7 +282,7 @@ class MySQLController {
 
             const tabla_precios_pt_zona = await db.query(`Select * from ${bdmysql}.lista_precios_pt_zona`);
 
-            const tabla_lista_precios_mp = await db.query(`SELECT anio, semanaAnioLista, precioNac, ItemCode FROM ${bdmysql}.lista_precios_mp GROUP BY anio, semanaAnioLista, precioNac,ItemCode ORDER BY anio, semanaAnioLista DESC`);
+            const tabla_lista_precios_mp = await db.query(`SELECT anio, semanaAnioLista, precioNac, ItemCode FROM ${bdmysql}.lista_precios_mp GROUP BY anio, semanaAnioLista, precioNac,ItemCode ORDER BY anio DESC, semanaAnioLista DESC`);
 
 
 

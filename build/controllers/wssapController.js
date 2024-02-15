@@ -354,6 +354,116 @@ class WssapController {
             }
         });
     }
+    EntradasUsuarioAreaXE(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                //console.log(infoUsuario);
+                const compania = infoUsuario[0].dbcompanysap;
+                const userSap = infoUsuario[0].codusersap;
+                const area = req.params.area;
+                //console.log(await helper.format(fechaTrm));
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
+                const data2 = yield response2.json();
+                //console.log(response2,data2);   
+                return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    InfoDocumentoMR(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                //console.log(infoUsuario);
+                const compania = infoUsuario[0].dbcompanysap;
+                const userSap = infoUsuario[0].codusersap;
+                //const area = req.query.area;
+                console.log('Parametros', req.params);
+                console.log('Query', req.query);
+                console.log('Body', req.body);
+                let docNumParam = "";
+                if (req.query.SP) {
+                    docNumParam += `&SP=${req.query.SP}`;
+                }
+                if (req.query.OC) {
+                    docNumParam += `&OC=${req.query.OC}`;
+                }
+                if (req.query.HE) {
+                    docNumParam += `&HE=${req.query.HE}`;
+                }
+                if (req.query.FA) {
+                    docNumParam += `&FA=${req.query.FA}`;
+                }
+                //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}${docNumParam}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsDocsCompras.xsjs?compania=${compania}${docNumParam}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
+                const data2 = yield response2.json();
+                //console.log(response2,data2);   
+                return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
+    TrazabilidadDocumentoXE(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            //Obtener datos del usurio logueado que realizo la petición
+            let jwt = req.headers.authorization || '';
+            jwt = jwt.slice('bearer'.length).trim();
+            const decodedToken = yield helpers_1.default.validateToken(jwt);
+            //******************************************************* */
+            try {
+                const infoUsuario = yield helpers_1.default.getInfoUsuario(decodedToken.userId, decodedToken.company);
+                //console.log(infoUsuario);
+                const compania = infoUsuario[0].dbcompanysap;
+                const userSap = infoUsuario[0].codusersap;
+                const area = req.query.area;
+                console.log('Parametros', req.params);
+                console.log('Query', req.query);
+                console.log('Body', req.body);
+                let docNumParam = "";
+                if (req.query.SP) {
+                    docNumParam = `&SP=${req.query.SP}`;
+                }
+                if (req.query.OC) {
+                    docNumParam = `&OC=${req.query.OC}`;
+                }
+                if (req.query.HE) {
+                    docNumParam = `&HE=${req.query.HE}`;
+                }
+                //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}&area=${area}${docNumParam}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_GESTION_COMPRAS.xsjs?compania=${compania}${docNumParam}`;
+                console.log(url2);
+                const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
+                const data2 = yield response2.json();
+                //console.log(response2,data2);   
+                return res.json(data2);
+            }
+            catch (error) {
+                console.error(error);
+                return res.json(error);
+            }
+        });
+    }
     OrdenesUsuarioAreaXE(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             //Obtener datos del usurio logueado que realizo la petición
@@ -368,11 +478,12 @@ class WssapController {
                 const userSap = infoUsuario[0].codusersap;
                 const area = req.params.area;
                 //console.log(await helper.format(fechaTrm));
-                const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
+                const url2 = `https://UBINITROFERT:nFtHOkay345$@nitrofert-hbt.heinsohncloud.com.co:4300/WSNTF/wsNF_ENTRADASPORTAL.xsjs?compania=${compania}&area=${area}&status=O`;
+                //const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsOcAbiertasArea.xsjs?compania=${compania}&area=${area}`;
                 console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
-                console.log(response2, data2);
+                //console.log(response2,data2);   
                 return res.json(data2);
             }
             catch (error) {

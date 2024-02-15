@@ -3181,7 +3181,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsValidaCuentaPresupuesto.xsjs?pCompania=${compania}&pCuenta=${cuenta}`;
-                //////console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('validaPresupuestoCuenta',data2);
@@ -3227,7 +3227,7 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
             try {
                 const { anio, acctcode, ocrcode2, ocrcode, subtotal, total } = lineaPresupuesto;
                 const url2 = `https://UBINITROFERT:nFtHOkay345$@137.116.33.72:4300/WSNTF/wsNFPPTO.xsjs?pCompania=${bdPresupuesto}&pCuenta=${acctcode}&pAno=${anio}&pDependencia=${ocrcode2}&pLocalidad=${ocrcode}&pEmpresa=${compania}`;
-                ////console.log(url2);
+                console.log(url2);
                 const response2 = yield (0, node_fetch_1.default)(url2, { agent: new https_1.default.Agent({ rejectUnauthorized: false, }) });
                 const data2 = yield response2.json();
                 ////////console.log('getPresupuestoXE',data2);
@@ -5167,6 +5167,9 @@ table, td, div, h1, p {font-family: Arial, sans-serif;}
                                 if (titulo.no_titulo.includes('-')) {
                                     console.log("incluye -");
                                     no_titulo = titulo.no_titulo.split('-')[1];
+                                }
+                                else if (titulo.no_titulo.includes('NITR')) {
+                                    no_titulo = titulo.no_titulo.split('NITR')[1];
                                 }
                                 else {
                                     console.log("No incluye -");

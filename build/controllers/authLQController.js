@@ -228,7 +228,7 @@ class AuthLQController {
             try {
                 const infoLog = yield helpers_1.default.loginWsLQ();
                 console.log(infoLog.data.access_token);
-                //let result_titulos = await helper.cunsumirTitulosLQ(infoLog.data.access_token);
+                let result_titulos = yield helpers_1.default.cunsumirTitulosLQ(infoLog.data.access_token);
                 let result_pagos = yield helpers_1.default.cunsumirPagosLQ(infoLog.data.access_token);
                 res.json({
                     result_pagos

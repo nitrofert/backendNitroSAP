@@ -929,6 +929,7 @@ class SolpedController {
             const compania = infoUsuario[0].dbcompanysap;
             const origin = req.headers.origin;
             const bdPresupuesto = (urlbk.includes('localhost')==true || urlbk.includes('-dev.')==true)?'COPIA_PRESUPUESTO':'PRESUPUESTO';
+            //const bdPresupuesto = (urlbk.includes('localhost')==true || urlbk.includes('-dev.')==true)?'PRESUPUESTO':'PRESUPUESTO';
             //Obtener array de id de solped seleccionadas
             const arraySolpedId = req.body;
             let validaPresupuesto = await helper.permisoValidacionPresupuesto(compania);
@@ -1032,7 +1033,7 @@ class SolpedController {
                                 infoSolpedToSAP.Series = 62; //temporal mientras activan el usuario de Xengine para Presupuesto
                                 infoSolpedToSAP.DocType = 'I';
 
-                                infoSolpedToSAP.BPL_IDAssignedToInvoice = 2;
+                                infoSolpedToSAP.BPL_IDAssignedToInvoice = infoUsuario[0].companyname=='NITROFERT'?2:infoUsuario[0].companyname=='INTEFERT'?3:infoUsuario[0].companyname=='NITROCARIBE'?4:0;
                                 //Cambiar los items por las cuentas contables y quitar los impuestos , cambiar la cantidad a 1 y el total de la linea colocar en precio unitario
                                 for(let line in infoSolpedToSAP.DocumentLines){
                                     infoSolpedToSAP.DocumentLines[line].LineVendor = '';
@@ -1040,7 +1041,7 @@ class SolpedController {
                                     infoSolpedToSAP.DocumentLines[line].TaxCode = '';
                                     infoSolpedToSAP.DocumentLines[line].Price = infoSolpedToSAP.DocType=='S'?infoSolpedToSAP.DocumentLines[line].LineTotal:((infoSolpedToSAP.DocumentLines[line].Price||0)*(infoSolpedToSAP.DocumentLines[line].Quantity || 1));
                                     infoSolpedToSAP.DocumentLines[line].Quantity = 1;
-                                    infoSolpedToSAP.DocumentLines[line].WarehouseCode = 'NITROFER';
+                                    infoSolpedToSAP.DocumentLines[line].WarehouseCode = infoUsuario[0].companyname.substring(0,8);
                                     infoSolpedToSAP.DocumentLines[line].AccountCode="";
                                     infoSolpedToSAP.DocumentLines[line].ProjectCode="";
 

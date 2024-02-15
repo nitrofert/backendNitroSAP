@@ -25,6 +25,9 @@ class WsSAPRoutes {
         this.router.get('/Xengine/series2/:objtype?', wssapController_1.default.Series);
         this.router.get('/Xengine/ordenes-open-usuario', wssapController_1.default.OrdenesUsuarioXE);
         this.router.get('/Xengine/ordenes-open-usuario/:area', wssapController_1.default.OrdenesUsuarioAreaXE);
+        this.router.get('/Xengine/entradas-open-usuario/:area', wssapController_1.default.EntradasUsuarioAreaXE);
+        this.router.get('/Xengine/trazabilidad-documento', wssapController_1.default.TrazabilidadDocumentoXE);
+        this.router.get('/Xengine/info-documentos-mr', wssapController_1.default.InfoDocumentoMR);
         this.router.get('/Xengine/ordenes-open-usuario-sl', wssapController_1.default.OrdenesUsuarioSL);
         this.router.get('/Xengine/pedido/:pedido', wssapController_1.default.PedidoByIdSL);
         this.router.get('/Areas/Solped', wssapController_1.default.getAreasSolpedSL);
