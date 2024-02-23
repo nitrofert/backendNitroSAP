@@ -24,6 +24,7 @@ import mrpRoutes from './routes/mrpRoutes';
 import reportesRoutes from './routes/reportesRoutes';
 import mysqlRoutes from './routes/mysqlRoutes';
 import mysqlWsRoutes from './routes/mysqlWsRoutes';
+import noticiasRoutes from './routes/noticiasRoutes';
 
 
 class Server{
@@ -83,6 +84,7 @@ class Server{
         this.app.use('/api/nitroLQ',authRoutesLQ);
         this.app.use('/api/mysql/query',mysqlRoutes);
         this.app.use('/api/mysql/ws/v1',mysqlWsRoutes);
+        this.app.use('/api/noticias',noticiasRoutes);
 
         
         //console.log('Routes');

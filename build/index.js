@@ -25,6 +25,7 @@ const mrpRoutes_1 = __importDefault(require("./routes/mrpRoutes"));
 const reportesRoutes_1 = __importDefault(require("./routes/reportesRoutes"));
 const mysqlRoutes_1 = __importDefault(require("./routes/mysqlRoutes"));
 const mysqlWsRoutes_1 = __importDefault(require("./routes/mysqlWsRoutes"));
+const noticiasRoutes_1 = __importDefault(require("./routes/noticiasRoutes"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -74,6 +75,7 @@ class Server {
         this.app.use('/api/nitroLQ', authRoutesLQ_1.default);
         this.app.use('/api/mysql/query', mysqlRoutes_1.default);
         this.app.use('/api/mysql/ws/v1', mysqlWsRoutes_1.default);
+        this.app.use('/api/noticias', noticiasRoutes_1.default);
         //console.log('Routes');
     }
     start() {
